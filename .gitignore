@@ -1,0 +1,37 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# React Native
+android/
+ios/
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+*.mobileprovision
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj
+*.idea/
+*.gradle/
+*.iml
+
+# Metro, Expo
+.expo/
+.expo-shared/
+*.expo
+
+# Misc
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/

@@ -1,0 +1,36 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "backend folder",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start-dev": "npx nodemon src/index.js",
+    "migrate": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ManunGar/Band-Manager.git"
+  },
+  "author": "ManunGar",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1",
+    "fs": "^0.0.1-security",
+    "mariadb": "^3.4.5",
+    "morgan": "^1.10.1",
+    "mysql2": "^3.15.2",
+    "passport": "^0.7.0",
+    "passport-http-bearer": "^1.0.1",
+    "path": "^0.12.7",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "sequelize-cli": "^6.6.3"
+  }
+}

@@ -1,5 +1,10 @@
 import dotenv from 'dotenv'
 import { Sequelize } from 'sequelize'
+import loadBandModel from './band.js'
+import loadComponentModel from './component.js'
+import loadInstrumentModel from './instrument.js'
+import loadMusicianModel from './musician.js'
+import loadUserModel from './user.js'
 
 dotenv.config()
 const database = process.env.DATABASE_NAME || 'band-manager'
@@ -15,9 +20,19 @@ const sequelizeConnection = new Sequelize(database, username, password, {
 })
 
 // Models would be imported and initialized here
+const User = loadUserModel(sequelizeConnection, Sequelize.DataTypes)
+const Band = loadBandModel(sequelizeConnection, Sequelize.DataTypes)
+const Musician = loadMusicianModel(sequelizeConnection, Sequelize.DataTypes)
+const Instrument = loadInstrumentModel(sequelizeConnection, Sequelize.DataTypes)
+const Component = loadComponentModel(sequelizeConnection, Sequelize.DataTypes)
 
 const db = {
     // Models go here
+    User,
+    Band,
+    Musician,
+    Instrument,
+    Component,
 }
 
 // Create a db object to hold all models
@@ -39,4 +54,5 @@ const disconnectSequelize = async (connection) => {
     return connection.close()
 }
 
-export { disconnectSequelize, initSequelize }
+export { Band, Component, disconnectSequelize, initSequelize, Instrument, Musician, User }
+

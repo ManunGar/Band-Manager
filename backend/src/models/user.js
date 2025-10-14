@@ -53,7 +53,7 @@ const loadModel = (sequelize, DataTypes) => {
     },
     profile_picture: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     }
   }, {
     sequelize,

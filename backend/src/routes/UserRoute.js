@@ -10,6 +10,13 @@ const loadFileRoutes = function (app) {
             handleValidation,
             UserController.registerMusician
         )
+    // Musician login route
+    app.route('/login/musician')
+        .post(
+            UserValidation.login,
+            handleValidation,
+            UserController.loginMusician
+        )
 }
 
 export default loadFileRoutes

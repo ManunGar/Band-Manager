@@ -25,6 +25,19 @@ const _isEmailRegistered = async (value, { req }) => {
     }
 }
 
+const _isBirthdayInThePast = (value, { req }) => {
+    try {
+        const birthday = new Date(value);
+        const today = new Date();
+        if (birthday >= today) {
+            return Promise.reject(new Error('La fecha de nacimiento debe ser en el pasado'));
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error(error));
+    }
+}
+
 const login = [
     check('username')
         .exists().withMessage('El nombre de usuario es requerido')
@@ -60,7 +73,8 @@ const register = [
         .isString().withMessage('La ubicación debe ser texto'),
     check('birthday')
         .exists().withMessage('La fecha de nacimiento es requerida')
-        .isDate().withMessage('La fecha de nacimiento no es válida'),
+        .isDate().withMessage('La fecha de nacimiento no es válida')
+        .custom(_isBirthdayInThePast),
     check('phone')
         .exists().withMessage('El número de teléfono es requerido')
         .isMobilePhone('any').withMessage('El número de teléfono no es válido'),

@@ -10,7 +10,7 @@ const loadModel = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      User.hasOne(models.Musician, { foreignKey: 'userId' })
+      User.hasOne(models.Musician, { foreignKey: 'userId', as: 'musician' });
     }
   }
   User.init({

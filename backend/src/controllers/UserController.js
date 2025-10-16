@@ -1,11 +1,23 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { Op } from "sequelize";
-import { Musician, User } from "../models/sequelize.js";
+import { Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to find a user by token
 const findByToken = async (token) => {
-    const user = await User.findOne({ where: { token } });
+    const user = await User.findOne({
+        where: { token },
+        attributes: { exclude: ['password'] },
+         include: [
+            {
+                model: Musician,
+                as: 'musician',
+                include: [
+                    { model: Instrument, as: 'instruments' }
+                ]
+            }
+        ]
+    });
     if (!user) {
         throw new Error('Token not valid');
     }

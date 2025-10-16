@@ -1,6 +1,15 @@
 import crypto from "crypto";
 import { Musician, User } from "../models/sequelize.js";
 
+// Function to find a user by token
+const findByToken = async (token) => {
+    const user = await User.findOne({ where: { token } });
+    if (!user) {
+        throw new Error('Token not valid');
+    }
+    return user;
+}
+
 // Function to handle musician registration
 const registerMusician = async (req, res) => {
     const transaction = await User.sequelize.transaction();
@@ -40,6 +49,7 @@ const _createUserToken = () => {
 
 
 const UserController = {
+    findByToken,
     registerMusician,
 };
 

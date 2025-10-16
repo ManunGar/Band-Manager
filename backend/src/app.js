@@ -2,6 +2,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
+import { initPassport } from './config/passport.js';
 import { initSequelize } from './models/sequelize.js';
 import loadRoutes from './routes/index.js';
 
@@ -12,6 +13,7 @@ const initializeApp = async () => {
     app.use(cors());
     app.use(express.json());
     loadRoutes(app);
+    initPassport();
     app.connection = await initializeDatabase() // Initialize DB connection and attach to app
     return app;
 };

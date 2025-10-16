@@ -1,11 +1,28 @@
 import { check } from 'express-validator';
+import { User } from '../models/sequelize.js';
 
-const _isUsernameRegistered = async () => {
-    
+const _isUsernameRegistered = async (value, { req }) => {
+    try {
+        const user = await User.findOne({ where: { username: value } });
+        if (user) {
+            return Promise.reject(new Error('El nombre de usuario ya está registrado'));
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error(error));
+    }
 }
 
-const _isEmailRegistered = async () => {
-
+const _isEmailRegistered = async (value, { req }) => {
+    try {
+        const user = await User.findOne({ where: { email: value } });
+        if (user) {
+            return Promise.reject(new Error('El correo electrónico ya está registrado'));
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error(error));
+    }
 }
 
 const login = [
@@ -31,10 +48,12 @@ const register = [
         .exists().withMessage('El nombre de usuario es requerido')
         .trim()
         .isLength({ min: 6 }).withMessage('El nombre de usuario debe tener al menos 6 caracteres')
-        .isString().withMessage('El nombre de usuario debe ser texto'),
+        .isString().withMessage('El nombre de usuario debe ser texto')
+        .custom(_isUsernameRegistered),
     check('email')
         .exists().withMessage('El correo electrónico es requerido')
-        .isEmail().withMessage('El correo electrónico no es válido'),
+        .isEmail().withMessage('El correo electrónico no es válido')
+        .custom(_isEmailRegistered),
     check('location')
         .exists().withMessage('La ubicación es requerida')
         .trim()

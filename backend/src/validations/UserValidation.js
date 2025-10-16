@@ -25,7 +25,7 @@ const _isEmailRegistered = async (value, { req }) => {
     }
 }
 
-const _isBirthdayInThePast = (value, { req }) => {
+const _isBirthdayInThePast = async (value, { req }) => {
     try {
         const birthday = new Date(value);
         const today = new Date();
@@ -35,6 +35,34 @@ const _isBirthdayInThePast = (value, { req }) => {
         return Promise.resolve();
     } catch (error) {
         return Promise.reject(new Error(error));
+    }
+}
+
+const _isPasswordSafe = async (value, { req }) => {
+    try {
+        if (!/[a-z]/.test(value)) {
+            return Promise.reject(new Error('La contraseña debe contener al menos una letra minúscula'));
+        }
+        if (!/[A-Z]/.test(value)) {
+            return Promise.reject(new Error('La contraseña debe contener al menos una letra mayúscula'));
+        }
+        if (!/[0-9]/.test(value)) {
+            return Promise.reject(new Error('La contraseña debe contener al menos un número'));
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error(error))
+    }
+}
+
+const _isSamePasswords = async (value, { req }) => {
+    try {
+        if (value !== req.body.password) {
+            return Promise.reject(new Error('Las contraseñas no coinciden'));
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error(error))
     }
 }
 
@@ -82,18 +110,14 @@ const register = [
         .exists().withMessage('La contraseña es requerida')
         .trim()
         .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
-        .isString().withMessage('La contraseña debe ser texto'),
+        .isString().withMessage('La contraseña debe ser texto')
+        .custom(_isPasswordSafe),
     check('repeatPassword')
         .exists().withMessage('Debe repetir la contraseña')
         .trim()
         .isLength({ min: 8 }).withMessage('La confirmación de contraseña debe tener al menos 8 caracteres')
         .isString().withMessage('La confirmación de contraseña debe ser texto')
-        .custom((value, { req }) => {
-            if (value !== req.body.password) {
-                throw new Error('Las contraseñas no coinciden');
-            }
-            return true;
-        })
+        .custom(_isSamePasswords)
 ];
 
 export { login, register };

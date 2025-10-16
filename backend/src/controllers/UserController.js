@@ -1,4 +1,6 @@
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { Op } from "sequelize";
 import { Musician, User } from "../models/sequelize.js";
 
 // Function to find a user by token
@@ -40,6 +42,33 @@ const registerMusician = async (req, res) => {
     }
 }
 
+// Function to handle musician login
+const loginMusician = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        // Allow login with either username or email
+        const user = await User.findOne({ 
+            where: { 
+            [Op.or]: [
+                { username: username },
+                { email: username }
+            ]
+            }
+        });
+        console.log("🚀 ~ loginMusician ~ user:", user)
+        // Check if user exists and password is correct
+        const passwordMatch = user && await bcrypt.compare(password, user.password);
+        if (!user || !passwordMatch) {
+            return res.status(401).send({ error: 'Invalid username/email or password' });
+        }
+        // No generate a new token on each login to persist sessions
+        return res.status(200).send({ message: 'Login successful', token: user.token });
+    } catch (error) {
+        console.error('Error in loginMusician:', error);
+        return res.status(500).send({ error: 'Error logging in musician' });
+    }
+};
+
 
 // This function creates a new player token
 const _createUserToken = () => {
@@ -51,6 +80,7 @@ const _createUserToken = () => {
 const UserController = {
     findByToken,
     registerMusician,
+    loginMusician
 };
 
 export default UserController;

@@ -24,7 +24,7 @@ const loadModel = (sequelize, DataTypes) => {
       });
 
       // User relationship with Musician (One-to-One)
-      Musician.hasOne(models.User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+      Musician.belongsTo(models.User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
       // Component relationship with Musician (One-to-Many)
       Musician.hasMany(models.Component, { foreignKey: 'musicianId', as: 'components' });

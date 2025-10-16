@@ -80,7 +80,7 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('InstrumentComponents');
+    await queryInterface.dropTable('ComponentInstruments');
     await queryInterface.dropTable('Components');
   }
 };

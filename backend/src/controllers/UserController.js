@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { Op } from "sequelize";
+import { addProfilePictureToBody } from "../middleware/FileHandlerMiddleware.js";
 import { Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to find a user by token
@@ -81,6 +82,31 @@ const loginMusician = async (req, res) => {
     }
 };
 
+// Function to edit user details
+const editUserDetails = async (req, res) => {
+    const user = req.user;
+    const updatedData = req.body;
+    try {
+        await User.update(updatedData, { where: { id: user.id } });
+        const updatedUser = await User.findByPk(user.id, { attributes: { exclude: ['password'] } });
+        res.status(200).send({ message: 'User details updated successfully', user: updatedUser });
+        
+    } catch (error) {
+        res.status(500).send({ error: 'Error editing user details' });
+    }
+}
+
+const editProfilePicture = async (req, res) => {
+    const user = req.user;
+    try {
+        await addProfilePictureToBody(req);
+        await User.update({ profile_picture: req.body.profile_picture }, { where: { id: user.id } });
+        const updatedUser = await User.findByPk(user.id, { attributes: { exclude: ['password'] } });
+        res.status(200).send({ message: 'Profile picture updated successfully', user: updatedUser });
+    } catch (error) {
+        res.status(500).send({ error: 'Error updating profile picture' });
+    }
+}
 
 // This function creates a new player token
 const _createUserToken = () => {
@@ -92,7 +118,9 @@ const _createUserToken = () => {
 const UserController = {
     findByToken,
     registerMusician,
-    loginMusician
+    loginMusician,
+    editUserDetails,
+    editProfilePicture
 };
 
 export default UserController;

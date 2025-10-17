@@ -1,5 +1,8 @@
 import { check } from 'express-validator';
 import { User } from '../models/sequelize.js';
+import { checkFileIsImage, checkFileMaxSize } from './FileValidationHelper.js';
+
+const maxFileSize = 2 * 1024 * 1024 // 2MB
 
 const _isUsernameRegistered = async (value, { req }) => {
     try {
@@ -120,4 +123,45 @@ const register = [
         .custom(_isSamePasswords)
 ];
 
-export { login, register };
+const update = [
+    check('full_name')
+        .exists().withMessage('El nombre completo es requerido')
+        .trim()
+        .isLength({ min: 2 }).withMessage('El nombre completo debe tener al menos 2 caracteres')
+        .isString().withMessage('El nombre completo debe ser texto'),
+    check('username')
+        .exists().withMessage('El nombre de usuario es requerido')
+        .trim()
+        .isLength({ min: 6 }).withMessage('El nombre de usuario debe tener al menos 6 caracteres')
+        .isString().withMessage('El nombre de usuario debe ser texto')
+        .custom(_isUsernameRegistered),
+    check('email')
+        .exists().withMessage('El correo electrónico es requerido')
+        .isEmail().withMessage('El correo electrónico no es válido')
+        .custom(_isEmailRegistered),
+    check('location')
+        .exists().withMessage('La ubicación es requerida')
+        .trim()
+        .isString().withMessage('La ubicación debe ser texto'),
+    check('birthday')
+        .exists().withMessage('La fecha de nacimiento es requerida')
+        .isDate().withMessage('La fecha de nacimiento no es válida')
+        .custom(_isBirthdayInThePast),
+    check('phone')
+        .exists().withMessage('El número de teléfono es requerido')
+        .isMobilePhone('any').withMessage('El número de teléfono no es válido'),
+    check('password').not().exists().withMessage('La contraseña no se puede actualizar aquí'),
+]
+
+const updateProfilePicture = [
+    check('profile_picture')
+    .custom((value, { req }) => {
+    return checkFileIsImage(req, 'profile_picture')
+  }).withMessage('Sube una imagen con formato (jpeg, png).'),
+  check('profile_picture').custom((value, { req }) => {
+    return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+  }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB')
+]
+
+export { login, register, update, updateProfilePicture };
+

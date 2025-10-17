@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { Op } from "sequelize";
+import { addProfilePictureToBody } from "../middleware/FileHandlerMiddleware.js";
 import { Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to find a user by token
@@ -97,7 +98,8 @@ const editUserDetails = async (req, res) => {
 
 const editProfilePicture = async (req, res) => {
     const user = req.user;
-    try {        
+    try {
+        await addProfilePictureToBody(req);
         await User.update({ profile_picture: req.body.profile_picture }, { where: { id: user.id } });
         const updatedUser = await User.findByPk(user.id, { attributes: { exclude: ['password'] } });
         res.status(200).send({ message: 'Profile picture updated successfully', user: updatedUser });

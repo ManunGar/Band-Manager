@@ -17,6 +17,13 @@ const loadFileRoutes = function (app) {
             handleValidation,
             UserController.loginMusician
         )
+    // Edit user details route
+    app.route('/user/edit')
+        .put(
+            UserValidation.update,
+            handleValidation,
+            UserController.editUserDetails
+        )
 }
 
 export default loadFileRoutes

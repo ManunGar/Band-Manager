@@ -120,4 +120,35 @@ const register = [
         .custom(_isSamePasswords)
 ];
 
-export { login, register };
+const update = [
+    check('full_name')
+        .exists().withMessage('El nombre completo es requerido')
+        .trim()
+        .isLength({ min: 2 }).withMessage('El nombre completo debe tener al menos 2 caracteres')
+        .isString().withMessage('El nombre completo debe ser texto'),
+    check('username')
+        .exists().withMessage('El nombre de usuario es requerido')
+        .trim()
+        .isLength({ min: 6 }).withMessage('El nombre de usuario debe tener al menos 6 caracteres')
+        .isString().withMessage('El nombre de usuario debe ser texto')
+        .custom(_isUsernameRegistered),
+    check('email')
+        .exists().withMessage('El correo electrónico es requerido')
+        .isEmail().withMessage('El correo electrónico no es válido')
+        .custom(_isEmailRegistered),
+    check('location')
+        .exists().withMessage('La ubicación es requerida')
+        .trim()
+        .isString().withMessage('La ubicación debe ser texto'),
+    check('birthday')
+        .exists().withMessage('La fecha de nacimiento es requerida')
+        .isDate().withMessage('La fecha de nacimiento no es válida')
+        .custom(_isBirthdayInThePast),
+    check('phone')
+        .exists().withMessage('El número de teléfono es requerido')
+        .isMobilePhone('any').withMessage('El número de teléfono no es válido'),
+    check('password').not().exists().withMessage('La contraseña no se puede actualizar aquí'),
+]
+
+export { login, register, update };
+

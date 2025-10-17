@@ -1,5 +1,8 @@
 import { check } from 'express-validator';
 import { User } from '../models/sequelize.js';
+import { checkFileIsImage, checkFileMaxSize } from './FileValidationHelper.js';
+
+const maxFileSize = 2 * 1024 * 1024 // 2MB
 
 const _isUsernameRegistered = async (value, { req }) => {
     try {
@@ -150,5 +153,15 @@ const update = [
     check('password').not().exists().withMessage('La contraseña no se puede actualizar aquí'),
 ]
 
-export { login, register, update };
+const updateProfilePicture = [
+    check('profile_picture')
+    .custom((value, { req }) => {
+    return checkFileIsImage(req, 'profile_picture')
+  }).withMessage('Sube una imagen con formato (jpeg, png).'),
+  check('profile_picture').custom((value, { req }) => {
+    return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+  }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB')
+]
+
+export { login, register, update, updateProfilePicture };
 

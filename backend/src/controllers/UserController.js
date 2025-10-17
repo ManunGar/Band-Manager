@@ -95,6 +95,16 @@ const editUserDetails = async (req, res) => {
     }
 }
 
+const editProfilePicture = async (req, res) => {
+    const user = req.user;
+    try {        
+        await User.update({ profile_picture: req.body.profile_picture }, { where: { id: user.id } });
+        const updatedUser = await User.findByPk(user.id, { attributes: { exclude: ['password'] } });
+        res.status(200).send({ message: 'Profile picture updated successfully', user: updatedUser });
+    } catch (error) {
+        res.status(500).send({ error: 'Error updating profile picture' });
+    }
+}
 
 // This function creates a new player token
 const _createUserToken = () => {
@@ -107,7 +117,8 @@ const UserController = {
     findByToken,
     registerMusician,
     loginMusician,
-    editUserDetails
+    editUserDetails,
+    editProfilePicture
 };
 
 export default UserController;

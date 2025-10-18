@@ -63,10 +63,11 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 30,
         alignItems: 'center',
-        marginTop: 20
+        marginTop: 30
     },
     buttonText: {
         fontSize: 18,
         fontFamily: 'Oswald_600',
+        color: GlobalStyle.blue
     }
 })

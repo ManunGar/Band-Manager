@@ -8,7 +8,7 @@ export default function App() {
   return (
     <>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right', 'bottom']}>
           <AppNav />
         </SafeAreaView>
       </SafeAreaProvider>

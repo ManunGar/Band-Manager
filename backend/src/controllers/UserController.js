@@ -33,10 +33,10 @@ const findByToken = async (token) => {
 // Function to check if a provider token is valid
 const isValidProviderToken = async (req, res) => {
     try {
-        const { token } = req.body.token;
+        const token = req.body.token;
         const user = await User.findOne(
-            { where: { token } },
             {
+                where: { token },
                 attributes: { exclude: ['password'] },
                 include: [
                     {

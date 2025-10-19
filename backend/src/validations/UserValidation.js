@@ -69,6 +69,12 @@ const _isSamePasswords = async (value, { req }) => {
     }
 }
 
+const validateProviderToken = [
+    check('token')
+        .exists().withMessage('El token del proveedor es requerido')
+        .isString().withMessage('El token del proveedor debe ser texto')
+];
+
 const login = [
     check('username')
         .exists().withMessage('El nombre de usuario es requerido')
@@ -163,5 +169,5 @@ const updateProfilePicture = [
   }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB')
 ]
 
-export { login, register, update, updateProfilePicture };
+export { login, register, update, updateProfilePicture, validateProviderToken };
 

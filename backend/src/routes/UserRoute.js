@@ -5,6 +5,12 @@ import { handleValidation } from '../validations/HandleValidation.js'
 import * as UserValidation from '../validations/UserValidation.js'
 
 const loadFileRoutes = function (app) {
+    app.route('/validate/provider-token')
+        .get(
+            UserValidation.validateProviderToken,
+            handleValidation,
+            UserController.isValidProviderToken
+        );
     // Musician registration route
     app.route('/register/musician')
         .post(

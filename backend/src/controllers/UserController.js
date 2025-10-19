@@ -6,23 +6,28 @@ import { Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to find a user by token
 const findByToken = async (token) => {
-    const user = await User.findOne({
-        where: { token },
-        attributes: { exclude: ['password'] },
-        include: [
-            {
-                model: Musician,
-                as: 'musician',
-                include: [
-                    { model: Instrument, as: 'instruments' }
-                ]
-            }
-        ]
-    });
-    if (!user) {
-        throw new Error('Token not valid');
+    try {
+        const user = await User.findOne({
+            where: { token },
+            attributes: { exclude: ['password'] },
+            include: [
+                {
+                    model: Musician,
+                    as: 'musician',
+                    include: [
+                        { model: Instrument, as: 'instruments' }
+                    ]
+                }
+            ]
+        });
+        if (!user) {
+            throw new Error('Token not valid');
+        }
+        return user;
+    } catch (error) {
+        console.error('Error in findByToken:', error);
+        throw new Error('Error finding player by token: ' + error.message);
     }
-    return user;
 }
 
 // Function to check if a provider token is valid
@@ -44,7 +49,7 @@ const isValidProviderToken = async (req, res) => {
         if (!user) {
             return res.status(401).send({ error: 'Invalid provider token' });
         }
-        return res.status(200).send({ message: 'Provider token is valid' });
+        return res.status(200).send({ message: 'Provider token is valid', user });
     } catch (error) {
         console.error('Error in isValidProviderToken:', error);
         return res.status(500).send({ error: 'Error validating provider token' });
@@ -67,13 +72,16 @@ const registerMusician = async (req, res) => {
             token: _createUserToken()
         }, { transaction });
         // Create a new musician associated with the user
-        const newMusician = await Musician.create({
+        await Musician.create({
             userId: newUser.id,
         }, { transaction });
-        // Reload musician to include associated user data
-        const musician = await newMusician.reload({ include: [{ model: User, as: 'user' }], transaction });
+        // Reload user to include musician and instruments associations
         await transaction.commit();
-        return res.status(201).send({ message: 'Musician registered successfully', musician });
+        const user = await User.findByPk(newUser.id, {
+            attributes: { exclude: ['password'] },
+            include: [{ model: Musician, as: 'musician', include: [{ model: Instrument, as: 'instruments' }] }]
+        });
+        return res.status(201).send({ message: 'Musician registered successfully', user });
     } catch (error) {
         await transaction.rollback();
         console.error('Error in registerMusician:', error);
@@ -94,14 +102,18 @@ const loginMusician = async (req, res) => {
                 ]
             }
         });
-        console.log("🚀 ~ loginMusician ~ user:", user)
         // Check if user exists and password is correct
         const passwordMatch = user && await bcrypt.compare(password, user.password);
         if (!user || !passwordMatch) {
             return res.status(401).send({ error: 'Invalid username/email or password' });
         }
+        // Reload user to include musician and instruments associations
+        const validUser = await User.findByPk(user.id, {
+            attributes: { exclude: ['password'] },
+            include: [{ model: Musician, as: 'musician', include: [{ model: Instrument, as: 'instruments' }] }]
+        });
         // No generate a new token on each login to persist sessions
-        return res.status(200).send({ message: 'Login successful', token: user.token });
+        return res.status(200).send({ message: 'Login successful', user: validUser });
     } catch (error) {
         console.error('Error in loginMusician:', error);
         return res.status(500).send({ error: 'Error logging in musician' });
@@ -114,22 +126,31 @@ const editUserDetails = async (req, res) => {
     const updatedData = req.body;
     try {
         await User.update(updatedData, { where: { id: user.id } });
-        const updatedUser = await User.findByPk(user.id, { attributes: { exclude: ['password'] } });
+        const updatedUser = await User.findByPk(user.id, {
+            attributes: { exclude: ['password'] },
+            include: [{ model: Musician, as: 'musician', include: [{ model: Instrument, as: 'instruments' }] }]
+        });
         res.status(200).send({ message: 'User details updated successfully', user: updatedUser });
 
     } catch (error) {
+        console.error('Error in editUserDetails:', error);
         res.status(500).send({ error: 'Error editing user details' });
     }
 }
 
+// Function to edit profile picture
 const editProfilePicture = async (req, res) => {
     const user = req.user;
     try {
         await addProfilePictureToBody(req);
         await User.update({ profile_picture: req.body.profile_picture }, { where: { id: user.id } });
-        const updatedUser = await User.findByPk(user.id, { attributes: { exclude: ['password'] } });
+        const updatedUser = await User.findByPk(user.id, {
+            attributes: { exclude: ['password'] },
+            include: [{ model: Musician, as: 'musician', include: [{ model: Instrument, as: 'instruments' }] }]
+        });
         res.status(200).send({ message: 'Profile picture updated successfully', user: updatedUser });
     } catch (error) {
+        console.error('Error in editProfilePicture:', error);
         res.status(500).send({ error: 'Error updating profile picture' });
     }
 }

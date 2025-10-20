@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Button from '../../components/Button';
 import BandManagerIcon from '../../components/icons/BandManager';
 import Input from '../../components/Input';
+import { AuthContext } from '../../contexts/AuthContext';
 import * as GlobalStyle from '../../GlobalStyle';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -10,9 +11,16 @@ const { width: SCREEN_W } = Dimensions.get('window');
 const LoginScreen = () => {
     const [username, setUsername] = useState(null);
     const [password, setPassword] = useState(null);
+    const {login, user} = useContext(AuthContext);
+    const [error, setError] = useState(null);
 
-    const handleLogin = () => {
-        console.log('Logging in with:', { username, password });
+    const handleLogin = async () => {
+        try {
+            await login({ username, password });
+            console.log('Logging in with:', { username, password });
+        } catch (error) {
+            setError(error.message);
+        }
     }
 
 
@@ -29,6 +37,7 @@ const LoginScreen = () => {
                         <Text style={[styles.h2, { color: GlobalStyle.gray }]}>¿Músico nuevo?</Text>
                         <Pressable><Text style={[styles.h2, { color: GlobalStyle.yellow }]}>Registrate aquí</Text></Pressable>
                     </View>
+                    {error && <Text style={styles.errorText}>{error}</Text>}
                     <View style={styles.inputContainer}>
                         <Input
                             placeholder={'Introduzca un correo o nombre de usuario'}
@@ -88,7 +97,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 5,
         marginTop: -10,
-        marginBottom: 41,
+        marginBottom: 0,
     },
     h2: {
         fontSize: 16,
@@ -101,6 +110,12 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         gap: 34,
-        marginBottom: 3
+        marginBottom: 3,
+        marginTop: 30,
+    },
+    errorText: {
+        color: GlobalStyle.red,
+        fontFamily: 'Oswald_500',
+        fontSize: 14,
     }
 });

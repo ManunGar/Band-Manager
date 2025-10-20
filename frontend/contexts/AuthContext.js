@@ -16,10 +16,10 @@ export function AuthProvider({ children }) {
         try {
             const loggedInUser = await AuthEndpoints.loginMusician(userData);
             axios.defaults.headers.common = {
-                Authorization: `Bearer ${loggedInUser.token}`,
+                Authorization: `Bearer ${loggedInUser.user.token}`,
             };
-            setUser(loggedInUser);
-            AsyncStorage.setItem('userToken', JSON.stringify(loggedInUser.token))
+            setUser(loggedInUser.user);
+            AsyncStorage.setItem('userToken', JSON.stringify(loggedInUser.user.token))
 
         } catch (error) {
             throw error
@@ -30,10 +30,10 @@ export function AuthProvider({ children }) {
         try {
             const loggedInUser = await AuthEndpoints.registerMusician(userData);
             axios.defaults.headers.common = {
-                Authorization: `Bearer ${loggedInUser.token}`,
+                Authorization: `Bearer ${loggedInUser.user.token}`,
             };
-            setUser(loggedInUser);
-            AsyncStorage.setItem('userToken', JSON.stringify(loggedInUser.token))
+            setUser(loggedInUser.user);
+            AsyncStorage.setItem('userToken', JSON.stringify(loggedInUser.user.token))
         } catch (error) {
             throw error
         }
@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
     const editProfilePicture = async (pictureData) => {
         try {
             const updatedUser = await AuthEndpoints.editProfilePicture(pictureData);
-            setUser(updatedUser);
+            setUser(updatedUser.user);
         } catch (error) {
             throw error
         }
@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
     const editMusician = async (musicianData) => {
         try {
             const updatedUser = await AuthEndpoints.editMusician(musicianData);
-            setUser(updatedUser);
+            setUser(updatedUser.user);
         } catch (error) {
             throw error
         }
@@ -69,8 +69,8 @@ export function AuthProvider({ children }) {
             if (userToken) {
                 userToken = JSON.parse(userToken)
                 const returnedUser = await AuthEndpoints.isTokenValid({ token: userToken })
-                axios.defaults.headers.common = { Authorization: `Bearer ${returnedUser.token}` }
-                setUser(returnedUser)
+                axios.defaults.headers.common = { Authorization: `Bearer ${returnedUser.user.token}` }
+                setUser(returnedUser.user)
             }
         } catch (error) {
             logout();

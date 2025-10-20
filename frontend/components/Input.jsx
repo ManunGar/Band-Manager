@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'Oswald_400',
         borderRadius: 30,
-        width: '100%',
-        height: 38
+        height: 45,
+        marginTop: -6
     },
     eyeContainer: {
         position: 'absolute',

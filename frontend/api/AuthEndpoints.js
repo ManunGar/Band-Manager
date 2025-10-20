@@ -1,0 +1,62 @@
+import axios from 'axios';
+import { handleError } from './handleError.js';
+
+const baseUrl = 'http://localhost:3030'; // Adjust the base URL as needed
+
+// Endpoint for musician login
+const loginMusician = async credential => {
+    try {
+        const response = await axios.post(`${baseUrl}/login/musician`, credential);
+        return response.data
+    } catch (error) {
+        handleError(error)
+    }
+}
+
+// Endpoint for musician registration
+const registerMusician = async (preparedData) => {
+    try {
+        const response = await axios.post(`${baseUrl}/register/musician`, preparedData);
+        return response.data
+    } catch (error) {
+        handleError(error)
+    }
+}
+
+// Endpoint to edit musician details
+const editMusician = async (preparedData) => {
+    try {
+        const response = await axios.put(`${baseUrl}/user/edit`, preparedData);
+        return response.data
+    } catch (error) {
+        handleError(error)
+    }
+}
+
+// Endpoint to edit profile picture
+const editProfilePicture = async (preparedData) => {
+    try {
+        const response = await axios.put(`${baseUrl}/user/edit/profile-picture`, preparedData);
+        return response.data
+    } catch (error) {
+        handleError(error)
+    }
+}
+
+// Endpoint to validate provider token
+const isTokenValid = async (preparedData) => {
+    try {
+        const response = await axios.get(`${baseUrl}/validate/provider-token`, preparedData)
+        return response.data
+    } catch (error) {
+        handleError(error)
+    }
+}
+
+export default {
+    loginMusician,
+    registerMusician,
+    isTokenValid,
+    editMusician,
+    editProfilePicture
+};

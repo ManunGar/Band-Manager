@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
 import { useContext, useEffect } from 'react'
 import { AuthContext } from '../contexts/AuthContext'
+import AppStack from './app/AppStack'
 import AuthStack from './auth/AuthStack'
 
 const AppNav = () => {
@@ -35,7 +36,7 @@ const AppNav = () => {
 
     return (
         <NavigationContainer>
-            <AuthStack />
+           { !user ? <AuthStack /> : <AppStack /> }
         </NavigationContainer>
     )
 }

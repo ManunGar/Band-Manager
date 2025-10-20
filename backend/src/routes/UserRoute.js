@@ -6,7 +6,7 @@ import * as UserValidation from '../validations/UserValidation.js'
 
 const loadFileRoutes = function (app) {
     app.route('/validate/provider-token')
-        .get(
+        .post(
             UserValidation.validateProviderToken,
             handleValidation,
             UserController.isValidProviderToken

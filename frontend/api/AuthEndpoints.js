@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { handleError } from './handleError.js';
 
-const baseUrl = 'http://localhost:3030'; // Adjust the base URL as needed
+const baseUrl = 'http://192.168.1.12:3030'; // Adjust the base URL as needed
 
 // Endpoint for musician login
 const loginMusician = async credential => {
@@ -46,7 +46,7 @@ const editProfilePicture = async (preparedData) => {
 // Endpoint to validate provider token
 const isTokenValid = async (preparedData) => {
     try {
-        const response = await axios.get(`${baseUrl}/validate/provider-token`, preparedData)
+        const response = await axios.post(`${baseUrl}/validate/provider-token`, preparedData)
         return response.data
     } catch (error) {
         handleError(error)

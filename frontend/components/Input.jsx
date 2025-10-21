@@ -1,23 +1,26 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import Svg, { G, Path } from 'react-native-svg';
 import * as GlobalStyle from '../GlobalStyle';
 
-const Input = ({ placeholder, label, value, onChangeText, secureTextEntry }) => {
+const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keyboardType, onPress }) => {
     const [showPassword, setShowPassword] = useState(!secureTextEntry);
 
     return (
-        <View style={styles.inputContainer}>
+        <Pressable style={styles.inputContainer} onPress={onPress}>
             <Text style={styles.inputLabel}>
                 {label}
             </Text>
             <TextInput
+                onPress={onPress}
                 style={styles.input}
                 value={value}
                 placeholder={placeholder}
                 onChangeText={onChangeText}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                keyboardType={keyboardType || 'default'}
+                editable={onPress ? false : true}
             />
             {secureTextEntry && <Pressable style={styles.eyeContainer} onPress={() => setShowPassword(!showPassword)}>
                 <Svg style={styles.eyeSvg} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -30,7 +33,7 @@ const Input = ({ placeholder, label, value, onChangeText, secureTextEntry }) => 
                     <Path fill={GlobalStyle.darkGray} d="M5.1 9.2C13.3-1.2 28.4-3.1 38.8 5.1l592 464c10.4 8.2 12.3 23.3 4.1 33.7s-23.3 12.3-33.7 4.1l-592-464C-1.2 34.7-3.1 19.6 5.1 9.2" />
                 </Svg>}
             </Pressable>}
-        </View>
+        </Pressable>
     )
 }
 
@@ -58,8 +61,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'Oswald_400',
         borderRadius: 30,
-        height: 45,
-        marginTop: -6
+        height: 50,
+        marginTop: -9,
     },
     eyeContainer: {
         position: 'absolute',

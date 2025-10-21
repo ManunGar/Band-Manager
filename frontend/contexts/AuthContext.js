@@ -11,15 +11,20 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const login = async (userData) => {
         try {
+            setIsLoading(true);
             const loggedInUser = await AuthEndpoints.loginMusician(userData);
             axios.defaults.headers.common = {
                 Authorization: `Bearer ${loggedInUser.user.token}`,
             };
             setUser(loggedInUser.user);
             AsyncStorage.setItem('userToken', JSON.stringify(loggedInUser.user.token))
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 2000);
 
         } catch (error) {
             throw error
@@ -28,20 +33,28 @@ export function AuthProvider({ children }) {
 
     const register = async (userData) => {
         try {
+            setIsLoading(true);
             const loggedInUser = await AuthEndpoints.registerMusician(userData);
             axios.defaults.headers.common = {
                 Authorization: `Bearer ${loggedInUser.user.token}`,
             };
             setUser(loggedInUser.user);
             AsyncStorage.setItem('userToken', JSON.stringify(loggedInUser.user.token))
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 2000);
         } catch (error) {
             throw error
         }
     };
 
     const logout = () => {
+        setIsLoading(true);
         setUser(null)
         AsyncStorage.removeItem('userToken')
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 2000);
     };
 
     const editProfilePicture = async (pictureData) => {
@@ -80,7 +93,7 @@ export function AuthProvider({ children }) {
 
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, editProfilePicture }}>
+        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, editProfilePicture, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

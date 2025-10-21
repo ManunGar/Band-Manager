@@ -1,10 +1,14 @@
+import { useContext } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { AuthContext } from '../../contexts/AuthContext';
+import * as GlobalStyle from '../../GlobalStyle';
 
-const LoadingScreen = ({ loadingText }) => {
+const LoadingScreen = () => {
+  const {loadingText} = useContext(AuthContext);
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#111827" />
-      <Text style={styles.text}>{loadingText || 'Procesando...'}</Text>
+      <Text style={styles.text}>{loadingText}</Text>
+      <ActivityIndicator size="large" color={GlobalStyle.blue} />
     </View>
   );
 };
@@ -17,9 +21,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   text: {
-    marginTop: 20,
-    fontSize: 18,
-    color: '#111827',
+    fontFamily: 'BebasNeue',
+    fontSize: 30,
+    marginBottom: 20,
+    color: GlobalStyle.blue,
   },
 });
 

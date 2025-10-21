@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { useContext, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Button from '../../components/Button';
@@ -11,8 +12,9 @@ const { width: SCREEN_W } = Dimensions.get('window');
 const LoginScreen = () => {
     const [username, setUsername] = useState(null);
     const [password, setPassword] = useState(null);
-    const {login, user} = useContext(AuthContext);
+    const { login, user } = useContext(AuthContext);
     const [error, setError] = useState(null);
+    const navigation = useNavigation();
 
     const handleLogin = async () => {
         try {
@@ -21,6 +23,10 @@ const LoginScreen = () => {
         } catch (error) {
             setError(error.message);
         }
+    }
+
+    const goToRegister = () => {
+        navigation.navigate('Register');
     }
 
 
@@ -35,7 +41,9 @@ const LoginScreen = () => {
                     <Text style={styles.h1}>INICIAR SESIÓN</Text>
                     <View style={styles.h2Container}>
                         <Text style={[styles.h2, { color: GlobalStyle.gray }]}>¿Músico nuevo?</Text>
-                        <Pressable><Text style={[styles.h2, { color: GlobalStyle.yellow }]}>Registrate aquí</Text></Pressable>
+                        <Pressable onPress={goToRegister}>
+                            <Text style={[styles.h2, { color: GlobalStyle.yellow }]}>Registrate aquí</Text>
+                        </Pressable>
                     </View>
                     {error && <Text style={styles.errorText}>{error}</Text>}
                     <View style={styles.inputContainer}>

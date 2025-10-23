@@ -1,4 +1,32 @@
-import { Musician } from "../models/sequelize.js";
+import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
+
+// Function to get account details of the logged-in musician
+const accountDetails = async (req, res) => {
+    const user = req.user;
+    try {
+        // Fetch user details
+        const userDetails = await User.findByPk(user.id, {
+            attributes: { exclude: ['password'] },
+            include: [
+                {
+                    model: Musician,
+                    as: 'musician',
+                    include: [
+                        { model: Instrument, as: 'instruments' },
+                        { model: Component, as: 'components', include: [{ model: Band, as: 'band' }] }
+                    ]
+                }
+            ]
+        });
+        if (!userDetails) {
+            return res.status(404).send({ error: 'User not found' });
+        }
+        return res.status(200).send({ musician: userDetails });
+    } catch (error) {
+        console.error('Error in accountDetails:', error);
+        return res.status(500).send({ error: 'Error fetching account details' });
+    }
+};
 
 // Function to add instruments to a musician
 const addInstrumentsToMusician = async (req, res) => {
@@ -22,6 +50,7 @@ const addInstrumentsToMusician = async (req, res) => {
 
 const MusicianController = {
     addInstrumentsToMusician,
+    accountDetails
 };
 
 export default MusicianController;

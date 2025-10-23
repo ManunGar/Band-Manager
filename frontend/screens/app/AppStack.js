@@ -5,7 +5,7 @@ import AgreementIcon from '../../components/icons/AgreementIcon';
 import BandIcon from '../../components/icons/BandIcon';
 import NotificationIcon from '../../components/icons/NotificationIcon';
 import MyTabBar from '../../components/MyTabBar';
-import Account from './account/Account';
+import Account from './account/AccountStack';
 import Agenda from './agenda/Agenda';
 import Agreement from './agreements/Agreement';
 import Band from './bands/Band';
@@ -15,7 +15,9 @@ const Tab = createBottomTabNavigator();
 
 const AppStack = () => {
   return (
-    <Tab.Navigator tabBar={(props) => <MyTabBar {...props} />}>
+    <Tab.Navigator tabBar={(props) => <MyTabBar {...props} />} screenOptions={{
+      headerShown: false,
+    }}>
         <Tab.Screen name="Agenda" component={Agenda} options={{
           tabBarIcon: ({ color, size }) => (
             <AgendaIcon width={size} height={size} fill={color} stroke={color}/>

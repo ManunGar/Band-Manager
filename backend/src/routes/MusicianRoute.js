@@ -12,6 +12,11 @@ const loadFileRoutes = function (app) {
             handleValidation,
             MusicianController.addInstrumentsToMusician
         )
+    app.route('/musicians/account')
+        .get(
+            isLoggedIn,
+            MusicianController.accountDetails
+        )
 }
 
 export default loadFileRoutes

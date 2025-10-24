@@ -6,7 +6,6 @@ import { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../contexts/AuthContext'
 import AppStack from './app/AppStack'
 import AuthStack from './auth/AuthStack'
-import LoadingScreen from './auth/LoadingScreen'
 
 const AppNav = () => {
 
@@ -36,10 +35,6 @@ const AppNav = () => {
 
     if (!fontsLoaded || !isReady) {
         return null;
-    }
-
-    if (isLoading) {
-        return <LoadingScreen />
     }
 
 

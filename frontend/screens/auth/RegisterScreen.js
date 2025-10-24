@@ -10,6 +10,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import BandManagerIcon from '../../components/icons/BandManager';
 import { AuthContext } from '../../contexts/AuthContext';
+import LoadingScreen from './LoadingScreen';
 
 // ====== Schemas by steps ======
 const stepSchemas = [
@@ -53,7 +54,7 @@ const TOTAL_STEPS = stepSchemas.length;
 
 const RegisterScreen = () => {
     const navigation = useNavigation();
-    const { register } = useContext(AuthContext);
+    const { register, isLoading } = useContext(AuthContext);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [step, setStep] = useState(0);
 
@@ -119,6 +120,10 @@ const RegisterScreen = () => {
     };
 
     const back = () => setStep((s) => Math.max(s - 1, 0));
+
+    if (isLoading) {
+        return <LoadingScreen />
+    }
 
     // Simple progress bar
     const progress = (step + 1) / TOTAL_STEPS;

@@ -36,7 +36,14 @@ const editMusician = async (preparedData) => {
 // Endpoint to edit profile picture
 const editProfilePicture = async (preparedData) => {
     try {
-        const response = await axios.put(`${baseUrl}/user/edit/profile-picture`, preparedData);
+        const response = await axios.put(`${baseUrl}/user/edit/profile-picture`, preparedData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            }
+        );
         return response.data
     } catch (error) {
         handleError(error)

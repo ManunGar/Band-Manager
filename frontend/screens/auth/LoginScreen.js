@@ -6,13 +6,14 @@ import BandManagerIcon from '../../components/icons/BandManager';
 import Input from '../../components/Input';
 import { AuthContext } from '../../contexts/AuthContext';
 import * as GlobalStyle from '../../GlobalStyle';
+import LoadingScreen from './LoadingScreen';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
 const LoginScreen = () => {
     const [username, setUsername] = useState(null);
     const [password, setPassword] = useState(null);
-    const { login, user } = useContext(AuthContext);
+    const { login, user, isLoading } = useContext(AuthContext);
     const [error, setError] = useState(null);
     const navigation = useNavigation();
 
@@ -23,6 +24,10 @@ const LoginScreen = () => {
         } catch (error) {
             setError(error.message);
         }
+    }
+
+    if (isLoading) {
+        return <LoadingScreen />
     }
 
     const goToRegister = () => {

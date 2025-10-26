@@ -28,6 +28,9 @@ export function AuthProvider({ children }) {
             }, 1000);
 
         } catch (error) {
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 1000);
             throw error
         }
     };
@@ -46,6 +49,10 @@ export function AuthProvider({ children }) {
                 setLoadingText('');
             }, 2000);
         } catch (error) {
+            setTimeout(() => {
+                setIsLoading(false);
+                setLoadingText('');
+            }, 1000);
             throw error
         }
     };

@@ -5,7 +5,7 @@ import MusicianEndpoints from '../../../api/MusicianEndpoints'
 import LocationIcon from '../../../components/icons/LocationIcon'
 import PhoneIcon from '../../../components/icons/PhoneIcon'
 import StarIcon from '../../../components/icons/StarIcon'
-import ImagePicker from '../../../components/ImagePicker'
+import ProfilePhotoSheet from '../../../components/ProfilePhotoSheet'
 import TopBar from '../../../components/TopBar'
 import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyle from '../../../GlobalStyle'
@@ -47,11 +47,12 @@ const AccountDetailScreen = () => {
 
     return (
             <ScrollView style={styles.container}>
-                <TopBar /> {/* Top bar component */}
+                {/* Top bar component */}
+                <TopBar /> 
                 {/* Profile picture section */}
                 <View style={styles.topContainer}>
                     <Image
-                        source={{ uri: musician?.profilePicture }}
+                        source={{ uri: musician?.profile_picture }}
                         style={styles.profilePicture}
                     />
                     <Pressable onPress={openSheet}><Text style={styles.changePictureButton}>Cambiar Imagen</Text></Pressable>
@@ -95,7 +96,10 @@ const AccountDetailScreen = () => {
                     </View>
                 </View>
                 {/* Image Picker component */}
-                <ImagePicker sheetRef={sheetRef} />
+                <ProfilePhotoSheet 
+                    sheetRef={sheetRef} 
+                    onUploaded={fetchAccountDetails}
+                />
             </ScrollView>
     )
 }

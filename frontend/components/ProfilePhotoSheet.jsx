@@ -1,11 +1,13 @@
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { useCallback, useMemo } from 'react';
-import { Text, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useContext, useMemo, useState } from 'react';
+import { Alert, Text, TouchableOpacity } from 'react-native';
+import { AuthContext } from '../contexts/AuthContext';
 import * as GlobalStyle from '../GlobalStyle';
+import { assertSizeLT3MB, pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
 
-const ImagePicker = ({ sheetRef }) => {
-
+const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
+    const { editProfilePicture } = useContext(AuthContext);
+    const [uploading, setUploading] = useState(false);
     const snapPoints = useMemo(() => ['40%'], [])
 
     const closeSheet = useCallback(() => {
@@ -24,7 +26,24 @@ const ImagePicker = ({ sheetRef }) => {
         []
     );
 
-    const insets = useSafeAreaInsets();
+    const uploadingProfilePicture = async (uri) => {
+        try {
+            setUploading(true);
+            await assertSizeLT3MB(uri);
+            const form = new FormData();
+            form.append('profile_picture', {
+                uri: uri,
+                name: `avatar_${Date.now()}.jpg`,
+                type: 'image/jpeg',
+            });
+            await editProfilePicture(form);
+            onUploaded?.();
+        } catch (error) {
+            Alert.alert('Error', error.message || 'Hubo un error al subir la imagen.');
+        } finally {
+            setUploading(false);
+        }
+    }
 
     return (
         <BottomSheetModal
@@ -35,19 +54,39 @@ const ImagePicker = ({ sheetRef }) => {
             backdropComponent={renderBackdrop}
             handleIndicatorStyle={{ backgroundColor: GlobalStyle.gray }}
             backgroundStyle={{ backgroundColor: GlobalStyle.white, borderRadius: 16 }}
-            keyboardBehavior="interactive"       
-            keyboardBlurBehavior="restore"       
+            keyboardBehavior="interactive"
+            keyboardBlurBehavior="restore"
         >
             <BottomSheetView style={{ padding: 16, gap: 10 }}>
                 <TouchableOpacity
-                    onPress={() => { console.log('Galería'); closeSheet(); }}
+                    disabled={uploading}
+                    onPress={async () => {
+                        try {
+                            const uri = await pickFromLibrary();
+                            if (!uri) return;
+                            const jpeg = await toUploadableJpeg(uri);
+                            await uploadingProfilePicture(jpeg);
+                        } finally {
+                            closeSheet();
+                        }
+                    }}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center' }}
                 >
                     <Text style={{ fontWeight: '600', color: '#111827' }}>Elegir de la galería</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => { console.log('Cámara'); closeSheet(); }}
+                    disabled={uploading}
+                    onPress={async () => {
+                        try {
+                            const uri = await takePhoto();
+                            if (!uri) return;
+                            const jpeg = await toUploadableJpeg(uri);
+                            await uploadingProfilePicture(jpeg);
+                        } finally {
+                            closeSheet();
+                        }
+                    }}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center' }}
                 >
                     <Text style={{ fontWeight: '600', color: '#111827' }}>Tomar una foto</Text>
@@ -71,4 +110,4 @@ const ImagePicker = ({ sheetRef }) => {
     )
 }
 
-export default ImagePicker
+export default ProfilePhotoSheet

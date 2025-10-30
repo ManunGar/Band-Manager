@@ -48,7 +48,7 @@ const AccountDetailScreen = () => {
     return (
             <ScrollView style={styles.container}>
                 {/* Top bar component */}
-                <TopBar /> 
+                <TopBar backEnabled={false} configEnabled/> 
                 {/* Profile picture section */}
                 <View style={styles.topContainer}>
                     <Image
@@ -81,7 +81,8 @@ const AccountDetailScreen = () => {
                     <View>
                         <Text style={styles.subTitle}>Bandas:</Text>
                         <FlatList
-                            style={{ marginTop: 10, gap: 15 }}
+                            style={{ marginTop: 10 }}
+                            contentContainerStyle={{ gap: 15 }}
                             data={musician?.musician.components || []}
                             keyExtractor={(item) => item.id.toString()}
                             horizontal

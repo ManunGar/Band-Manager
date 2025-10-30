@@ -13,6 +13,16 @@ module.exports = {
         profile_picture: 'https://res.cloudinary.com/dprlzqkhi/image/upload/v1761254715/logoBanda_lp6ri1.png',
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        name: 'Banda de Ejemplo',
+        location: 'Lugar de Ejemplo',
+        phone: '955123456',
+        type: 'Banda de Música',
+        code: 'BMLR002',
+        profile_picture: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ]);
   },

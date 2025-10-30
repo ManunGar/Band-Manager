@@ -1,14 +1,16 @@
 import { StyleSheet, View } from 'react-native';
 import BackIcon from './icons/BackIcons';
+import ConfigurationIcon from './icons/ConfigurationIcon';
 import EditIcon from './icons/EditIcon';
 
-const TopBar = ({ editEnabled = true, backEnabled = true }) => {
+const TopBar = ({ editEnabled = true, backEnabled = true, configEnabled = false }) => {
     return (
         <View style={styles.container}>
             <View>
                 {backEnabled && <BackIcon />}
             </View>
-            <View>
+            <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center', alignContent: 'center' }}>
+                {configEnabled && <ConfigurationIcon />}
                 {editEnabled && <EditIcon />}
             </View>
         </View>

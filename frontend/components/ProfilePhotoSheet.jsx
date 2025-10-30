@@ -1,6 +1,6 @@
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useCallback, useContext, useMemo, useState } from 'react';
-import { Alert, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Text, TouchableOpacity } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
 import * as GlobalStyle from '../GlobalStyle';
 import { assertSizeLT3MB, pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
@@ -50,7 +50,7 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
             ref={sheetRef}
             index={0}
             snapPoints={snapPoints}
-            enablePanDownToClose
+            enablePanDownToClose={!uploading}
             backdropComponent={renderBackdrop}
             handleIndicatorStyle={{ backgroundColor: GlobalStyle.gray }}
             backgroundStyle={{ backgroundColor: GlobalStyle.white, borderRadius: 16 }}
@@ -70,9 +70,13 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
                             closeSheet();
                         }
                     }}
-                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center' }}
+                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center', opacity: uploading ? 0.6 : 1 }}
                 >
-                    <Text style={{ fontWeight: '600', color: '#111827' }}>Elegir de la galería</Text>
+                    {uploading ? (
+                        <ActivityIndicator />
+                    ) : (
+                        <Text style={{ fontWeight: '600', color: '#111827' }}>Elegir de la galería</Text>
+                    )}
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -87,9 +91,13 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
                             closeSheet();
                         }
                     }}
-                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center' }}
+                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center', opacity: uploading ? 0.6 : 1 }}
                 >
-                    <Text style={{ fontWeight: '600', color: '#111827' }}>Tomar una foto</Text>
+                    {uploading ? (
+                        <ActivityIndicator />
+                    ) : (
+                        <Text style={{ fontWeight: '600', color: '#111827' }}>Tomar una foto</Text>
+                    )}
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -100,6 +108,7 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    disabled={uploading}
                     onPress={closeSheet}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#e5e7eb', alignItems: 'center' }}
                 >

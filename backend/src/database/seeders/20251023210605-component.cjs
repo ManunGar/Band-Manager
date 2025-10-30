@@ -11,6 +11,14 @@ module.exports = {
         administrator: true,
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        musicianId: 1,
+        bandId: 2,
+        private: true,
+        administrator: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ]);
   },

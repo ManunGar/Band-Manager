@@ -9,6 +9,12 @@ module.exports = {
         instrumentId: 5,
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        componentId: 2,
+        instrumentId: 8,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ]);
   },

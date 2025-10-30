@@ -6,123 +6,135 @@ module.exports = {
     return queryInterface.bulkInsert('Instruments', [
       {
         name: 'Dirección Musical',
-        image: '/example',
+        image: '/public/instruments/director.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Flauta',
-        image: '/example',
+        image: '/public/instruments/flauta.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
-        name: 'Piccolo',
-        image: '/example',
+        name: 'Flautín',
+        image: '/public/instruments/piccolo.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Oboe',
-        image: '/example',
+        image: '/public/instruments/oboe.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Clarinete',
-        image: '/example',
+        image: '/public/instruments/clarinete.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Requinto',
-        image: '/example',
+        image: '/public/instruments/clarinete.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Clarinete bajo',
-        image: '/example',
+        image: '/public/instruments/clarinete-bajo.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Saxofón alto',
-        image: '/example',
+        image: '/public/instruments/saxofon.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Saxofón soprano',
-        image: '/example',
+        image: '/public/instruments/saxofon.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Saxofón tenor',
-        image: '/example',
+        image: '/public/instruments/saxofon.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Saxofón barítono',
-        image: '/example',
+        image: '/public/instruments/saxofon.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Fagot',
-        image: '/example',
+        image: '/public/instruments/fagot.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Trompa',
-        image: '/example',
+        image: '/public/instruments/trompa.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Trombón',
-        image: '/example',
+        image: '/public/instruments/trombon.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Tuba',
-        image: '/example',
+        image: '/public/instruments/tuba.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Bombardino',
-        image: '/example',
+        image: '/public/instruments/bombardino.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Trompeta',
-        image: '/example',
+        image: '/public/instruments/trompeta.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Fliscorno',
+        image: '/public/instruments/trompeta.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Corneta',
-        image: '/example',
+        image: '/public/instruments/corneta.png',
         createdAt: new Date(),
         updatedAt: new Date()
       }, {
         name: 'Percusión',
-        image: '/example',
+        image: '/public/instruments/percusion.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'Tambor',
-        image: '/example',
+        image: '/public/instruments/tambor.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
+      {
+        name: 'Bombo',
+        image: '/public/instruments/bombo.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     ], {});
   },
 

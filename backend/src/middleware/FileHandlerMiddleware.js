@@ -53,6 +53,19 @@ const addProfilePictureToBody = async (req) => {
   }
 }
 
+// Function to delete file from Cloudinary
+const deleteFileFromCloudinary = async (fileUrl) => {
+  cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET
+  })
+  if (fileUrl && fileUrl.includes('bandmanager')) {
+    const imageId = 'bandmanager/' + fileUrl.split('/bandmanager/')[1].split('.')[0]
+    await cloudinary.uploader.destroy(imageId)
+  }
+}
+
 const handleFilesUpload = (fileName, folder, model, idPathParamName) => (req, res, next) => {
   // Configure multer storage
   const storage = multer.diskStorage({
@@ -91,5 +104,5 @@ const handleFilesDestroy = (model, idPathParamName) => async (req, res, next) =>
   next()
 }
 
-export { addFilenameToBody, addProfilePictureToBody, handleFilesDestroy, handleFilesUpload }
+export { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary, handleFilesDestroy, handleFilesUpload }
 

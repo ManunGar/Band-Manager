@@ -1,19 +1,27 @@
-import { StyleSheet, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import * as GlobalStyle from '../GlobalStyle'
 import BackIcon from './icons/BackIcons'
 import ConfigurationIcon from './icons/ConfigurationIcon'
 import EditIcon from './icons/EditIcon'
+import SaveIcon from './icons/SaveIcon'
 
-const TopContainer = ({ children, style, editEnabled = true, backEnabled = true, configEnabled = false }) => {
+const {width: SCREENW} = Dimensions.get('window');
+
+const TopContainer = ({ children, style, title, editEnabled = true, backEnabled = true, configEnabled = false, saveEnabled = false }) => {
+    const navigation = useNavigation();
+    
     return (
         <View style={[styles.topContainer, style]}>
             <View style={styles.container}>
-                <View>
+                <TouchableOpacity onPress={() => { if (backEnabled) navigation.goBack() }} hitSlop={10}>
                     {backEnabled && <BackIcon />}
-                </View>
+                </TouchableOpacity>
+                {title && <Text style={styles.title}>{title}</Text>}
                 <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center', alignContent: 'center' }}>
                     {configEnabled && <ConfigurationIcon />}
                     {editEnabled && <EditIcon />}
+                    {saveEnabled && <SaveIcon />}
                 </View>
             </View>
             {children}
@@ -45,5 +53,17 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         zIndex: 10,
+    },
+    title: {
+        position: 'absolute',
+        width: SCREENW,
+        left: SCREENW / 2,
+        transform: [{ translateX: -((SCREENW) / 2) }],
+        fontFamily: 'Oswald_500',
+        fontSize: 20,
+        color: GlobalStyle.gray,
+        textTransform: 'uppercase',
+        textAlign: 'center',
+        zIndex: -1,
     }
 })

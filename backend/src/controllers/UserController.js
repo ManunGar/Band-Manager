@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { Op } from "sequelize";
-import { addProfilePictureToBody } from "../middleware/FileHandlerMiddleware.js";
+import { addProfilePictureToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to find a user by token
@@ -155,6 +155,25 @@ const editProfilePicture = async (req, res) => {
     }
 }
 
+// Function to delete profile picture
+const deleteProfilePicture = async (req, res) => {
+    const user = req.user;
+    const profilePictureUrl = user.profile_picture;
+    try {
+        await User.update({ profile_picture: null }, { where: { id: user.id } });
+        const updatedUser = await User.findByPk(user.id, {
+            attributes: { exclude: ['password'] },
+            include: [{ model: Musician, as: 'musician', include: [{ model: Instrument, as: 'instruments' }] }]
+        });
+        await deleteFileFromCloudinary(profilePictureUrl);
+        res.status(200).send({ message: 'Profile picture updated successfully', user: updatedUser });
+
+    } catch (error) {
+        console.error('Error in deleteProfilePicture:', error);
+        res.status(500).send({ error: 'Error deleting profile picture' });
+    }
+}
+
 // This function creates a new player token
 const _createUserToken = () => {
     // Logic to create a player token
@@ -168,7 +187,8 @@ const UserController = {
     loginMusician,
     editUserDetails,
     editProfilePicture,
-    isValidProviderToken
+    isValidProviderToken,
+    deleteProfilePicture
 };
 
 export default UserController;

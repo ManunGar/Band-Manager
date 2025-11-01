@@ -41,6 +41,12 @@ const loadFileRoutes = function (app) {
             handleValidation,
             UserController.editProfilePicture
         )
+    // Delete profile picture route
+    app.route('/user/delete/profile-picture')
+        .put(
+            isLoggedIn,
+            UserController.deleteProfilePicture
+        )
 }
 
 export default loadFileRoutes

@@ -104,15 +104,14 @@ const AccountDetailScreen = () => {
                         <LinkText>Agregar Instrumento</LinkText>
                     </View>
                     {(musician?.musician.instruments || []).map((instrument, i) => (
-                        <>
+                        <View key={i}>
                             <InstrumentLevel
-                                key={instrument.id}
                                 instrument={instrument}
                             />
-                            <View key={instrument.id + instrument.id} style={{ 
+                            <View style={{ 
                                 marginVertical: 10 }}>
                             </View>
-                        </>
+                        </View>
                     ))}
                 </View>
             </View>

@@ -75,6 +75,15 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const deleteProfilePicture = async () => {
+        try {
+            const updatedUser = await AuthEndpoints.deleteProfilePicture();
+            setUser(updatedUser.user);
+        } catch (error) {
+            throw error
+        }
+    };
+
     const editMusician = async (musicianData) => {
         try {
             const updatedUser = await AuthEndpoints.editMusician(musicianData);
@@ -102,7 +111,7 @@ export function AuthProvider({ children }) {
 
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, editProfilePicture, isLoading, loadingText }}>
+        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, editProfilePicture, deleteProfilePicture, isLoading, loadingText }}>
             {children}
         </AuthContext.Provider>
     );

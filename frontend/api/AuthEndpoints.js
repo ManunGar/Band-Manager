@@ -50,6 +50,16 @@ const editProfilePicture = async (preparedData) => {
     }
 }
 
+// Endpoint to delete profile picture
+const deleteProfilePicture = async () => {
+    try {
+        const response = await axios.put(`${baseUrl}/user/delete/profile-picture`);
+        return response.data
+    } catch (error) {
+        handleError(error)
+    }
+}
+
 // Endpoint to validate provider token
 const isTokenValid = async (preparedData) => {
     try {
@@ -65,5 +75,6 @@ export default {
     registerMusician,
     isTokenValid,
     editMusician,
-    editProfilePicture
+    editProfilePicture,
+    deleteProfilePicture
 };

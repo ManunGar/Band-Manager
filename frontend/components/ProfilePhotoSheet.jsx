@@ -6,7 +6,7 @@ import * as GlobalStyle from '../GlobalStyle';
 import { assertSizeLT3MB, pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
 
 const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
-    const { editProfilePicture } = useContext(AuthContext);
+    const { editProfilePicture, deleteProfilePicture } = useContext(AuthContext);
     const [uploading, setUploading] = useState(false);
     const snapPoints = useMemo(() => ['40%'], [])
 
@@ -58,6 +58,7 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
             keyboardBlurBehavior="restore"
         >
             <BottomSheetView style={{ padding: 16, gap: 10 }}>
+                {/* Choose from Library */}
                 <TouchableOpacity
                     disabled={uploading}
                     onPress={async () => {
@@ -78,7 +79,7 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
                         <Text style={{ fontWeight: '600', color: '#111827' }}>Elegir de la galería</Text>
                     )}
                 </TouchableOpacity>
-
+                {/* Take Photo */}
                 <TouchableOpacity
                     disabled={uploading}
                     onPress={async () => {
@@ -99,14 +100,21 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
                         <Text style={{ fontWeight: '600', color: '#111827' }}>Tomar una foto</Text>
                     )}
                 </TouchableOpacity>
-
+                {/* Delete Photo */}
                 <TouchableOpacity
-                    onPress={() => { console.log('Eliminar'); closeSheet(); }}
+                    onPress={async () => {
+                        try {
+                            await deleteProfilePicture();
+                            onUploaded?.();
+                        } finally {
+                            closeSheet();
+                        }
+                    }}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#fef2f2', alignItems: 'center' }}
                 >
                     <Text style={{ fontWeight: '600', color: GlobalStyle.red }}>Eliminar foto actual</Text>
                 </TouchableOpacity>
-
+                {/* Cancel Button */}
                 <TouchableOpacity
                     disabled={uploading}
                     onPress={closeSheet}

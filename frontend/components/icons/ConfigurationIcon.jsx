@@ -5,9 +5,9 @@ function ConfigurationIcon({ width, height, stroke, strokeWidth }) {
   return (
     <Svg
       xmlns="http://www.w3.org/2000/svg"
-      width={width || 35}
-      height={height || 35}
-      viewBox="0 0 48 48"
+      width={width || 30}
+      height={height || 30}
+      viewBox="0 0 46 46"
     >
       <G fill="none" stroke={stroke || GlobalStyle.black} strokeLinejoin="round" strokeWidth={strokeWidth || 4}>
         <Path d="M24 4l-6 6h-8v8l-6 6 6 6v8h8l6 6 6-6h8v-8l6-6-6-6v-8h-8z" />

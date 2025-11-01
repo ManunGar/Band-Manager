@@ -4,8 +4,8 @@ import * as GlobalStyle from '../../GlobalStyle';
 function SvgComponent({width, height, ...props}) {
   return (
     <Svg
-      width={width || 33}
-      height={height || 33}
+      width={width || 28}
+      height={height || 28}
       viewBox="0 0 33 33"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

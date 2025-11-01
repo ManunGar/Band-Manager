@@ -1,10 +1,12 @@
 import { useFocusEffect } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { Dimensions, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native'
 import MusicianEndpoints from '../../../api/MusicianEndpoints'
 import LocationIcon from '../../../components/icons/LocationIcon'
 import PhoneIcon from '../../../components/icons/PhoneIcon'
 import StarIcon from '../../../components/icons/StarIcon'
+import InstrumentLevel from '../../../components/InstrumentLevel'
+import LinkText from '../../../components/LinkText'
 import ProfilePhotoSheet from '../../../components/ProfilePhotoSheet'
 import TopBar from '../../../components/TopBar'
 import { AuthContext } from '../../../contexts/AuthContext'
@@ -46,62 +48,80 @@ const AccountDetailScreen = () => {
     }, [])
 
     return (
-            <ScrollView style={styles.container}>
-                {/* Top bar component */}
-                <TopBar backEnabled={false} configEnabled/> 
-                {/* Profile picture section */}
-                <View style={styles.topContainer}>
-                    <Image
-                        source={{ uri: musician?.profile_picture }}
-                        style={styles.profilePicture}
-                    />
-                    <Pressable onPress={openSheet}><Text style={styles.changePictureButton}>Cambiar Imagen</Text></Pressable>
-                    <View style={{ width: SCREENW - 60, marginTop: 15 }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text style={styles.profileName}>{musician?.full_name}</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <StarIcon />
-                                <Text style={styles.infoText}>{musician?.rating || "__.___"}</Text>
-                            </View>
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 5 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, }}>
-                                <LocationIcon />
-                                <Text style={styles.infoText}>{musician?.location || "Desconocida"}</Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, }}>
-                                <PhoneIcon />
-                                <Text style={styles.infoText}>{musician?.phone || "Desconocida"}</Text>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                {/* Bands and Instruments section */}
-                <View style={styles.bottomContainer}>
-                    <View>
-                        <Text style={styles.subTitle}>Bandas:</Text>
-                        <FlatList
-                            style={{ marginTop: 10 }}
-                            contentContainerStyle={{ gap: 15 }}
-                            data={musician?.musician.components || []}
-                            keyExtractor={(item) => item.id.toString()}
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            renderItem={({ item }) => (
-                                <Image
-                                    source={{ uri: item?.band.profile_picture }}
-                                    style={styles.bandPicture}
-                                />
-                            )}
-                        />
-                    </View>
-                </View>
-                {/* Image Picker component */}
-                <ProfilePhotoSheet 
-                    sheetRef={sheetRef} 
-                    onUploaded={fetchAccountDetails}
+        <ScrollView style={styles.container}>
+            {/* Top bar component */}
+            <TopBar backEnabled={false} configEnabled />
+            {/* Profile picture section */}
+            <View style={styles.topContainer}>
+                <Image
+                    source={{ uri: musician?.profile_picture }}
+                    style={styles.profilePicture}
                 />
-            </ScrollView>
+                <LinkText onPress={openSheet} style={{ marginTop: 10, }}>Cambiar Imagen</LinkText>
+                <View style={{ width: SCREENW - 60, marginTop: 15 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={styles.profileName}>{musician?.full_name}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <StarIcon />
+                            <Text style={styles.infoText}>{musician?.rating || "__.___"}</Text>
+                        </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 5 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, }}>
+                            <LocationIcon />
+                            <Text style={styles.infoText}>{musician?.location || "Desconocida"}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, }}>
+                            <PhoneIcon />
+                            <Text style={styles.infoText}>{musician?.phone || "Desconocida"}</Text>
+                        </View>
+                    </View>
+                </View>
+            </View>
+            {/* Bands and Instruments section */}
+            <View style={styles.bottomContainer}>
+                <View>
+                    <Text style={styles.subTitle}>Bandas:</Text>
+                    <FlatList
+                        style={{ marginTop: 10 }}
+                        contentContainerStyle={{ gap: 15 }}
+                        data={musician?.musician.components || []}
+                        keyExtractor={(item) => item.id.toString()}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        renderItem={({ item }) => (
+                            <Image
+                                key={item.id}
+                                source={{ uri: item?.band.profile_picture }}
+                                style={styles.bandPicture}
+                            />
+                        )}
+                    />
+                </View>
+                <View>
+                    <View style={{ justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-end', marginTop: 20, marginBottom: 10 }}>
+                        <Text style={styles.subTitle}>Instrumentos:</Text>
+                        <LinkText>Agregar Instrumento</LinkText>
+                    </View>
+                    {(musician?.musician.instruments || []).map((instrument, i) => (
+                        <>
+                            <InstrumentLevel
+                                key={instrument.id}
+                                instrument={instrument}
+                            />
+                            <View key={instrument.id + instrument.id} style={{ 
+                                marginVertical: 10 }}>
+                            </View>
+                        </>
+                    ))}
+                </View>
+            </View>
+            {/* Image Picker component */}
+            <ProfilePhotoSheet
+                sheetRef={sheetRef}
+                onUploaded={fetchAccountDetails}
+            />
+        </ScrollView>
     )
 }
 
@@ -113,7 +133,7 @@ const styles = StyleSheet.create({
         backgroundColor: GlobalStyle.lightBackground,
     },
     topContainer: {
-        paddingTop: 70,
+        paddingTop: 75,
         backgroundColor: GlobalStyle.white,
         borderBottomLeftRadius: 25,
         borderBottomRightRadius: 25,
@@ -127,12 +147,6 @@ const styles = StyleSheet.create({
         height: 160,
         borderRadius: 10,
         backgroundColor: GlobalStyle.lightBackground,
-    },
-    changePictureButton: {
-        fontFamily: 'Oswald_400',
-        fontSize: 16,
-        color: GlobalStyle.yellow,
-        marginTop: 10,
     },
     profileName: {
         fontFamily: 'Oswald_500',

@@ -1,6 +1,5 @@
 import { Image, StyleSheet, Text, View } from 'react-native'
 import * as GlobalStyle from '../GlobalStyle'
-import LinkText from './LinkText'
 
 const InstrumentLevel = ({ instrument }) => {
     
@@ -16,7 +15,6 @@ const InstrumentLevel = ({ instrument }) => {
                     <Text style={styles.level}>{instrument.MusicianLevel.level}</Text>
                 </View>
             </View>
-            <LinkText>Editar</LinkText>
         </View>
     )
 }

@@ -9,11 +9,14 @@ import InputSearch from '../../../components/InputSearch'
 import TopContainer from '../../../components/TopContainer'
 import * as GlobalStyle from '../../../GlobalStyle'
 
-const InstrumentsScreen = ({route}) => {
+const InstrumentsScreen = ({ route }) => {
     const { userInstruments } = route.params;
     const musicianLevel = ['aficionado', 'aficionado profesional', 'enseñanzas básica', 'título profesional', 'título superior'];
-    
+
+    const [allInstruments, setAllInstruments] = useState([])
     const [instruments, setInstruments] = useState([])
+    const [search, setSearch] = useState('')
+
     const [musicianInstruments, setMusicianInstruments] = useState([])
     const [uploading, setUploading] = useState(false);
     const [instrument, setInstrument] = useState(null)
@@ -22,7 +25,24 @@ const InstrumentsScreen = ({route}) => {
     const sheetRef = useRef(null)
     const navigation = useNavigation();
 
-    useEffect(() => {
+    useEffect(() => { // Debounce search input
+        const timeout = setTimeout(() => {
+            if (!search.trim()) { // If search is empty, show all instruments
+                setInstruments(allInstruments);
+                return;
+            }
+
+            const lower = search.toLowerCase();
+            const filtered = allInstruments.filter((inst) =>
+                inst.name.toLowerCase().includes(lower)
+            );
+            setInstruments(filtered);
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [search, allInstruments]);
+
+    useEffect(() => { // Initial fetch of instruments
         fetchInstruments();
     }, []);
 
@@ -43,6 +63,7 @@ const InstrumentsScreen = ({route}) => {
                 instrument.selected = instrumentsMap.includes(instrument.id);
                 instrument.level = instrument.selected ? userInstruments.find(inst => inst.id === instrument.id).MusicianLevel.level : null;
             });
+            setAllInstruments(data);
             setInstruments(data);
             parseMusicianInstruments(userInstruments);
         } catch (error) {
@@ -119,7 +140,9 @@ const InstrumentsScreen = ({route}) => {
                 <Text style={styles.subtitle}>Instrumentos de nivel musical</Text>
                 <View style={{ marginTop: 10, width: '100%' }}>
                     <InputSearch
-                        placeholder="Busca por instrumento" />
+                        placeholder="Busca por instrumento" 
+                        value={search}
+                        onChangeText={setSearch}/>
                 </View>
                 <FlatList
                     data={userInstruments || []}

@@ -35,6 +35,7 @@ const addInstrumentsToMusician = async (req, res) => {
     const transaction = await Musician.sequelize.transaction();
     try {
         const musician = await Musician.findByPk(musicianId, { transaction });
+        await musician.setInstruments([], { transaction }); // Clear existing instruments
         for (const [instrumentId, level] of Object.entries(instruments)) {
             const instrumentIdNum = parseInt(instrumentId, 10);
             await musician.addInstrument(instrumentIdNum, { through: { level }, transaction });

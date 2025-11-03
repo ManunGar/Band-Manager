@@ -1,4 +1,4 @@
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native'
 import MusicianEndpoints from '../../../api/MusicianEndpoints'
@@ -8,7 +8,7 @@ import StarIcon from '../../../components/icons/StarIcon'
 import InstrumentLevel from '../../../components/InstrumentLevel'
 import LinkText from '../../../components/LinkText'
 import ProfilePhotoSheet from '../../../components/ProfilePhotoSheet'
-import TopBar from '../../../components/TopBar'
+import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyle from '../../../GlobalStyle'
 
@@ -18,20 +18,11 @@ const AccountDetailScreen = () => {
     const [musician, setMusician] = useState(null)
     const { logout } = useContext(AuthContext)
     const sheetRef = useRef(null)
+    const navigation = useNavigation()
 
     useEffect(() => {
         fetchAccountDetails()
     }, [])
-
-    // Close the bottom sheet when the screen is unfocused
-    useFocusEffect(
-        useCallback(() => {
-            return () => {
-                sheetRef.current?.dismiss();
-            };
-        }, [])
-    );
-
 
     const fetchAccountDetails = async () => {
         try {
@@ -43,16 +34,24 @@ const AccountDetailScreen = () => {
         }
     }
 
+    // Close the bottom sheet when the screen is unfocused
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                sheetRef.current?.dismiss();
+            };
+        }, [])
+    );
+
     const openSheet = useCallback(() => {
         sheetRef.current?.present()
     }, [])
 
     return (
         <ScrollView style={styles.container}>
-            {/* Top bar component */}
-            <TopBar backEnabled={false} configEnabled />
             {/* Profile picture section */}
-            <View style={styles.topContainer}>
+            <TopContainer
+                configEnabled>
                 <Image
                     source={{ uri: musician?.profile_picture }}
                     style={styles.profilePicture}
@@ -77,7 +76,7 @@ const AccountDetailScreen = () => {
                         </View>
                     </View>
                 </View>
-            </View>
+            </TopContainer>
             {/* Bands and Instruments section */}
             <View style={styles.bottomContainer}>
                 <View>
@@ -101,15 +100,16 @@ const AccountDetailScreen = () => {
                 <View>
                     <View style={{ justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-end', marginTop: 20, marginBottom: 10 }}>
                         <Text style={styles.subTitle}>Instrumentos:</Text>
-                        <LinkText>Agregar Instrumento</LinkText>
+                        <LinkText onPress={() => navigation.navigate('Instruments')}>Editar Instrumento</LinkText>
                     </View>
                     {(musician?.musician.instruments || []).map((instrument, i) => (
                         <View key={i}>
                             <InstrumentLevel
                                 instrument={instrument}
                             />
-                            <View style={{ 
-                                marginVertical: 10 }}>
+                            <View style={{
+                                marginVertical: 10
+                            }}>
                             </View>
                         </View>
                     ))}
@@ -130,16 +130,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: GlobalStyle.lightBackground,
-    },
-    topContainer: {
-        paddingTop: 75,
-        backgroundColor: GlobalStyle.white,
-        borderBottomLeftRadius: 25,
-        borderBottomRightRadius: 25,
-        marginBottom: 20,
-        paddingBottom: 30,
-        paddingHorizontal: 30,
-        alignItems: 'center',
     },
     profilePicture: {
         width: 160,

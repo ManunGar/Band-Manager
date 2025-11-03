@@ -8,7 +8,7 @@ import SaveIcon from './icons/SaveIcon'
 
 const {width: SCREENW} = Dimensions.get('window');
 
-const TopContainer = ({ children, style, title, editEnabled = true, backEnabled = true, configEnabled = false, saveEnabled = false }) => {
+const TopContainer = ({ children, style, title, editEnabled = true, backEnabled = true, configEnabled = false, saveEnabled = false, onSave }) => {
     const navigation = useNavigation();
     
     return (
@@ -21,7 +21,7 @@ const TopContainer = ({ children, style, title, editEnabled = true, backEnabled 
                 <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center', alignContent: 'center' }}>
                     {configEnabled && <ConfigurationIcon />}
                     {editEnabled && <EditIcon />}
-                    {saveEnabled && <SaveIcon />}
+                    {saveEnabled && <SaveIcon onSave={onSave} />}
                 </View>
             </View>
             {children}

@@ -1,28 +1,38 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import InstrumentsEndpoints from '../../../api/InstrumentsEndpoints'
+import MusicianEndpoints from '../../../api/MusicianEndpoints'
 import BottomSheet from '../../../components/BottomSheet'
 import InputSearch from '../../../components/InputSearch'
 import TopContainer from '../../../components/TopContainer'
-import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyle from '../../../GlobalStyle'
 
-const InstrumentsScreen = () => {
-    const { user } = useContext(AuthContext);
-    const [instruments, setInstruments] = useState([])
-    const [userInstruments, setUserInstruments] = useState(user?.musician?.instruments || [])
-    const [musicianInstruments, setMusicianInstruments] = useState([])
-    const sheetRef = useRef(null)
-    const [uploading, setUploading] = useState(false);
-    const snapPoints = useMemo(() => ['70%'], [])
-    const [instrument, setInstrument] = useState(null)
+const InstrumentsScreen = ({route}) => {
+    const { userInstruments } = route.params;
     const musicianLevel = ['aficionado', 'aficionado profesional', 'enseñanzas básica', 'título profesional', 'título superior'];
+    
+    const [instruments, setInstruments] = useState([])
+    const [musicianInstruments, setMusicianInstruments] = useState([])
+    const [uploading, setUploading] = useState(false);
+    const [instrument, setInstrument] = useState(null)
 
+    const snapPoints = useMemo(() => ['70%'], [])
+    const sheetRef = useRef(null)
+    const navigation = useNavigation();
 
     useEffect(() => {
         fetchInstruments();
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            // Refresh instruments when returning to the screen
+            fetchInstruments();
+            return () => closeSheet();
+        }, [])
+    );
 
     // Fetch instruments from API and set state
     const fetchInstruments = async () => {
@@ -34,52 +44,58 @@ const InstrumentsScreen = () => {
                 instrument.level = instrument.selected ? userInstruments.find(inst => inst.id === instrument.id).MusicianLevel.level : null;
             });
             setInstruments(data);
-            parseMusicianInstruments();
+            parseMusicianInstruments(userInstruments);
         } catch (error) {
             console.error('Error fetching instruments:', error);
         }
     }
 
     // Parse musician's instruments and set state
-    const parseMusicianInstruments = () => {
+    const parseMusicianInstruments = (userInstruments) => {
         const parsed = { instruments: {} };
         userInstruments.forEach(instrument => {
             parsed.instruments[instrument.id] = instrument.MusicianLevel.level;
         });
-        console.log('Parsed musician instruments:', parsed);
         setMusicianInstruments(parsed);
     }
 
-    const handleSave = () => {
-        // Handle saving selected instruments
+    const handleSave = async () => {
+        try {
+            setUploading(true);
+            await MusicianEndpoints.addInstrumentsToMusician(musicianInstruments);
+        } catch (error) {
+            console.error('Error saving musician instruments:', error);
+        } finally {
+            setUploading(false);
+            navigation.goBack();
+        }
     }
 
     const handleLevelPress = (instrument, level) => {
         const updatedInstrument = { ...instrument }
         updatedInstrument.MusicianLevel = {};
         updatedInstrument.MusicianLevel.level = level;
-        console.log('Selected level for instrument:', updatedInstrument);
         const updatedUserInstruments = [...userInstruments.filter(inst => inst.id !== updatedInstrument.id), updatedInstrument]
-        setUserInstruments(updatedUserInstruments)
+        userInstruments.splice(0, userInstruments.length, ...updatedUserInstruments);
         const instrumentsMap = updatedUserInstruments.map(inst => inst.id) || [];
         instruments.forEach(instrument => {
             instrument.selected = instrumentsMap.includes(instrument.id);
             instrument.level = instrument.selected ? updatedUserInstruments.find(inst => inst.id === instrument.id).MusicianLevel.level : null;
         });
-        parseMusicianInstruments();
+        parseMusicianInstruments(updatedUserInstruments);
 
     }
 
     const handleDelete = (instrument) => {
         // Handle deleting instrument from musician's list
         const updatedUserInstruments = userInstruments.filter(inst => inst.id !== instrument.id);
-        setUserInstruments(updatedUserInstruments);
+        userInstruments.splice(0, userInstruments.length, ...updatedUserInstruments);
         const instrumentsMap = updatedUserInstruments.map(inst => inst.id) || [];
         instruments.forEach(instrument => {
             instrument.selected = instrumentsMap.includes(instrument.id);
             instrument.level = instrument.selected ? updatedUserInstruments.find(inst => inst.id === instrument.id).MusicianLevel.level : null;
         });
-        parseMusicianInstruments();
+        parseMusicianInstruments(updatedUserInstruments);
     }
 
     const openSheet = useCallback((instrument) => {
@@ -97,6 +113,7 @@ const InstrumentsScreen = () => {
             <TopContainer
                 editEnabled={false}
                 saveEnabled
+                onSave={handleSave}
                 style={{ alignItems: 'flex-start', marginBottom: 0 }}
                 title={'Instrumentos'}>
                 <Text style={styles.subtitle}>Instrumentos de nivel musical</Text>
@@ -119,7 +136,10 @@ const InstrumentsScreen = () => {
             <ScrollView style={styles.instrumentsContainer}
                 contentContainerStyle={{ gap: 15, paddingBottom: 30, paddingTop: 20 }}>
                 {instruments.length > 0 && instruments.map((instrument) => (
-                    <Instrument key={instrument.id} instrument={instrument} onPress={() => openSheet(instrument)} />
+                    <Instrument key={instrument.id}
+                        instrument={instrument}
+                        onPress={() => openSheet(instrument)}
+                        uploading={uploading} />
                 ))}
                 <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ gap: 10 }} uploading={uploading}>
                     {/* Content for the bottom sheet can be added here */}
@@ -139,7 +159,7 @@ const InstrumentsScreen = () => {
                         />
                     ))}
                     {/* Delete Instrument Button */}
-                    {instrument?.level && <TouchableOpacity onPress={() =>{ 
+                    {instrument?.level && <TouchableOpacity onPress={() => {
                         handleDelete(instrument)
                         closeSheet()
                     }}
@@ -184,9 +204,9 @@ const MusicianInstruments = ({ instrument }) => {
     )
 }
 
-const Instrument = ({ instrument, onPress }) => {
+const Instrument = ({ instrument, onPress, uploading }) => {
     return (
-        <TouchableOpacity onPress={onPress} style={[InstrumentStyles.instrumentContainer, instrument.selected && { borderColor: GlobalStyle.yellow }]}>
+        <TouchableOpacity disabled={uploading} onPress={onPress} style={[InstrumentStyles.instrumentContainer, instrument.selected && { borderColor: GlobalStyle.yellow }]}>
             <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }} style={{ width: 40, height: 40 }} />
             <View>
                 <Text style={InstrumentStyles.instrumentName}>{instrument.name}</Text>

@@ -13,6 +13,17 @@ const accountDetails = async () => {
     }
 };
 
+// Endpoint to add instruments to musician
+const addInstrumentsToMusician = async (preparedData) => {
+    try {
+        const response = await axios.post(`${baseUrl}/musicians/instruments`, preparedData);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
-    accountDetails
+    accountDetails,
+    addInstrumentsToMusician
 };

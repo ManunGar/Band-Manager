@@ -37,6 +37,8 @@ const AccountDetailScreen = () => {
     // Close the bottom sheet when the screen is unfocused
     useFocusEffect(
         useCallback(() => {
+            // Refresh account details when returning to the screen
+            fetchAccountDetails();
             return () => {
                 sheetRef.current?.dismiss();
             };
@@ -46,6 +48,12 @@ const AccountDetailScreen = () => {
     const openSheet = useCallback(() => {
         sheetRef.current?.present()
     }, [])
+
+    const goToInstruments = () => {
+        navigation.navigate('Instruments', {
+            userInstruments: musician?.musician.instruments || []
+        })
+    }
 
     return (
         <ScrollView style={styles.container}>
@@ -100,7 +108,7 @@ const AccountDetailScreen = () => {
                 <View>
                     <View style={{ justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-end', marginTop: 20, marginBottom: 10 }}>
                         <Text style={styles.subTitle}>Instrumentos:</Text>
-                        <LinkText onPress={() => navigation.navigate('Instruments')}>Editar Instrumento</LinkText>
+                        <LinkText onPress={goToInstruments}>Editar Instrumento</LinkText>
                     </View>
                     {(musician?.musician.instruments || []).map((instrument, i) => (
                         <View key={i}>

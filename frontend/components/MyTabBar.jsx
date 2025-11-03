@@ -1,7 +1,12 @@
 import { TouchableOpacity, View } from 'react-native';
 import * as GlobalStyle from '../GlobalStyle';
 
-function MyTabBar({ state, descriptors, navigation }) {
+function MyTabBar({ state, descriptors, navigation, isTabBarVisible = true }) {
+
+  if (!isTabBarVisible) {
+    return null;
+  }
+
   return (
     <View
       style={{

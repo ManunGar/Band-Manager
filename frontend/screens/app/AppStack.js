@@ -1,4 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AccountIcon from '../../components/icons/AccountIcon';
 import AgendaIcon from '../../components/icons/AgendaIcon';
 import AgreementIcon from '../../components/icons/AgreementIcon';
@@ -15,34 +16,50 @@ const Tab = createBottomTabNavigator();
 
 const AppStack = () => {
   return (
-    <Tab.Navigator tabBar={(props) => <MyTabBar {...props} />} screenOptions={{
+    <Tab.Navigator tabBar={(props) => {
+      // name of the current route in the nested navigator
+      const route = props.state.routes[props.state.index];
+      let isTabBarVisible = true;
+
+      const focusedNestedRouteName =
+        getFocusedRouteNameFromRoute(route) ?? 'AccountDetail';// default screen
+
+      const hiddenRoutes = ['Instruments']; // screen list where tab bar is hidden
+
+      if (hiddenRoutes.includes(focusedNestedRouteName)) {
+        isTabBarVisible = false;
+      }
+
+
+      return <MyTabBar {...props} isTabBarVisible={isTabBarVisible} />;
+    }} screenOptions={{
       headerShown: false,
     }}>
-        <Tab.Screen name="Agenda" component={Agenda} options={{
-          tabBarIcon: ({ color, size }) => (
-            <AgendaIcon width={size} height={size} fill={color} stroke={color}/>
-          )
-        }}/>
-        <Tab.Screen name="Agreements" component={Agreement} options={{
-          tabBarIcon: ({ color, size }) => (
-            <AgreementIcon width={size} height={size} fill={color} stroke={color}/>
-          )
-        }}/>
-        <Tab.Screen name="Band" component={Band} options={{
-          tabBarIcon: ({color, size}) => (
-            <BandIcon width={size} height={size} fill={color} stroke={color}/>
-          )
-        }}/>
-        <Tab.Screen name="Notification" component={Notification} options={{
-          tabBarIcon: ({ color, size }) => (
-            <NotificationIcon width={size} height={size} fill={color} stroke={color}/>
-          )
-        }}/>
-        <Tab.Screen name="Account" component={Account} options={{
-          tabBarIcon: ({ color, size }) => (
-            <AccountIcon width={size} height={size} fill={"none"} stroke={color}/>
-          )
-        }}/>
+      <Tab.Screen name="Agenda" component={Agenda} options={{
+        tabBarIcon: ({ color, size }) => (
+          <AgendaIcon width={size} height={size} fill={color} stroke={color} />
+        )
+      }} />
+      <Tab.Screen name="Agreements" component={Agreement} options={{
+        tabBarIcon: ({ color, size }) => (
+          <AgreementIcon width={size} height={size} fill={color} stroke={color} />
+        )
+      }} />
+      <Tab.Screen name="Band" component={Band} options={{
+        tabBarIcon: ({ color, size }) => (
+          <BandIcon width={size} height={size} fill={color} stroke={color} />
+        )
+      }} />
+      <Tab.Screen name="Notification" component={Notification} options={{
+        tabBarIcon: ({ color, size }) => (
+          <NotificationIcon width={size} height={size} fill={color} stroke={color} />
+        )
+      }} />
+      <Tab.Screen name="Account" component={Account} options={{
+        tabBarIcon: ({ color, size }) => (
+          <AccountIcon width={size} height={size} fill={"none"} stroke={color} />
+        )
+      }} />
     </Tab.Navigator>
   )
 }

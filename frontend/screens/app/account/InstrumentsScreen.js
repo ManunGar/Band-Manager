@@ -1,23 +1,23 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { ScrollView } from 'react-native-gesture-handler'
 import InstrumentsEndpoints from '../../../api/InstrumentsEndpoints'
 import MusicianEndpoints from '../../../api/MusicianEndpoints'
 import BottomSheet from '../../../components/BottomSheet'
 import InputSearch from '../../../components/InputSearch'
 import TopContainer from '../../../components/TopContainer'
 import * as GlobalStyle from '../../../GlobalStyle'
+import { buildMusicianInstrumentMap } from '../../../helpers/ParseHelpers'
 
 const InstrumentsScreen = ({ route }) => {
-    const { userInstruments } = route.params;
     const musicianLevel = ['aficionado', 'aficionado profesional', 'enseñanzas básica', 'título profesional', 'título superior'];
 
     const [allInstruments, setAllInstruments] = useState([])
     const [instruments, setInstruments] = useState([])
     const [search, setSearch] = useState('')
 
-    const [musicianInstruments, setMusicianInstruments] = useState([])
+    const [currentInstruments, setCurrentInstruments] = useState(route.params.userInstruments)
+    const [musicianInstruments, setMusicianInstruments] = useState({}) // State to hold musician's instruments and levels. This is the body to save instruments data
     const [uploading, setUploading] = useState(false);
     const [instrument, setInstrument] = useState(null)
 
@@ -50,34 +50,30 @@ const InstrumentsScreen = ({ route }) => {
         useCallback(() => {
             // Refresh instruments when returning to the screen
             fetchInstruments();
-            return () => closeSheet();
-        }, [])
+            return closeSheet;
+        }, [currentInstruments])
     );
 
     // Fetch instruments from API and set state
     const fetchInstruments = async () => {
-        const instrumentsMap = userInstruments.map(inst => inst.id) || [];
         try {
             const data = await InstrumentsEndpoints.getAllInstruments();
-            data.forEach(instrument => {
-                instrument.selected = instrumentsMap.includes(instrument.id);
-                instrument.level = instrument.selected ? userInstruments.find(inst => inst.id === instrument.id).MusicianLevel.level : null;
-            });
-            setAllInstruments(data);
-            setInstruments(data);
-            parseMusicianInstruments(userInstruments);
+            const merged = mergeInstrumentsWithUser(data, currentInstruments);
+            setAllInstruments(merged);
+            setInstruments(merged);
+            setMusicianInstruments(buildMusicianInstrumentMap(currentInstruments));
         } catch (error) {
             console.error('Error fetching instruments:', error);
         }
     }
 
-    // Parse musician's instruments and set state
-    const parseMusicianInstruments = (userInstruments) => {
-        const parsed = { instruments: {} };
-        userInstruments.forEach(instrument => {
-            parsed.instruments[instrument.id] = instrument.MusicianLevel.level;
-        });
-        setMusicianInstruments(parsed);
+    function mergeInstrumentsWithUser(instruments, userInstruments) {
+        const map = new Map(userInstruments.map(i => [i.id, i.MusicianLevel.level]));
+        return instruments.map(inst => ({
+            ...inst,
+            selected: map.has(inst.id),
+            level: map.get(inst.id) || null,
+        }));
     }
 
     const handleSave = async () => {
@@ -92,32 +88,22 @@ const InstrumentsScreen = ({ route }) => {
         }
     }
 
-    const handleLevelPress = (instrument, level) => {
-        const updatedInstrument = { ...instrument }
-        updatedInstrument.MusicianLevel = {};
-        updatedInstrument.MusicianLevel.level = level;
-        const updatedUserInstruments = [...userInstruments.filter(inst => inst.id !== updatedInstrument.id), updatedInstrument]
-        userInstruments.splice(0, userInstruments.length, ...updatedUserInstruments);
-        const instrumentsMap = updatedUserInstruments.map(inst => inst.id) || [];
-        instruments.forEach(instrument => {
-            instrument.selected = instrumentsMap.includes(instrument.id);
-            instrument.level = instrument.selected ? updatedUserInstruments.find(inst => inst.id === instrument.id).MusicianLevel.level : null;
-        });
-        parseMusicianInstruments(updatedUserInstruments);
+    const updateMusicianInstrument = (instrument, newLevel = null) => {
+        if (!currentInstruments.some(i => i.id === instrument.id)) currentInstruments.push({ ...instrument })
+        const updated = currentInstruments.map(inst =>
+            inst.id === instrument.id
+                ? { ...inst, MusicianLevel: { level: newLevel } }
+                : inst
+        ).filter(inst => inst.MusicianLevel.level); // delete if newLevel is null
 
-    }
-
-    const handleDelete = (instrument) => {
-        // Handle deleting instrument from musician's list
-        const updatedUserInstruments = userInstruments.filter(inst => inst.id !== instrument.id);
-        userInstruments.splice(0, userInstruments.length, ...updatedUserInstruments);
-        const instrumentsMap = updatedUserInstruments.map(inst => inst.id) || [];
-        instruments.forEach(instrument => {
-            instrument.selected = instrumentsMap.includes(instrument.id);
-            instrument.level = instrument.selected ? updatedUserInstruments.find(inst => inst.id === instrument.id).MusicianLevel.level : null;
-        });
-        parseMusicianInstruments(updatedUserInstruments);
-    }
+        setCurrentInstruments(updated);
+        setMusicianInstruments(buildMusicianInstrumentMap(updated));
+        setAllInstruments(prev => prev.map(i => ({
+            ...i,
+            selected: updated.some(u => u.id === i.id),
+            level: updated.find(u => u.id === i.id)?.MusicianLevel.level || null,
+        })));
+    };
 
     const openSheet = useCallback((instrument) => {
         setInstrument(instrument);
@@ -140,12 +126,12 @@ const InstrumentsScreen = ({ route }) => {
                 <Text style={styles.subtitle}>Instrumentos de nivel musical</Text>
                 <View style={{ marginTop: 10, width: '100%' }}>
                     <InputSearch
-                        placeholder="Busca por instrumento" 
+                        placeholder="Busca por instrumento"
                         value={search}
-                        onChangeText={setSearch}/>
+                        onChangeText={setSearch} />
                 </View>
                 <FlatList
-                    data={userInstruments || []}
+                    data={currentInstruments || []}
                     keyExtractor={item => item.id.toString()}
                     style={{ marginTop: 20, width: '100%' }}
                     ItemSeparatorComponent={<View style={{ width: 20 }}></View>}
@@ -156,50 +142,52 @@ const InstrumentsScreen = ({ route }) => {
                     )}
                 />
             </TopContainer>
-            <ScrollView style={styles.instrumentsContainer}
-                contentContainerStyle={{ gap: 15, paddingBottom: 30, paddingTop: 20 }}>
-                {instruments.length > 0 && instruments.map((instrument) => (
-                    <Instrument key={instrument.id}
-                        instrument={instrument}
-                        onPress={() => openSheet(instrument)}
+            <FlatList 
+                data={instruments} 
+                keyExtractor={item => item.id.toString()}
+                renderItem={({ item }) => (
+                    <Instrument
+                        instrument={item}
+                        onPress={() => openSheet(item)}
                         uploading={uploading} />
+                )} 
+                style={styles.instrumentsContainer}
+                contentContainerStyle={{ gap: 15, paddingBottom: 30, paddingTop: 20 }}
+            />
+            <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ gap: 10 }} uploading={uploading}>
+                <Text style={{ fontFamily: 'Oswald_500', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
+                    {`Selecciona tu nivel musical para ${instrument?.name}`}
+                </Text>
+                {musicianLevel.map((level, index) => (
+                    <MusicianLevelButton
+                        key={index}
+                        level={level}
+                        onPress={() => {
+                            updateMusicianInstrument(instrument, level)
+                            closeSheet()
+                        }}
+                        uploading={uploading}
+                        instrument={instrument}
+                    />
                 ))}
-                <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ gap: 10 }} uploading={uploading}>
-                    {/* Content for the bottom sheet can be added here */}
-                    <Text style={{ fontFamily: 'Oswald_500', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
-                        {`Selecciona tu nivel musical para ${instrument?.name}`}
-                    </Text>
-                    {musicianLevel.map((level, index) => (
-                        <MusicianLevelButton
-                            key={index}
-                            level={level}
-                            onPress={() => {
-                                handleLevelPress(instrument, level)
-                                closeSheet()
-                            }}
-                            uploading={uploading}
-                            instrument={instrument}
-                        />
-                    ))}
-                    {/* Delete Instrument Button */}
-                    {instrument?.level && <TouchableOpacity onPress={() => {
-                        handleDelete(instrument)
-                        closeSheet()
-                    }}
-                        style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#fef2f2', alignItems: 'center' }}
-                    >
-                        <Text style={{ fontWeight: '600', color: GlobalStyle.red }}>Eliminar instrumento</Text>
-                    </TouchableOpacity>}
-                    {/* Cancel Button */}
-                    <TouchableOpacity
-                        disabled={uploading}
-                        onPress={closeSheet}
-                        style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#e5e7eb', alignItems: 'center' }}
-                    >
-                        <Text style={{ fontWeight: '600', color: '#111827' }}>Cancelar</Text>
-                    </TouchableOpacity>
-                </BottomSheet>
-            </ScrollView>
+                {/* Delete Instrument Button */}
+                {instrument?.level && <TouchableOpacity onPress={() => {
+                    updateMusicianInstrument(instrument)
+                    closeSheet()
+                }}
+                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#fef2f2', alignItems: 'center' }}
+                >
+                    <Text style={{ fontWeight: '600', color: GlobalStyle.red }}>Eliminar instrumento</Text>
+                </TouchableOpacity>}
+                {/* Cancel Button */}
+                <TouchableOpacity
+                    disabled={uploading}
+                    onPress={closeSheet}
+                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#e5e7eb', alignItems: 'center' }}
+                >
+                    <Text style={{ fontWeight: '600', color: '#111827' }}>Cancelar</Text>
+                </TouchableOpacity>
+            </BottomSheet>
         </>
     )
 }

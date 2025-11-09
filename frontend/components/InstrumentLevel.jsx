@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
     level: {
         fontFamily: 'Oswald_400',
         fontSize: 16,
+        marginTop: -4,
         color: GlobalStyle.black,
         textTransform: 'capitalize'
     }

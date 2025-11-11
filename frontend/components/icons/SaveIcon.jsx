@@ -20,7 +20,7 @@ function SaveIcon({ width, height, stroke, strokeWidth, onSave }) {
                     strokeLinejoin="round"
                 />
             </Svg>
-            <LinkText style={{ marginBottom: -2 }} onPress={onSave}>Guardar</LinkText>
+                <LinkText style={{ marginBottom: -2 }}>Guardar</LinkText>
         </TouchableOpacity>
     )
 }

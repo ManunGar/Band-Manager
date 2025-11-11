@@ -13,7 +13,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        musicianId: 1,
+        musicianId: 2,
         bandId: 2,
         private: true,
         administrator: true,

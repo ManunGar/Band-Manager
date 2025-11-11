@@ -28,6 +28,7 @@ const loadFileRoutes = function (app) {
     // Edit user details route
     app.route('/user/edit')
         .put(
+            isLoggedIn,
             UserValidation.update,
             handleValidation,
             UserController.editUserDetails

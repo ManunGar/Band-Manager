@@ -124,7 +124,9 @@ const loginMusician = async (req, res) => {
 const editUserDetails = async (req, res) => {
     const user = req.user;
     const updatedData = req.body;
+    console.log("🚀 ~ editUserDetails ~ updatedData:", updatedData)
     try {
+        console.log("🚀 ~ editUserDetails ~ user:", user)
         await User.update(updatedData, { where: { id: user.id } });
         const updatedUser = await User.findByPk(user.id, {
             attributes: { exclude: ['password'] },

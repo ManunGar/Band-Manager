@@ -1,15 +1,20 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment';
-import { useEffect, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import Input from '../../../components/Input';
 import TopContainer from '../../../components/TopContainer';
+import { AuthContext } from '../../../contexts/AuthContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 
 const InfoEditScreen = ({ route }) => {
     const { label, value, keyboardType, schema } = route.params;
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const { editMusician } = useContext(AuthContext);
+    const [error, setError] = useState(null);
+    const navigation = useNavigation();
 
     useEffect(() => {
         console.log('Mounted InfoEditScreen with params:', route.params);
@@ -34,7 +39,6 @@ const InfoEditScreen = ({ route }) => {
                 };
                 handleEditSubmit(payload);
             } catch (err) {
-                console.error(err?.response?.data || err);
                 Alert.alert('Error', err?.response?.data?.message || 'No se pudo guardar la información.');
             } finally {
                 setSubmitting(false);
@@ -44,10 +48,10 @@ const InfoEditScreen = ({ route }) => {
 
     const handleEditSubmit = async (payload) => {
         try {
-            console.log('Submitting payload:', payload);
+            await editMusician(payload);
+            navigation.goBack();
         } catch (err) {
-            console.error(err?.response?.data || err);
-            Alert.alert('Error', err?.response?.data?.message || 'No se pudo guardar la información.');
+            setError(err.message);
         }
     }
 
@@ -117,9 +121,18 @@ const InfoEditScreen = ({ route }) => {
                         maximumDate={new Date()}
                     />
                 )}
+                {error && <Text style={styles.errorText}>{error}</Text>}
             </View>
         </View>
     )
 }
 
 export default InfoEditScreen
+
+const styles = StyleSheet.create({
+    errorText: {
+        color: GlobalStyle.red,
+        fontFamily: 'Oswald_500',
+        fontSize: 14,
+    }
+})

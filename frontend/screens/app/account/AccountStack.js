@@ -2,6 +2,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useContext } from 'react';
 import { AuthContext } from '../../../contexts/AuthContext';
 import AccountDetailScreen from './AccountDetailScreen';
+import AccountEditScreen from './AccountEditScreen';
+import InfoEditScreen from './InfoEditScreen';
 import InstrumentsScreen from './InstrumentsScreen';
 
 const Stack = createStackNavigator();
@@ -17,6 +19,8 @@ const Account = () => {
         }}>
             <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
             <Stack.Screen name="Instruments" component={InstrumentsScreen} />
+            <Stack.Screen name="AccountEdit" component={AccountEditScreen} />
+            <Stack.Screen name="InfoEdit" component={InfoEditScreen} />
         </Stack.Navigator>
     )
 }

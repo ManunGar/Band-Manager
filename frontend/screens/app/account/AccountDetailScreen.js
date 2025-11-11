@@ -59,7 +59,8 @@ const AccountDetailScreen = () => {
         <ScrollView style={styles.container}>
             {/* Profile picture section */}
             <TopContainer
-                configEnabled>
+                configEnabled
+                onEdit={() => navigation.navigate('AccountEdit')}>
                 <Image
                     source={{ uri: musician?.profile_picture }}
                     style={styles.profilePicture}

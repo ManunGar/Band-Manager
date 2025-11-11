@@ -1,9 +1,10 @@
 import Svg, { Path } from "react-native-svg";
 import * as GlobalStyle from '../../GlobalStyle';
 
-function SvgComponent({width, height, ...props}) {
+function SvgComponent({ width, height, onPress, ...props }) {
   return (
     <Svg
+      onPress={onPress}
       width={width || 28}
       height={height || 28}
       viewBox="0 0 33 33"

@@ -19,16 +19,25 @@ module.exports = {
         profile_picture: '',
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        username: 'admin2',
+        email: 'admin2@example.com',
+        password: bcrypt.hashSync('Patata1234', salt),
+        full_name: 'Patata Nuño García',
+        location: 'Sevilla',
+        phone: '605267619',
+        birthday: '1995-10-23',
+        token: 'admin-token2',
+        profile_picture: '',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ]);
   },
 
   async down (queryInterface, Sequelize) {
-    /**
-     * Add commands to revert seed here.
-     *
-     * Example:
-     * await queryInterface.bulkDelete('People', null, {});
-     */
+        return queryInterface.bulkDelete('Users', null, {});
+    
   }
 };

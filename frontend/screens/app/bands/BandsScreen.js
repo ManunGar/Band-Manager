@@ -36,12 +36,12 @@ const BandsScreen = () => {
             </TopContainer>
             <FlatList
                 data={bands}
+                style={{ borderWidth: 1, borderColor: 'lightgray', paddingHorizontal: 25 }}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <Band band={item} />
                 )}
                 ListEmptyComponent={<Text style={styles.noBandsText}>No perteneces a ninguna banda</Text>}
-                contentContainerStyle={{ alignItems: 'center' }}
             />
         </View>
     )
@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     noBandsText: {
         fontFamily: 'Oswald_400',
         fontSize: 16,
-        color: 'gray'
+        color: 'gray',
+        textAlign: 'center',
     }
 })

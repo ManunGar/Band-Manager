@@ -31,6 +31,7 @@ const BandsScreen = () => {
             <TopContainer
                 backEnabled={false}
                 editEnabled={false}
+                createEnabled={true}
                 style={{ paddingBottom: 24, paddingTop: 24, alignItems: 'none' }}>
                 <Text style={styles.title}>Bandas</Text>
             </TopContainer>

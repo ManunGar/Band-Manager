@@ -1,16 +1,16 @@
-import { Image, StyleSheet, Text, View } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import * as GlobalStyle from '../GlobalStyle'
 
 const Band = ({ band }) => {
     return (
-        <View style={styles.container}>
+        <TouchableOpacity style={styles.container}>
             <Image source={{ uri: band.profile_picture }} style={{ width: 85, height: 80 }} />
             <View style={{ marginLeft: 13, flex: 1, flexShrink: 1 }}>
                 <Text style={styles.bandType} numberOfLines={1} ellipsizeMode="tail">{band.type}</Text>
                 <Text style={styles.bandName} numberOfLines={1} ellipsizeMode="tail">{band.name}</Text>
                 <Text style={styles.bandLocation} numberOfLines={1} ellipsizeMode="tail">{band.location}</Text>
             </View>
-        </View>
+        </TouchableOpacity>
     )
 }
 

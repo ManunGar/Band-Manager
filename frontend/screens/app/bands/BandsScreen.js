@@ -36,7 +36,7 @@ const BandsScreen = () => {
             </TopContainer>
             <FlatList
                 data={bands}
-                style={{ borderWidth: 1, borderColor: 'lightgray', paddingHorizontal: 25 }}
+                style={{ paddingHorizontal: 25 }}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <Band band={item} />

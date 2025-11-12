@@ -2,10 +2,11 @@ import { useFocusEffect } from '@react-navigation/native'
 import { useCallback, useContext, useState } from 'react'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BandEndpoints from '../../../api/BandEndpoints'
+import Band from '../../../components/Band'
 import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
 
-const Band = () => {
+const BandsScreen = () => {
     const [bands, setBands] = useState([])
     const { user } = useContext(AuthContext)
 
@@ -37,7 +38,7 @@ const Band = () => {
                 data={bands}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <Text>{item.name}</Text>
+                    <Band band={item} />
                 )}
                 ListEmptyComponent={<Text style={styles.noBandsText}>No perteneces a ninguna banda</Text>}
                 contentContainerStyle={{ alignItems: 'center' }}
@@ -46,7 +47,7 @@ const Band = () => {
     )
 }
 
-export default Band
+export default BandsScreen
 
 const styles = StyleSheet.create({
     title: {

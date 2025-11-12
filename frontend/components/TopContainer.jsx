@@ -3,6 +3,7 @@ import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import * as GlobalStyle from '../GlobalStyle'
 import BackIcon from './icons/BackIcons'
 import ConfigurationIcon from './icons/ConfigurationIcon'
+import CreateIcon from './icons/CreateIcon'
 import EditIcon from './icons/EditIcon'
 import SaveIcon from './icons/SaveIcon'
 
@@ -12,9 +13,10 @@ const TopContainer = ({ children, style,
             title, 
             editEnabled = true, 
             backEnabled = true, 
+            createEnabled = false,
             configEnabled = false, 
             saveEnabled = false, 
-            onEdit, onSave }) => {
+            onEdit, onSave, onCreate }) => {
     const navigation = useNavigation();
     
     return (
@@ -27,6 +29,7 @@ const TopContainer = ({ children, style,
                 <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center', alignContent: 'center' }}>
                     {configEnabled && <ConfigurationIcon />}
                     {editEnabled && <EditIcon onPress={onEdit}/>}
+                    {createEnabled && <CreateIcon onCreate={onCreate}/>}
                     {saveEnabled && <SaveIcon onSave={onSave} />}
                 </View>
             </View>

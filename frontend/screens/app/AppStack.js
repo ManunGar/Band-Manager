@@ -1,10 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import AccountIcon from '../../components/icons/AccountIcon';
 import AgendaIcon from '../../components/icons/AgendaIcon';
 import AgreementIcon from '../../components/icons/AgreementIcon';
 import BandIcon from '../../components/icons/BandIcon';
 import NotificationIcon from '../../components/icons/NotificationIcon';
+import ProfileIcon from '../../components/icons/ProfileIcon';
 import MyTabBar from '../../components/MyTabBar';
 import Account from './account/AccountStack';
 import Agenda from './agenda/Agenda';
@@ -57,7 +57,7 @@ const AppStack = () => {
       }} />
       <Tab.Screen name="Account" component={Account} options={{
         tabBarIcon: ({ color, size }) => (
-          <AccountIcon width={size} height={size} fill={"none"} stroke={color} />
+          <ProfileIcon width={size*1.5} height={size*1.5} />
         )
       }} />
     </Tab.Navigator>

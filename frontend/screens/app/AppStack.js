@@ -9,7 +9,7 @@ import MyTabBar from '../../components/MyTabBar';
 import Account from './account/AccountStack';
 import Agenda from './agenda/Agenda';
 import Agreement from './agreements/Agreement';
-import Band from './bands/Band';
+import BandsScreen from './bands/BandsScreen';
 import Notification from './notifications/Notification';
 
 const Tab = createBottomTabNavigator();
@@ -45,7 +45,7 @@ const AppStack = () => {
           <AgreementIcon width={size} height={size} fill={color} stroke={color} />
         )
       }} />
-      <Tab.Screen name="Band" component={Band} options={{
+      <Tab.Screen name="Band" component={BandsScreen} options={{
         tabBarIcon: ({ color, size }) => (
           <BandIcon width={size} height={size} fill={color} stroke={color} />
         )

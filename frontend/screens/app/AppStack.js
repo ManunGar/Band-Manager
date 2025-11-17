@@ -9,7 +9,7 @@ import MyTabBar from '../../components/MyTabBar';
 import Account from './account/AccountStack';
 import Agenda from './agenda/Agenda';
 import Agreement from './agreements/Agreement';
-import BandsScreen from './bands/BandsScreen';
+import Bands from './bands/BandStack';
 import Notification from './notifications/Notification';
 
 const Tab = createBottomTabNavigator();
@@ -24,7 +24,7 @@ const AppStack = () => {
       const focusedNestedRouteName =
         getFocusedRouteNameFromRoute(route) ?? 'AccountDetail';// default screen
 
-      const hiddenRoutes = ['Instruments', 'AccountEdit']; // screen list where tab bar is hidden
+      const hiddenRoutes = ['Instruments', 'AccountEdit', 'BandDetails']; // screen list where tab bar is hidden
 
       if (hiddenRoutes.includes(focusedNestedRouteName)) {
         isTabBarVisible = false;
@@ -45,7 +45,7 @@ const AppStack = () => {
           <AgreementIcon width={size} height={size} fill={color} stroke={color} />
         )
       }} />
-      <Tab.Screen name="Band" component={BandsScreen} options={{
+      <Tab.Screen name="Bands" component={Bands} options={{
         tabBarIcon: ({ color, size }) => (
           <BandIcon width={size} height={size} fill={color} stroke={color} />
         )

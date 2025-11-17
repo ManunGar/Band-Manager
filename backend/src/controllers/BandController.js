@@ -1,4 +1,4 @@
-import { Band, Component } from "../models/sequelize.js";
+import { Band, Component, Instrument } from "../models/sequelize.js";
 
 // Function to list bands of the logged-in musician
 const listMyBands = async (req, res) => {
@@ -47,6 +47,27 @@ const createBand = async (req, res) => {
     }
 };
 
+//Function to find a band by its ID
+const findBandById = async (req, res) => {
+    const bandId = req.params.bandId;
+    try {
+        const band = await Band.findByPk(bandId, {
+            include: [{
+                model: Component,
+                as: 'components',
+                include: [{ model: Instrument, as: 'instruments'}]
+            }]
+        });
+        if (!band) {
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        res.status(200).send({ band });
+    } catch (error) {
+        console.error('Error fetching band by ID:', error);
+        res.status(500).send({ error: 'Error fetching band by ID' });     
+    }
+};
+
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -67,7 +88,8 @@ const _generateUniqueBandCode = async () => {
 
 const BandController = {
     listMyBands,
-    createBand
+    createBand,
+    findBandById
 };
 
 export default BandController;

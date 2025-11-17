@@ -42,6 +42,7 @@ const BandsScreen = () => {
                 renderItem={({ item }) => (
                     <Band band={item} />
                 )}
+                ItemSeparatorComponent={() => <View style={{paddingTop: 12}}></View>}
                 ListEmptyComponent={<Text style={styles.noBandsText}>No perteneces a ninguna banda</Text>}
             />
         </View>

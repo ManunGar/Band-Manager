@@ -9,7 +9,7 @@ function ConfigurationIcon({ width, height, stroke, strokeWidth }) {
       height={height || 30}
       viewBox="0 0 46 46"
     >
-      <G fill="none" stroke={stroke || GlobalStyle.black} strokeLinejoin="round" strokeWidth={strokeWidth || 4}>
+      <G fill="none" stroke={stroke || GlobalStyle.black} strokeLinejoin="round" strokeWidth={strokeWidth || 4.5}>
         <Path d="M24 4l-6 6h-8v8l-6 6 6 6v8h8l6 6 6-6h8v-8l6-6-6-6v-8h-8z" />
         <Path d="M24 30a6 6 0 100-12 6 6 0 000 12z" />
       </G>

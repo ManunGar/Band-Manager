@@ -13,6 +13,17 @@ const listMyBands = async () => {
     }
 };
 
+// Endpoint to get band details by ID
+const getBandDetails = async (bandId) => {
+    try {
+        const response = await axios.get(`${baseUrl}/bands/${bandId}`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
-    listMyBands
+    listMyBands,
+    getBandDetails
 };

@@ -1,9 +1,13 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import * as GlobalStyle from '../GlobalStyle'
+import { useNavigation } from '@react-navigation/native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as GlobalStyle from '../GlobalStyle';
 
 const Band = ({ band }) => {
+    const navigation = useNavigation();
+
+
     return (
-        <TouchableOpacity style={styles.container}>
+        <TouchableOpacity style={styles.container} onPress={() => navigation.navigate('BandDetails', { bandId: band.id })}>
             <Image source={{ uri: band.profile_picture }} style={{ width: 85, height: 80 }} />
             <View style={{ marginLeft: 13, flex: 1, flexShrink: 1 }}>
                 <Text style={styles.bandType} numberOfLines={1} ellipsizeMode="tail">{band.type}</Text>

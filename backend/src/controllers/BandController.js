@@ -1,4 +1,4 @@
-import { Band, Component, Instrument } from "../models/sequelize.js";
+import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to list bands of the logged-in musician
 const listMyBands = async (req, res) => {
@@ -55,7 +55,7 @@ const findBandById = async (req, res) => {
             include: [{
                 model: Component,
                 as: 'components',
-                include: [{ model: Instrument, as: 'instruments'}]
+                include: [{model: Musician, as: 'musician', include: {model: User, as: 'user'}} ,{ model: Instrument, as: 'instruments'}]
             }]
         });
         if (!band) {

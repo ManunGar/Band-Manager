@@ -4,6 +4,9 @@ import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import TopContainer from '../../../components/TopContainer';
 import * as GlobalStyle from '../../../GlobalStyle';
 import Index from './stack/Index';
+import Performances from './stack/Performances';
+import Rehearsal from './stack/Rehearsal';
+import Repertoire from './stack/Repertoire';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -13,9 +16,9 @@ const BandScreen = ({ route }) => {
     return (
         < Tab.Navigator tabBar={(props) => <MyTabBar {...props} band={band} />} >
             <Tab.Screen name="Inicio" component={Index} initialParams={{ bandId: band?.id }} />
-            <Tab.Screen name="Actuaciones" component={Index} initialParams={{ bandId: band?.id }} />
-            <Tab.Screen name="Ensayos" component={Index} initialParams={{ bandId: band?.id }} />
-            <Tab.Screen name="Repertorio" component={Index} initialParams={{ bandId: band?.id }} />
+            <Tab.Screen name="Actuaciones" component={Performances} />
+            <Tab.Screen name="Ensayos" component={Rehearsal} initialParams={{ bandId: band?.id }} />
+            <Tab.Screen name="Repertorio" component={Repertoire} initialParams={{ bandId: band?.id }} />
         </Tab.Navigator >
     )
 }

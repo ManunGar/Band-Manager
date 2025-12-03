@@ -1,41 +1,24 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useLinkBuilder } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
-import BandEndpoints from '../../../api/BandEndpoints';
 import TopContainer from '../../../components/TopContainer';
 import * as GlobalStyle from '../../../GlobalStyle';
 import Index from './stack/Index';
+import Performances from './stack/Performances';
+import Rehearsal from './stack/Rehearsal';
+import Repertoire from './stack/Repertoire';
 
 const Tab = createMaterialTopTabNavigator();
 
 const BandScreen = ({ route }) => {
-    const [band, setBand] = useState(null)
-    const { bandId } = route.params
-
-    useEffect(() => {
-        fetchBandDetails();
-    }, [])
-
-    const fetchBandDetails = async () => {
-        try {
-            const data = await BandEndpoints.getBandDetails(bandId)
-            setBand(data?.band)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    useEffect(() => {
-        fetchBandDetails();
-    }, [])
+    const { band } = route.params;
 
     return (
-        < Tab.Navigator tabBar={(props) => <MyTabBar {...props} band={band} />}>
-            <Tab.Screen name="Inicio" component={Index} />
-            <Tab.Screen name="Actuaciones" component={Index} />
-            <Tab.Screen name="Ensayos" component={Index} />
-            <Tab.Screen name="Repertorio" component={Index} />
+        < Tab.Navigator tabBar={(props) => <MyTabBar {...props} band={band} />} >
+            <Tab.Screen name="Inicio" component={Index} initialParams={{ bandId: band?.id }} />
+            <Tab.Screen name="Actuaciones" component={Performances} />
+            <Tab.Screen name="Ensayos" component={Rehearsal} initialParams={{ bandId: band?.id }} />
+            <Tab.Screen name="Repertorio" component={Repertoire} initialParams={{ bandId: band?.id }} />
         </Tab.Navigator >
     )
 }
@@ -60,7 +43,7 @@ function MyTabBar({ state, descriptors, navigation, band }) {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     style={{ marginTop: 20}}
-                    contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}
+                    contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', gap: 20 }}
                 >
                     {state.routes.map((route, index) => {
                         const { options } = descriptors[route.key];

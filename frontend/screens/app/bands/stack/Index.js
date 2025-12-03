@@ -25,21 +25,35 @@ export default function Index({ route }) {
                     <Text style={styles.headerTitle}>Próximos eventos</Text>
                     <LinkText>Crear evento</LinkText>
                 </View>
+                <FlatList
+                    data={band?.events || []}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <Component component={item} />
+                    )}
+                    horizontal
+                    contentContainerStyle={{ gap: 10, width: '100%', minHeight: 60 }}
+                    ItemSeparatorComponent={(<View style={{ height: 10 }}></View>)}
+                    ListEmptyComponent={() => {
+                        return <Text style={styles.noContentText}>No hay eventos existentes</Text>
+                    }}
+                />
             </View>
             <View>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Miembros ({band?.components.length})</Text>
                     <LinkText>Añadir miembro</LinkText>
                 </View>
-                <FlatList 
+                <FlatList
                     data={band?.components || []}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                         <Component component={item} />
                     )}
                     ItemSeparatorComponent={(<View style={{ height: 10 }}></View>)}
+                    contentContainerStyle={{ gap: 10, width: '100%', minHeight: 60, paddingBottom: 40 }}
                     ListEmptyComponent={() => {
-                        return  <Text>No hay miembros</Text>
+                        return <Text style={styles.noContentText}>No hay miembros existentes</Text>
                     }}
                 />
 
@@ -53,11 +67,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 16,
     },
     headerTitle: {
         fontFamily: 'Oswald_500',
         fontSize: 17,
         color: GlobalStyle.black,
+    },
+    noContentText: {
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        marginTop: 10,
+        width: '100%',
     }
 })

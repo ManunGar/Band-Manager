@@ -1,18 +1,27 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as GlobalStyle from '../GlobalStyle';
+import AdminIcon from './icons/AdminIcon';
+import BackIcon from './icons/BackIcons';
 
-const Component = ({ component }) => {
+const Component = ({ component, seeAttendance=false, seeInstrument=true }) => {
     return (
-        <View style={styles.container}>
-            <Image source={{ uri: component.musician.user.profile_picture }} style={{ width: 60, height: 60, borderRadius: 30 }} />
-            <View>
-                <Text style={styles.name}>{component.musician.user.full_name}</Text>
-                <View style={styles.instrument}>
-                    <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${component.instruments[0]?.image}` }} style={{ width: 18, height: 18, marginTop: 4 }} />
-                    <Text style={styles.instrumentText}>{component.instruments[0]?.name}</Text>
+        <TouchableOpacity>
+            <View style={styles.container}>
+                <Image source={{ uri: component.musician.user.profile_picture }} style={{ width: 60, height: 60, borderRadius: 30 }} />
+                { !seeAttendance && component.administrator && <AdminIcon style={{ position: 'absolute', top: 40, left: 40 }} />}
+                <View>
+                    <Text style={styles.name}>{component.musician.user.full_name}</Text>
+                    {component.instruments[0] && seeInstrument ?
+                        <View style={styles.instrument}>
+                            <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${component.instruments[0]?.image}` }} style={{ width: 18, height: 18, marginTop: 4 }} />
+                            <Text style={styles.instrumentText}>{component.instruments[0]?.name}</Text>
+                        </View> :
+                        <Text style={styles.instrumentText}>Sin instrumento asignado</Text>
+                    }
                 </View>
+                <BackIcon fill={GlobalStyle.darkGray} style={{ marginLeft: 'auto', transform: [{ rotate: '180deg' }] }} />
             </View>
-        </View>
+        </TouchableOpacity>
     );
 }
 

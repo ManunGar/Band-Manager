@@ -18,7 +18,11 @@ const loadModel = (sequelize, DataTypes) => {
       Instrument.belongsToMany(models.Musician, { through: MusicianLevel, as: 'musicians', foreignKey: 'instrumentId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
       // Component relationship with Instrument (Many-to-Many)
-      const ComponentInstrument = sequelize.define('ComponentInstruments', {});
+      const ComponentInstrument = sequelize.define('ComponentInstruments', {
+        principal: {
+          type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false
+        }
+      });
       Instrument.belongsToMany(models.Component, {
         through: ComponentInstrument,
         as: 'components',

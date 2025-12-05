@@ -4,7 +4,6 @@ import { Component } from "../models/sequelize.js";
 const isBandMember = async (req, res, next) => {
     const bandId = req.params.bandId;
     const musicianId = req.user.musician.id;
-    console.log("🚀 ~ isBandMember ~ musicianId:", musicianId)
     try {
         const component = await Component.findOne({
             where: {
@@ -23,3 +22,4 @@ const isBandMember = async (req, res, next) => {
 };
 
 export { isBandMember };
+

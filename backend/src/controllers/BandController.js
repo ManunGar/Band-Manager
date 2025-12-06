@@ -38,6 +38,19 @@ const createBand = async (req, res) => {
             musicianId: req.user.musician.id,
             administrator: true
         }, { transaction });
+        // Create instruments associations of the component
+        const newComponent = await Component.findOne({
+            where: {
+                bandId: band.id,
+                musicianId: req.user.musician.id
+            },
+            transaction
+        });
+        const instruments = _transformInstrumentsData(req.body.instruments || []);
+        for (const instr of instruments)     {
+            await newComponent.addInstrument(instr.instrumentId, { through: { principal: instr.principal }, transaction });
+        }
+        
         await transaction.commit();
         res.status(201).send({ band });
     } catch (error) {
@@ -85,6 +98,13 @@ const _generateUniqueBandCode = async () => {
     }
     return code;
 };
+
+// Function to transform instruments data from request body
+const _transformInstrumentsData = (instruments) => {
+    const instrumentsId = Object.keys(instruments).map(id => parseInt(id, 10))
+    const instrumentsData = instrumentsId.map(id => ({ instrumentId: id, principal: instruments[id] }))
+    return instrumentsData;
+}
 
 const BandController = {
     listMyBands,

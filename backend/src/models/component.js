@@ -11,7 +11,11 @@ const loadModel = (sequelize, DataTypes) => {
       Component.belongsTo(models.Musician, { foreignKey: 'musicianId', as: 'musician' });
 
       // Instruments relationship with Components (Many-to-Many)
-      const ComponentInstrument = sequelize.define('ComponentInstruments', {});
+      const ComponentInstrument = sequelize.define('ComponentInstruments', {
+        principal: {
+          type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false
+        }
+      });
       Component.belongsToMany(models.Instrument, {
         through: ComponentInstrument,
         as: 'instruments',

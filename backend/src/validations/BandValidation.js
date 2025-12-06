@@ -6,11 +6,14 @@ const maxFileSize = 2 * 1024 * 1024 // 2MB
 
 const _instrumentsExist = async (value, { req }) => {
     try {
-        const instrumentIds = Object.keys(value).map(id => parseInt(id, 10));
-        for (const instrumentId of instrumentIds) {
+        const instrumentKeys = Object.keys(value);
+        const instrumentIds = [];
+        for (const key of instrumentKeys) {
+            const instrumentId = parseInt(key, 10);
             if (Number.isNaN(instrumentId) || instrumentId <= 0) {
-                return Promise.reject(new Error(`Invalid instrument id: ${instrumentId}`));
+                return Promise.reject(new Error(`Invalid instrument id: ${key}`));
             }
+            instrumentIds.push(instrumentId);
         }
         const instruments = await Instrument.findAll({ where: { id: instrumentIds } });
         if (instruments.length !== instrumentIds.length) {

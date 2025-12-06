@@ -46,7 +46,7 @@ const createBand = async (req, res) => {
             },
             transaction
         });
-        const instruments = _transformInstrumentsData(req.body.instruments || []);
+        const instruments = _transformInstrumentsData(req.body.instruments || {});
         for (const instr of instruments)     {
             await newComponent.addInstrument(instr.instrumentId, { through: { principal: instr.principal }, transaction });
         }

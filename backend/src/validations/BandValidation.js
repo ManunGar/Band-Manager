@@ -22,6 +22,25 @@ const _instrumentsExist = async (value, { req }) => {
     }
 }
 
+const _principalInstrumentExist = async (value, { req }) => {
+    try {
+        const principalInstruments = Object.values(value);
+        // Check that values are boolean
+        for (const isPrincipal of principalInstruments) {
+            if (typeof isPrincipal !== 'boolean') {
+                return Promise.reject(new Error(`Principal instrument value must be boolean: ${isPrincipal}`));
+            }
+        }
+        // Check that exactly one instrument is marked as principal
+        if (principalInstruments.filter(isPrincipal => isPrincipal === true).length !== 1) {
+            return Promise.reject(new Error('There must be exactly one principal instrument'));
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error(error));
+    }
+}
+
 const _bandNameUnique = async (value, { req }) => {
     try {
         const existingBand = await Band.findOne({ where: { name: value } });
@@ -64,6 +83,10 @@ const create = [
         .exists().withMessage('Instruments are required')
         .isObject().withMessage('Instruments must be an object with instrument IDs as keys')
         .custom(_instrumentsExist),
+    check('instruments')
+        .exists().withMessage('Instruments are required')
+        .isObject().withMessage('Instruments must be an object with instrument IDs as keys')
+        .custom(_principalInstrumentExist)
 ]
 
 export { create };

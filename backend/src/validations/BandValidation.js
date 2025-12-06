@@ -21,7 +21,7 @@ const _instrumentsExist = async (value, { req }) => {
         }
         return Promise.resolve();
     } catch (error) {
-        return Promise.reject(new Error(error));
+        return Promise.reject(new Error(error.message));
     }
 }
 
@@ -40,7 +40,7 @@ const _principalInstrumentExist = async (value, { req }) => {
         }
         return Promise.resolve();
     } catch (error) {
-        return Promise.reject(new Error(error));
+        return Promise.reject(new Error(error.message));
     }
 }
 
@@ -52,7 +52,7 @@ const _bandNameUnique = async (value, { req }) => {
         }
         return Promise.resolve();
     } catch (error) {
-        return Promise.reject(new Error(error));
+        return Promise.reject(new Error(error.message));
     }
 }
 

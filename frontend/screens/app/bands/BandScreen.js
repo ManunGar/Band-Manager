@@ -29,7 +29,7 @@ const BandScreen = ({ route }) => {
 function MyTabBar({ state, descriptors, navigation, band }) {
     const { buildHref } = useLinkBuilder();
     const { user } = useContext(AuthContext);
-    const isAdmin = band?.components?.some(component => component.musicianId === user?.musician.id && component.administrator);
+    const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
 
     return (
         <TopContainer

@@ -1,4 +1,5 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import profileDefaultImage from '../assets/milestones/profile_default.png';
 import * as GlobalStyle from '../GlobalStyle';
 import AdminIcon from './icons/AdminIcon';
 import BackIcon from './icons/BackIcons';
@@ -7,7 +8,7 @@ const Component = ({ component, seeAttendance=false, seeInstrument=true }) => {
     return (
         <TouchableOpacity>
             <View style={styles.container}>
-                <Image source={{ uri: component.musician.user.profile_picture }} style={{ width: 60, height: 60, borderRadius: 30 }} />
+                <Image source={component.musician.user.profile_picture ? { uri: component.musician.user.profile_picture } : profileDefaultImage} style={{ width: 60, height: 60, borderRadius: 30 }} />
                 { !seeAttendance && component.administrator && <AdminIcon style={{ position: 'absolute', top: 40, left: 40 }} />}
                 <View>
                     <Text style={styles.name}>{component.musician.user.full_name}</Text>

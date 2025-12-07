@@ -50,7 +50,7 @@ const createBand = async (req, res) => {
         for (const instr of instruments) {
             await newComponent.addInstrument(instr.instrumentId, { through: { principal: instr.principal }, transaction });
         }
-        
+
         await transaction.commit();
         res.status(201).send({ band });
     } catch (error) {
@@ -68,16 +68,37 @@ const findBandById = async (req, res) => {
             include: [{
                 model: Component,
                 as: 'components',
-                include: [{model: Musician, as: 'musician', include: {model: User, as: 'user'}} ,{ model: Instrument, as: 'instruments'}]
+                include: [{
+                    model: Musician,
+                    as: 'musician',
+                    include: {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'full_name', 'profile_picture']
+                    }
+                },
+                {
+                    model: Instrument,
+                    as: 'instruments',
+                    through: {
+                        attributes: ['principal'],
+                        where: { principal: true }
+                    }
+                }]
             }]
         });
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
+        band.components = band.components.sort((a, b) => {
+            const aId = a.instruments[0]?.id ?? Infinity;
+            const bId = b.instruments[0]?.id ?? Infinity;
+            return aId - bId;
+        });
         res.status(200).send({ band });
     } catch (error) {
         console.error('Error fetching band by ID:', error);
-        res.status(500).send({ error: 'Error fetching band by ID' });     
+        res.status(500).send({ error: 'Error fetching band by ID' });
     }
 };
 

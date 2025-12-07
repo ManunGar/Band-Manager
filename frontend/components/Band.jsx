@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as GlobalStyle from '../GlobalStyle';
+import bandDefaultImage from '../assets/milestones/band_default.png';
 
 const Band = ({ band }) => {
     const navigation = useNavigation();
@@ -8,7 +9,7 @@ const Band = ({ band }) => {
 
     return (
         <TouchableOpacity style={styles.container} onPress={() => navigation.navigate('BandDetails', { band: band })}>
-            <Image source={{ uri: band.profile_picture }} style={{ width: 85, height: 80 }} />
+            <Image source={band.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 85, height: 80 }} />
             <View style={{ marginLeft: 13, flex: 1, flexShrink: 1 }}>
                 <Text style={styles.bandType} numberOfLines={1} ellipsizeMode="tail">{band.type}</Text>
                 <Text style={styles.bandName} numberOfLines={1} ellipsizeMode="tail">{band.name}</Text>

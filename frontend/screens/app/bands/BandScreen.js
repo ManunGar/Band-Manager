@@ -1,6 +1,7 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useLinkBuilder } from '@react-navigation/native';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import TopContainer from '../../../components/TopContainer';
 import * as GlobalStyle from '../../../GlobalStyle';
 import Index from './stack/Index';
@@ -31,7 +32,7 @@ function MyTabBar({ state, descriptors, navigation, band }) {
             editEnabled={true} // TODO: Verify admin permissions
             createEnabled={true}
             style={{ paddingTop: 5, paddingBottom: 13 }}>
-            <Image source={{ uri: band?.profile_picture }} style={{ width: 70, height: 70 }} />
+            <Image source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 70, height: 70 }} />
             <Text style={{ fontSize: 26, fontFamily: 'BebasNeue', marginTop: 5 }}>
                 {band?.name}
             </Text>

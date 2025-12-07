@@ -2,6 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native'
 import MusicianEndpoints from '../../../api/MusicianEndpoints'
+import bandDefaultImage from '../../../assets/milestones/band_default.png'
 import profileDefault from '../../../assets/milestones/profile_default.png'
 import LocationIcon from '../../../components/icons/LocationIcon'
 import PhoneIcon from '../../../components/icons/PhoneIcon'
@@ -101,7 +102,7 @@ const AccountDetailScreen = () => {
                         renderItem={({ item }) => (
                             <Image
                                 key={item.id}
-                                source={{ uri: item?.band.profile_picture }}
+                                source={item?.band.profile_picture ? { uri: item.band.profile_picture } : bandDefaultImage}
                                 style={styles.bandPicture}
                             />
                         )}

@@ -2,6 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native'
 import MusicianEndpoints from '../../../api/MusicianEndpoints'
+import profileDefault from '../../../assets/milestones/profile_default.png'
 import LocationIcon from '../../../components/icons/LocationIcon'
 import PhoneIcon from '../../../components/icons/PhoneIcon'
 import StarIcon from '../../../components/icons/StarIcon'
@@ -62,7 +63,7 @@ const AccountDetailScreen = () => {
                 configEnabled
                 onEdit={() => navigation.navigate('AccountEdit')}>
                 <Image
-                    source={{ uri: musician?.profile_picture }}
+                    source={musician?.profile_picture ? { uri: musician.profile_picture } : profileDefault}
                     style={styles.profilePicture}
                 />
                 <LinkText onPress={openSheet} style={{ marginTop: 10, }}>Cambiar Imagen</LinkText>

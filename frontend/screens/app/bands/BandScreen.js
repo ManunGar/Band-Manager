@@ -33,8 +33,8 @@ function MyTabBar({ state, descriptors, navigation, band }) {
 
     return (
         <TopContainer
-            editEnabled={isAdmin} // TODO: Verify admin permissions
-            createEnabled={true}
+            editEnabled={isAdmin}
+            createEnabled={isAdmin}
             style={{ paddingTop: 5, paddingBottom: 13 }}>
             <Image source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 70, height: 70 }} />
             <Text style={{ fontSize: 26, fontFamily: 'BebasNeue', marginTop: 5 }}>

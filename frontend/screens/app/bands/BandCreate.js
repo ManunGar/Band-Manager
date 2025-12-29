@@ -1,7 +1,9 @@
+import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import { useEffect, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Yup from 'yup';
+import BandEndpoints from '../../../api/BandEndpoints.js';
 import InstrumentEndpoints from '../../../api/InstrumentsEndpoints.js';
 import Input from '../../../components/Input';
 import InputSearch from '../../../components/InputSearch.jsx';
@@ -42,6 +44,7 @@ const TOTAL_STEPS = stepSchema.length;
 
 const BandCreate = () => {
     const [step, setStep] = useState(0)
+    const navigation = useNavigation();
 
     const formik = useFormik({
         initialValues: {
@@ -54,16 +57,17 @@ const BandCreate = () => {
         validationSchema: stepSchema[step],
         validateOnChange: false,
         validateOnBlur: true,
-        onSubmit: (values, { setSubmitting }) => {
+        onSubmit: async (values, { setSubmitting }) => {
             try {
                 const payload = { ...values };
                 // Submit the payload to the backend
                 console.log('Submitting band:', payload);
                 // After successful submission, you might want to navigate away or reset the form   
-
+                await BandEndpoints.createBand(payload);
+                navigation.goBack();
             } catch (error) {
                 console.error(error?.response?.data || error);
-                Alert.alert('Error', error?.response?.data?.message || 'No se pudo registrar el usuario');
+                Alert.alert('Error', error?.response?.data?.message || 'No se pudo crear la banda. Inténtalo de nuevo más tarde.');
             } finally {
                 setSubmitting(false);
             }
@@ -181,7 +185,7 @@ const StepInstruments = ({ formik }) => {
             }
         } else {
             instrumentSelected.principal = Object.keys(updatedInstruments).length === 0;
-            updatedInstruments[instrument.id] = Object.keys(updatedInstruments).length > 0 ? "false" : "true";
+            updatedInstruments[instrument.id] = Object.keys(updatedInstruments).length > 0 ? false : true;
             instrumentSelected.selected = true;
         }
         formik.setFieldValue('instruments', updatedInstruments);
@@ -214,15 +218,6 @@ const StepInstruments = ({ formik }) => {
 }
 
 // ===== Helper components ======
-
-const MusicianInstruments = ({ instrument }) => {
-    return (
-        <View >
-            <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }} style={{ width: 40, height: 40 }} />
-            <View style={{ borderBottomWidth: 2, borderBlockColor: GlobalStyle.yellow, marginHorizontal: 5, marginTop: 10 }}></View>
-        </View>
-    )
-}
 
 function Error({ name, formik }) {
     const touched = formik.touched[name];

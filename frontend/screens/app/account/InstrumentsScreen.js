@@ -5,6 +5,7 @@ import InstrumentsEndpoints from '../../../api/InstrumentsEndpoints'
 import MusicianEndpoints from '../../../api/MusicianEndpoints'
 import BottomSheet from '../../../components/BottomSheet'
 import InputSearch from '../../../components/InputSearch'
+import Instrument from '../../../components/Instrument'
 import TopContainer from '../../../components/TopContainer'
 import * as GlobalStyle from '../../../GlobalStyle'
 import { buildMusicianInstrumentMap } from '../../../helpers/ParseHelpers'
@@ -214,41 +215,6 @@ const MusicianInstruments = ({ instrument }) => {
         </View>
     )
 }
-
-const Instrument = ({ instrument, onPress, uploading }) => {
-    return (
-        <TouchableOpacity disabled={uploading} onPress={onPress} style={[InstrumentStyles.instrumentContainer, instrument.selected && { borderColor: GlobalStyle.yellow }]}>
-            <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }} style={{ width: 40, height: 40 }} />
-            <View>
-                <Text style={InstrumentStyles.instrumentName}>{instrument.name}</Text>
-                {instrument.level && <Text style={InstrumentStyles.instrumentLevel}>{instrument.level}</Text>}
-            </View>
-        </TouchableOpacity>
-    )
-}
-
-const InstrumentStyles = StyleSheet.create({
-    instrumentContainer: {
-        padding: 10,
-        borderWidth: 2,
-        borderRadius: 8,
-        backgroundColor: GlobalStyle.white,
-        borderColor: GlobalStyle.white,
-        flexDirection: 'row',
-        gap: 15,
-    },
-    instrumentName: {
-        fontSize: 18,
-        fontFamily: 'BebasNeue'
-    },
-    instrumentLevel: {
-        fontSize: 14,
-        fontFamily: 'Oswald_400',
-        color: GlobalStyle.darkGray,
-        marginTop: -4,
-        textTransform: 'capitalize',
-    }
-})
 
 const MusicianLevelButton = ({ level, onPress, uploading, instrument }) => {
     return (

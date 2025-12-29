@@ -61,7 +61,6 @@ const BandCreate = () => {
             try {
                 const payload = { ...values };
                 // Submit the payload to the backend
-                console.log('Submitting band:', payload);
                 // After successful submission, you might want to navigate away or reset the form   
                 await BandEndpoints.createBand(payload);
                 navigation.goBack();

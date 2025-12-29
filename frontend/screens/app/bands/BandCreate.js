@@ -36,7 +36,12 @@ const stepSchema = [
     // 1 - Instruments
     Yup.object({
         instruments: Yup.object()
-            .required('Debes seleccionar al menos un instrumento'),
+            .required('Debes seleccionar al menos un instrumento')
+            .test(
+                'at-least-one-instrument',
+                'Debes seleccionar al menos un instrumento',
+                (value) => value != null && Object.keys(value).length > 0
+            ),
     })
 ]
 

@@ -159,7 +159,6 @@ const StepBandInfo = ({ formik }) => {
 const StepInstruments = ({ formik }) => {
     const [instruments, setInstruments] = useState([])
     const [search, setSearch] = useState('')
-    const [selectedInstrument, setSelectedInstrument] = useState(null)
 
     useEffect(() => {
         fetchInstruments();

@@ -23,7 +23,18 @@ const getBandDetails = async (bandId) => {
     }
 };
 
+// Endpoint to create a new band
+const createBand = async (bandData) => {
+    try {
+        const response = await axios.post(`${baseUrl}/bands`, bandData);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listMyBands,
-    getBandDetails
+    getBandDetails,
+    createBand
 };

@@ -155,6 +155,7 @@ const joinBand = async (req, res) => {
             await component.addInstrument(instr.instrumentId, { through: { principal: instr.principal }, transaction });
         }
         await transaction.commit();
+        return res.status(201).send({ message: 'Joined band successfully', component });
     } catch (error) {
         await transaction.rollback();
         console.error('Error joining band:', error);

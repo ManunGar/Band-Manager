@@ -1,4 +1,4 @@
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useState } from 'react'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BandEndpoints from '../../../api/BandEndpoints'
@@ -9,6 +9,7 @@ import { AuthContext } from '../../../contexts/AuthContext'
 const BandsScreen = () => {
     const [bands, setBands] = useState([])
     const { user } = useContext(AuthContext)
+    const navigation = useNavigation()
 
     useFocusEffect(
         useCallback(() => {
@@ -32,6 +33,7 @@ const BandsScreen = () => {
                 backEnabled={false}
                 editEnabled={false}
                 createEnabled={true}
+                onCreate={() => navigation.navigate('CreateBand')}
                 style={{ paddingBottom: 24, paddingTop: 24, alignItems: 'none' }}>
                 <Text style={styles.title}>Bandas</Text>
             </TopContainer>

@@ -1,6 +1,7 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { useContext } from 'react';
 import { AuthContext } from '../../../contexts/AuthContext';
+import BandCreate from './BandCreate';
 import BandScreen from './BandScreen';
 import BandsScreen from './BandsScreen';
 
@@ -17,6 +18,7 @@ const Bands = () => {
         }}>
             <Stack.Screen name="MyBands" component={BandsScreen} />
             <Stack.Screen name="BandDetails" component={BandScreen} />
+            <Stack.Screen name="CreateBand" component={BandCreate} />
         </Stack.Navigator>
     )
 }

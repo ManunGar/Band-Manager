@@ -191,7 +191,7 @@ const StepInstruments = ({ formik }) => {
     }
 
     return (
-        <View style={{ paddingInline: 20}}>
+        <View style={{ paddingHorizontal: 20 }}>
             <View style={{ marginTop: 10, width: '100%' }}>
                 <InputSearch
                     placeholder="Busca por instrumento"

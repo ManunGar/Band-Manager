@@ -132,6 +132,35 @@ const findBandByCode = async (req, res) => {
     }
 };
 
+// Function to join a band by its ID and create a component for the logged-in musician
+const joinBand = async (req, res) => {
+    const bandId = req.params.bandId;
+    const musicianId = req.user.musician.id;
+    const transaction = await Band.sequelize.transaction();
+    try {
+        // Check if the band exists
+        const band = await Band.findByPk(bandId);
+        if (!band) {
+            await transaction.rollback();
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        // Create the component for the musician
+        const component = await Component.create({
+            bandId: band.id,
+            musicianId: musicianId,
+            administrator: false
+        }, { transaction });
+        const instruments = _transformInstrumentsData(req.body.instruments || {});
+        for (const instr of instruments) {
+            await component.addInstrument(instr.instrumentId, { through: { principal: instr.principal }, transaction });
+        }
+        await transaction.commit();
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error joining band:', error);
+        res.status(500).send({ error: 'Error joining band' });
+    }
+};
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -161,7 +190,8 @@ const BandController = {
     listMyBands,
     createBand,
     findBandById,
-    findBandByCode
+    findBandByCode,
+    joinBand
 };
 
 export default BandController;

@@ -102,6 +102,36 @@ const findBandById = async (req, res) => {
     }
 };
 
+// Function to find a band by its unique code
+const findBandByCode = async (req, res) => {
+    const bandCode = req.params.bandCode;
+    try {
+        const band = await Band.findOne({
+            where: { code: bandCode },
+            include: [{
+                model: Component,
+                as: 'components',
+                include: [{
+                    model: Musician,
+                    as: 'musician',
+                    include: {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'full_name', 'profile_picture']
+                    }
+                }]
+            }]
+        });
+        if (!band) {
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        res.status(200).send({ band });
+    } catch (error) {
+        console.error('Error fetching band by code:', error);
+        res.status(500).send({ error: 'Error fetching band by code' });
+    }
+};
+
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -130,7 +160,8 @@ const _transformInstrumentsData = (instruments) => {
 const BandController = {
     listMyBands,
     createBand,
-    findBandById
+    findBandById,
+    findBandByCode
 };
 
 export default BandController;

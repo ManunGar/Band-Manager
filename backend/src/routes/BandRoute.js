@@ -26,6 +26,12 @@ const loadFileRoutes = function (app) {
             isBandMember, // Ensure the user is a member of the band
             BandController.findBandById
         )
+    // Get by code route
+    app.route('/bands/code/:bandCode')
+        .get(
+            isLoggedIn,
+            BandController.findBandByCode
+        )
 }
 
 export default loadFileRoutes

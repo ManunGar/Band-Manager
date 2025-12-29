@@ -102,6 +102,66 @@ const findBandById = async (req, res) => {
     }
 };
 
+// Function to find a band by its unique code
+const findBandByCode = async (req, res) => {
+    const bandCode = req.params.bandCode;
+    try {
+        const band = await Band.findOne({
+            where: { code: bandCode },
+            include: [{
+                model: Component,
+                as: 'components',
+                include: [{
+                    model: Musician,
+                    as: 'musician',
+                    include: {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'full_name', 'profile_picture']
+                    }
+                }]
+            }]
+        });
+        if (!band) {
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        res.status(200).send({ band });
+    } catch (error) {
+        console.error('Error fetching band by code:', error);
+        res.status(500).send({ error: 'Error fetching band by code' });
+    }
+};
+
+// Function to join a band by its ID and create a component for the logged-in musician
+const joinBand = async (req, res) => {
+    const bandId = req.params.bandId;
+    const musicianId = req.user.musician.id;
+    const transaction = await Band.sequelize.transaction();
+    try {
+        // Check if the band exists
+        const band = await Band.findByPk(bandId);
+        if (!band) {
+            await transaction.rollback();
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        // Create the component for the musician
+        const component = await Component.create({
+            bandId: band.id,
+            musicianId: musicianId,
+            administrator: false
+        }, { transaction });
+        const instruments = _transformInstrumentsData(req.body.instruments || {});
+        for (const instr of instruments) {
+            await component.addInstrument(instr.instrumentId, { through: { principal: instr.principal }, transaction });
+        }
+        await transaction.commit();
+        return res.status(201).send({ message: 'Joined band successfully', component });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error joining band:', error);
+        res.status(500).send({ error: 'Error joining band' });
+    }
+};
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -130,7 +190,9 @@ const _transformInstrumentsData = (instruments) => {
 const BandController = {
     listMyBands,
     createBand,
-    findBandById
+    findBandById,
+    findBandByCode,
+    joinBand
 };
 
 export default BandController;

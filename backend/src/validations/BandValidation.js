@@ -92,5 +92,15 @@ const create = [
         .custom(_principalInstrumentExist)
 ]
 
-export { create };
-
+const join = [
+    check('instruments')
+        .exists().withMessage('Instruments are required')
+        .isObject().withMessage('Instruments must be an object with instrument IDs as keys')
+        .custom(_instrumentsExist),
+    check('instruments')
+        .exists().withMessage('Instruments are required')
+        .isObject().withMessage('Instruments must be an object with instrument IDs as keys')
+        .custom(_principalInstrumentExist)
+]
+    
+export { create, join };

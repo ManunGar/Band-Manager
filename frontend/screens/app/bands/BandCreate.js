@@ -179,7 +179,7 @@ const StepInstruments = ({ formik }) => {
             if (instrumentSelected.principal) {
                 instrumentSelected.principal = false;
                 if (Object.keys(updatedInstruments).length > 0) {
-                    updatedInstruments[Object.keys(updatedInstruments)[0]] = "true";
+                    updatedInstruments[Object.keys(updatedInstruments)[0]] = true;
                     instruments.find(i => i.id.toString() === Object.keys(updatedInstruments)[0]).principal = true;
                 }
             }

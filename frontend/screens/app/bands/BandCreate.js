@@ -36,7 +36,12 @@ const stepSchema = [
     // 1 - Instruments
     Yup.object({
         instruments: Yup.object()
-            .required('Debes seleccionar al menos un instrumento'),
+            .required('Debes seleccionar al menos un instrumento')
+            .test(
+                'at-least-one-instrument',
+                'Debes seleccionar al menos un instrumento',
+                (value) => value != null && Object.keys(value).length > 0
+            ),
     })
 ]
 
@@ -61,8 +66,7 @@ const BandCreate = () => {
             try {
                 const payload = { ...values };
                 // Submit the payload to the backend
-                console.log('Submitting band:', payload);
-                // After successful submission, you might want to navigate away or reset the form   
+                // After successful submission, navigate back to the previous screen
                 await BandEndpoints.createBand(payload);
                 navigation.goBack();
             } catch (error) {
@@ -192,7 +196,7 @@ const StepInstruments = ({ formik }) => {
     }
 
     return (
-        <View style={{ paddingInline: 20}}>
+        <View style={{ paddingHorizontal: 20 }}>
             <View style={{ marginTop: 10, width: '100%' }}>
                 <InputSearch
                     placeholder="Busca por instrumento"

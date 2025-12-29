@@ -2,13 +2,13 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as GlobalStyle from '../GlobalStyle';
 
 const Instrument = ({ instrument, onPress, uploading }) => {
+    const levelLabel = instrument.principal ? 'Instrumento Principal' : instrument.level;
     return (
         <TouchableOpacity disabled={uploading} onPress={onPress} style={[InstrumentStyles.instrumentContainer, instrument.selected && { borderColor: GlobalStyle.yellow }]}>
             <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }} style={{ width: 40, height: 40 }} />
             <View>
                 <Text style={InstrumentStyles.instrumentName}>{instrument.name}</Text>
-                {instrument.level && <Text style={InstrumentStyles.instrumentLevel}>{instrument.level}</Text>}
-                {instrument.principal && <Text style={InstrumentStyles.instrumentLevel}>Instrumento Principal</Text>}
+                {levelLabel && <Text style={InstrumentStyles.instrumentLevel}>{levelLabel}</Text>}
             </View>
         </TouchableOpacity>
     )

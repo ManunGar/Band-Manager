@@ -33,8 +33,19 @@ const createBand = async (bandData) => {
     }
 };
 
+// Endpoint to find a band by code
+const findBandByCode = async (code) => {
+    try {
+        const response = await axios.get(`${baseUrl}/bands/code/${code}`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listMyBands,
     getBandDetails,
-    createBand
+    createBand,
+    findBandByCode
 };

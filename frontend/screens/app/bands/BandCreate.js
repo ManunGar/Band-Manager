@@ -176,8 +176,8 @@ const StepInstruments = ({ formik }) => {
     const selectInstrument = (instrument) => {
         const updatedInstruments = { ...formik.values.instruments };
         const instrumentSelected = instruments.find(i => i.id === instrument.id)
-        if (updatedInstruments[instrument.id]) {
-            delete updatedInstruments[instrument.id];
+        if (Object.keys(updatedInstruments).includes(String(instrument.id))) {
+            delete updatedInstruments[String(instrument.id)];
             instrumentSelected.selected = false;
             if (instrumentSelected.principal) {
                 instrumentSelected.principal = false;

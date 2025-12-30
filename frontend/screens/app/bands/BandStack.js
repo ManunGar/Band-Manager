@@ -4,6 +4,7 @@ import { AuthContext } from '../../../contexts/AuthContext';
 import BandCreate from './BandCreate';
 import BandScreen from './BandScreen';
 import BandsScreen from './BandsScreen';
+import JoinBandScreen from './JoinBandScreen';
 
 const Stack = createStackNavigator();
 
@@ -19,6 +20,7 @@ const Bands = () => {
             <Stack.Screen name="MyBands" component={BandsScreen} />
             <Stack.Screen name="BandDetails" component={BandScreen} />
             <Stack.Screen name="CreateBand" component={BandCreate} />
+            <Stack.Screen name="JoinBand" component={JoinBandScreen} />
         </Stack.Navigator>
     )
 }

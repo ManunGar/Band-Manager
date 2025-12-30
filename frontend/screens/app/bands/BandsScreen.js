@@ -1,11 +1,12 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import BandEndpoints from '../../../api/BandEndpoints'
 import Band from '../../../components/Band'
 import BottomSheet from '../../../components/BottomSheet'
 import Input from '../../../components/Input'
 import TopContainer from '../../../components/TopContainer'
+import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyles from '../../../GlobalStyle'
 
 const BandsScreen = () => {
@@ -15,6 +16,7 @@ const BandsScreen = () => {
     const [visible, setVisible] = useState(false)
     const navigation = useNavigation()
     const sheetRef = useRef(null)
+    const {user} = useContext(AuthContext);
     const snapPoints = useMemo(() => ['70%'], [])
 
     useFocusEffect(
@@ -34,10 +36,15 @@ const BandsScreen = () => {
     }
 
     const findBandByCode = async () => {
-        console.log("🚀 ~ findBandByCode ~ code:", code)
         try {
             const band = await BandEndpoints.findBandByCode(code);
-            console.log("🚀 ~ findBandByCode ~ band:", band)
+            setVisible(false);
+            setCode('');
+            if (band?.band?.components?.some(component => component.musicianId === user.musician?.id)) {
+                navigation.navigate('BandDetails', { band: band.band });
+            } else {
+                navigation.navigate('JoinBand', { band: band.band });
+            }
         } catch (error) {
             Alert.alert('Error', 'No se encontró ninguna banda con ese código.');
             return null;

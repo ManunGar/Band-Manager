@@ -43,9 +43,20 @@ const findBandByCode = async (code) => {
     }
 };
 
+// Endpoint to join a band
+const joinBand = async (bandId, data) => {
+    try {
+        const response = await axios.post(`${baseUrl}/bands/join/${bandId}`, data);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listMyBands,
     getBandDetails,
     createBand,
-    findBandByCode
+    findBandByCode,
+    joinBand,
 };

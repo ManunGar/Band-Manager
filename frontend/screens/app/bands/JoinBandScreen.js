@@ -3,6 +3,7 @@ import { useFormik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, Image, Text, View } from 'react-native';
 import * as Yup from 'yup';
+import BandEndpoints from '../../../api/BandEndpoints';
 import InstrumentsEndpoints from '../../../api/InstrumentsEndpoints';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import InputSearch from '../../../components/InputSearch';
@@ -88,7 +89,8 @@ const JoinBandScreen = ({ route }) => {
         validateOnBlur: true,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                console.log("🚀 ~ onSubmit ~ values:", values)
+                await BandEndpoints.joinBand(band.id, values);
+                navigation.goBack();
             } catch (error) {
                 console.error(error?.response?.data || error);
                 Alert.alert('Error', 'Hubo un error al unirte a la banda. Por favor, intenta de nuevo.');

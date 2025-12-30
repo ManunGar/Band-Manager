@@ -34,10 +34,11 @@ const BandsScreen = () => {
     }
 
     const findBandByCode = async () => {
-        console.log("🚀 ~ findBandByCode ~ code:", code)
         try {
             const band = await BandEndpoints.findBandByCode(code);
-            console.log("🚀 ~ findBandByCode ~ band:", band)
+            setVisible(false);
+            setCode('');
+            if (band) navigation.navigate('JoinBand', { band: band.band });
         } catch (error) {
             Alert.alert('Error', 'No se encontró ninguna banda con ese código.');
             return null;

@@ -158,15 +158,34 @@ const StepBandInfo = ({ formik }) => {
 
 const StepInstruments = ({ formik }) => {
     const [instruments, setInstruments] = useState([])
+    const [allInstruments, setAllInstruments] = useState([])
     const [search, setSearch] = useState('')
 
     useEffect(() => {
         fetchInstruments();
     }, []);
 
+    useEffect(() => { // Debounce search input
+        const timeout = setTimeout(() => {
+            if (!search.trim()) { // If search is empty, show all instruments
+                setInstruments(allInstruments);
+                return;
+            }
+
+            const lower = search.toLowerCase();
+            const filtered = allInstruments.filter((inst) =>
+                inst.name.toLowerCase().includes(lower)
+            );
+            setInstruments(filtered);
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [search, allInstruments]);
+
     const fetchInstruments = async () => {
         try {
             const response = await InstrumentEndpoints.getAllInstruments();
+            setAllInstruments(response);
             setInstruments(response);
         } catch (error) {
             console.error("Error fetching instruments:", error);
@@ -175,7 +194,7 @@ const StepInstruments = ({ formik }) => {
     
     const selectInstrument = (instrument) => {
         const updatedInstruments = { ...formik.values.instruments };
-        const instrumentSelected = instruments.find(i => i.id === instrument.id)
+        const instrumentSelected = allInstruments.find(i => i.id === instrument.id)
         if (Object.keys(updatedInstruments).includes(String(instrument.id))) {
             delete updatedInstruments[String(instrument.id)];
             instrumentSelected.selected = false;
@@ -183,7 +202,7 @@ const StepInstruments = ({ formik }) => {
                 instrumentSelected.principal = false;
                 if (Object.keys(updatedInstruments).length > 0) {
                     updatedInstruments[Object.keys(updatedInstruments)[0]] = true;
-                    instruments.find(i => i.id.toString() === Object.keys(updatedInstruments)[0]).principal = true;
+                    allInstruments.find(i => i.id.toString() === Object.keys(updatedInstruments)[0]).principal = true;
                 }
             }
         } else {
@@ -198,7 +217,7 @@ const StepInstruments = ({ formik }) => {
         <View style={{ paddingHorizontal: 20 }}>
             <View style={{ marginTop: 10, width: '100%' }}>
                 <InputSearch
-                    placeholder="Busca por instrumento"
+                    placeholder="Busca por nombre de instrumento"
                     value={search}
                     onChangeText={setSearch} />
                 <Error name="instruments" formik={formik} />

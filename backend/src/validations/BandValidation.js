@@ -69,7 +69,14 @@ const create = [
     check('phone')
         .exists().withMessage('Phone number is required')
         .isString().withMessage('Phone number must be a string')
-        .notEmpty().withMessage('Phone number cannot be empty'),
+        .notEmpty().withMessage('Phone number cannot be empty')
+        .custom((value, { req }) => {
+            const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+            if (!phoneRegex.test(value)) {
+                    return new Error('Phone number contains invalid characters');
+            }
+            return true;
+        }),
     check('type')
         .exists().withMessage('Band type is required')
         .isString().withMessage('Band type must be a string')
@@ -102,5 +109,33 @@ const join = [
         .isObject().withMessage('Instruments must be an object with instrument IDs as keys')
         .custom(_principalInstrumentExist)
 ]
-    
-export { create, join };
+
+const update = [
+    check('name')
+        .exists().withMessage('Band name is required')
+        .isString().withMessage('Band name must be a string')
+        .notEmpty().withMessage('Band name cannot be empty')
+        .custom(_bandNameUnique),
+    check('location')
+        .exists().withMessage('Location is required')
+        .isString().withMessage('Location must be a string')
+        .notEmpty().withMessage('Location cannot be empty'),
+    check('phone')
+        .exists().withMessage('Phone number is required')
+        .isString().withMessage('Phone number must be a string')
+        .notEmpty().withMessage('Phone number cannot be empty')
+        .custom((value, { req }) => {
+            const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+            if (!phoneRegex.test(value)) {
+                    return new Error('Phone number contains invalid characters');
+            }
+            return true;
+        }),
+    check('type')
+        .exists().withMessage('Band type is required')
+        .isString().withMessage('Band type must be a string')
+        .notEmpty().withMessage('Band type cannot be empty')
+]
+
+export { create, join, update };
+

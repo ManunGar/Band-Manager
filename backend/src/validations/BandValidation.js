@@ -47,7 +47,7 @@ const _principalInstrumentExist = async (value, { req }) => {
 const _bandNameUnique = async (value, { req }) => {
     try {
         const existingBand = await Band.findOne({ where: { name: value } });
-        if (existingBand) {
+        if (existingBand && existingBand.id !== parseInt(req.params?.bandId)) {
             return Promise.reject(new Error('Band name already in use'));
         }
         return Promise.resolve();
@@ -69,7 +69,14 @@ const create = [
     check('phone')
         .exists().withMessage('Phone number is required')
         .isString().withMessage('Phone number must be a string')
-        .notEmpty().withMessage('Phone number cannot be empty'),
+        .notEmpty().withMessage('Phone number cannot be empty')
+        .custom((value, { req }) => {
+            const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+            if (!phoneRegex.test(value)) {
+                throw new Error('Phone number contains invalid characters');
+            }
+            return true;
+        }),
     check('type')
         .exists().withMessage('Band type is required')
         .isString().withMessage('Band type must be a string')
@@ -102,5 +109,44 @@ const join = [
         .isObject().withMessage('Instruments must be an object with instrument IDs as keys')
         .custom(_principalInstrumentExist)
 ]
-    
-export { create, join };
+
+const update = [
+    check('name')
+        .exists().withMessage('Band name is required')
+        .isString().withMessage('Band name must be a string')
+        .notEmpty().withMessage('Band name cannot be empty')
+        .custom(_bandNameUnique),
+    check('location')
+        .exists().withMessage('Location is required')
+        .isString().withMessage('Location must be a string')
+        .notEmpty().withMessage('Location cannot be empty'),
+    check('phone')
+        .exists().withMessage('Phone number is required')
+        .isString().withMessage('Phone number must be a string')
+        .notEmpty().withMessage('Phone number cannot be empty')
+        .custom((value, { req }) => {
+            const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+            if (!phoneRegex.test(value)) {
+                throw new Error('Phone number contains invalid characters');
+            }
+            return true;
+        }),
+    check('type')
+        .exists().withMessage('Band type is required')
+        .isString().withMessage('Band type must be a string')
+        .notEmpty().withMessage('Band type cannot be empty')
+]
+
+const updateProfilePicture = [
+    check('profile_picture')
+        .custom((value, { req }) => {
+            return checkFileIsImage(req, 'profile_picture')
+        }).withMessage('Sube una imagen con formato (jpeg, png).'),
+    check('profile_picture')
+        .custom((value, { req }) => {
+            return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+        }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+]
+
+export { create, join, update, updateProfilePicture };
+

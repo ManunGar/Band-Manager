@@ -1,3 +1,4 @@
+import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to list bands of the logged-in musician
@@ -162,6 +163,85 @@ const joinBand = async (req, res) => {
         res.status(500).send({ error: 'Error joining band' });
     }
 };
+
+// Function to update a band by its ID
+const updateBand = async (req, res) => {
+    const bandId = req.params.bandId;
+    try {
+        const band = await Band.findByPk(bandId);
+        if (!band) {
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        await band.update({
+            name: req.body.name,
+            location: req.body.location,
+            phone: req.body.phone,
+            type: req.body.type
+        });
+        res.status(200).send({ band });
+    } catch (error) {
+        console.error('Error updating band:', error);
+        res.status(500).send({ error: 'Error updating band' });
+    }
+};
+
+// Function to delete a band by its ID
+const deleteBand = async (req, res) => {
+    const bandId = req.params.bandId;
+    try {
+        const band = await Band.findByPk(bandId);
+        if (!band) {
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        await band.destroy();
+        res.status(200).send({ message: 'Band deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting band:', error);
+        res.status(500).send({ error: 'Error deleting band' });
+    }
+};
+
+// Function to edit profile picture of a band by its ID
+const editBandProfilePicture = async (req, res) => {
+    const bandId = req.params.bandId;
+    try {
+        const band = await Band.findByPk(bandId);
+        if (!band) {
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        await addFilenameToBody(req, 'profile_picture', Band, 'bandId');
+        await band.update({
+            profile_picture: req.body.profile_picture
+        });
+        const updatedBand = await Band.findByPk(bandId);
+        res.status(200).send({ band: updatedBand });
+    } catch (error) {
+        console.error('Error updating band profile picture:', error);
+        res.status(500).send({ error: 'Error updating band profile picture' });
+    }
+};
+
+// Function to delete profile picture of a band by its ID
+const deleteBandProfilePicture = async (req, res) => {
+    const bandId = req.params.bandId;
+    try {
+        const band = await Band.findByPk(bandId);
+        if (!band) {
+            return res.status(404).send({ error: 'Band not found' });
+        }
+        const bandProfilePictureUrl = band.profile_picture;
+        await band.update({
+            profile_picture: null
+        });
+        await deleteFileFromCloudinary(bandProfilePictureUrl, Band);
+        const updatedBand = await Band.findByPk(bandId);
+        res.status(200).send({ band: updatedBand });
+    } catch (error) {
+        console.error('Error deleting band profile picture:', error);
+        res.status(500).send({ error: 'Error deleting band profile picture' });
+    }
+};
+
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -192,7 +272,11 @@ const BandController = {
     createBand,
     findBandById,
     findBandByCode,
-    joinBand
+    joinBand,
+    updateBand,
+    deleteBand,
+    editBandProfilePicture,
+    deleteBandProfilePicture
 };
 
 export default BandController;

@@ -1,4 +1,4 @@
-import { addFilenameToBody } from "../middleware/FileHandlerMiddleware.js";
+import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to list bands of the logged-in musician

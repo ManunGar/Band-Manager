@@ -73,7 +73,7 @@ const create = [
         .custom((value, { req }) => {
             const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
             if (!phoneRegex.test(value)) {
-                    return new Error('Phone number contains invalid characters');
+                return new Error('Phone number contains invalid characters');
             }
             return true;
         }),
@@ -127,7 +127,7 @@ const update = [
         .custom((value, { req }) => {
             const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
             if (!phoneRegex.test(value)) {
-                    return new Error('Phone number contains invalid characters');
+                return new Error('Phone number contains invalid characters');
             }
             return true;
         }),
@@ -137,5 +137,16 @@ const update = [
         .notEmpty().withMessage('Band type cannot be empty')
 ]
 
-export { create, join, update };
+const updateProfilePicture = [
+    check('profile_picture')
+        .custom((value, { req }) => {
+            return checkFileIsImage(req, 'profile_picture')
+        }).withMessage('Sube una imagen con formato (jpeg, png).'),
+    check('profile_picture')
+        .custom((value, { req }) => {
+            return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+        }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+]
+
+export { create, join, update, updateProfilePicture };
 

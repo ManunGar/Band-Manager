@@ -47,7 +47,7 @@ const _principalInstrumentExist = async (value, { req }) => {
 const _bandNameUnique = async (value, { req }) => {
     try {
         const existingBand = await Band.findOne({ where: { name: value } });
-        if (existingBand) {
+        if (existingBand && existingBand.id !== parseInt(req.params?.bandId)) {
             return Promise.reject(new Error('Band name already in use'));
         }
         return Promise.resolve();

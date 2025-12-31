@@ -127,7 +127,7 @@ const update = [
         .custom((value, { req }) => {
             const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
             if (!phoneRegex.test(value)) {
-                return new Error('Phone number contains invalid characters');
+                throw new Error('Phone number contains invalid characters');
             }
             return true;
         }),

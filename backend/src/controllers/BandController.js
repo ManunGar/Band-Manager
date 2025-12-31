@@ -233,7 +233,7 @@ const deleteBandProfilePicture = async (req, res) => {
         await band.update({
             profile_picture: null
         });
-        await deleteFileFromCloudinary(bandProfilePictureUrl);
+        await deleteFileFromCloudinary(bandProfilePictureUrl, Band);
         const updatedBand = await Band.findByPk(bandId);
         res.status(200).send({ band: updatedBand });
     } catch (error) {
@@ -274,7 +274,9 @@ const BandController = {
     findBandByCode,
     joinBand,
     updateBand,
-    deleteBand
+    deleteBand,
+    editBandProfilePicture,
+    deleteBandProfilePicture
 };
 
 export default BandController;

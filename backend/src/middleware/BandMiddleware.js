@@ -42,5 +42,27 @@ const isNotBandMember = async (req, res, next) => {
     }
 };
 
-export { isBandMember, isNotBandMember };
+// Middleware to check if the musician is an admin of the band
+const isBandAdmin = async (req, res, next) => {
+    const bandId = req.params.bandId;
+    const musicianId = req.user.musician.id;
+    try {
+        const component = await Component.findOne({
+            where: {
+                bandId: bandId,
+                musicianId: musicianId,
+                administrator: true
+            }
+        });
+        if (!component) {
+            return res.status(403).send({ error: 'Access denied. You are not an admin of this band.' });
+        }
+        next();
+    } catch (error) {
+        console.error('Error checking band admin status:', error);
+        res.status(500).send({ error: 'Error checking band admin status' });
+    }
+};
+
+export { isBandAdmin, isBandMember, isNotBandMember };
 

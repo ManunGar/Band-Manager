@@ -16,13 +16,13 @@ const addFilenameToBody = async (req, fieldName, model, idPathParamName) => {
     if (req.params[idPathParamName]) {
       const entity = await model.findByPk(req.params[idPathParamName])
       if (!entity) { return res.status(404).send({ errors: [{ type: 'Not found', msg: `${idPathParamName} no encontrado` }] }) }
-      if (entity.imagen && entity.imagen.includes('bandmanager')) {
-        const imageId = 'bandmanager/' + entity.imagen.split('/bandmanager/')[1].split('.')[0]
+      if (entity[fieldName] && entity[fieldName].includes('bandmanager')) {
+        const imageId = `bandmanager/${model.name.toLowerCase()}` + entity[fieldName].split(`bandmanager/${model.name.toLowerCase()}`)[1].split('.')[0]
         await cloudinary.uploader.destroy(imageId)
       }
     }
     //Add file to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, { folder: "bandmanager" })
+    const result = await cloudinary.uploader.upload(req.file.path, { folder: `bandmanager/${model.name.toLowerCase()}` })
     if (fs.existsSync(req.file.path)) await fs.unlinkSync(req.file.path) // Delete local file after upload
     req.body[fieldName] = result.secure_url
   }
@@ -54,14 +54,14 @@ const addProfilePictureToBody = async (req) => {
 }
 
 // Function to delete file from Cloudinary
-const deleteFileFromCloudinary = async (fileUrl) => {
+const deleteFileFromCloudinary = async (fileUrl, model) => {
   cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.CLOUDINARY_KEY,
     api_secret: process.env.CLOUDINARY_SECRET
   })
   if (fileUrl && fileUrl.includes('bandmanager')) {
-    const imageId = 'bandmanager/' + fileUrl.split('/bandmanager/')[1].split('.')[0]
+    const imageId = `bandmanager/${model.name.toLowerCase()}` + fileUrl.split(`bandmanager/${model.name.toLowerCase()}`)[1].split('.')[0]
     await cloudinary.uploader.destroy(imageId)
   }
 }

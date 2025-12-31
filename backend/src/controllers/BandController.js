@@ -226,10 +226,10 @@ const deleteBandProfilePicture = async (req, res) => {
     const bandId = req.params.bandId;
     try {
         const band = await Band.findByPk(bandId);
-        const bandProfilePictureUrl = band.profile_picture;
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
+        const bandProfilePictureUrl = band.profile_picture;
         await band.update({
             profile_picture: null
         });

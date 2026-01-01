@@ -1,6 +1,8 @@
 import ComponentController from "../controllers/ComponentController.js"
 import { isLoggedIn } from "../middleware/AuthMiddleware.js"
-import { isInTheSameBand } from "../middleware/ComponentMiddleware.js"
+import { isInTheSameBand, isMeOrAdmin } from "../middleware/ComponentMiddleware.js"
+import * as ComponentValidation from "../validations/ComponentValidation.js"
+import { handleValidation } from '../validations/HandleValidation.js'
 
 const loadFileRoutes = function (app) { 
     
@@ -9,7 +11,15 @@ const loadFileRoutes = function (app) {
             isLoggedIn,
             isInTheSameBand,
             ComponentController.findComponentById
-    )
+        )
+        .put(
+            isLoggedIn,
+            isInTheSameBand,
+            isMeOrAdmin,
+            ComponentValidation.update,
+            handleValidation,
+            ComponentController.updateComponentInstruments
+        )
 
 }
 

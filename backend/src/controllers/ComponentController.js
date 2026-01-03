@@ -52,7 +52,7 @@ const updateComponentInstruments = async (req, res) => {
             include: [{
                 model: Instrument,
                 as: 'instruments',
-                required: true
+                required: false
             }, {
                 model: Musician,
                 as: 'musician',

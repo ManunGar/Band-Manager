@@ -75,6 +75,39 @@ const updateComponentInstruments = async (req, res) => {
     }
 };
 
+// Function to remove a component from its band
+const removeComponentFromBand = async (req, res) => {
+    const componentId = req.params.componentId;
+    try {
+        const component = await Component.findByPk(componentId);
+        if (!component) {
+            return res.status(404).send({ error: 'Component not found.' });
+        }
+        await component.destroy();
+        return res.status(200).send({ message: 'Component removed from band successfully.' });
+    } catch (error) {
+        console.error('Error removing component from band:', error);
+        return res.status(500).send({ error: 'Error removing component from band' });
+    }
+};
+
+// Function to promote a component to administrator
+const promoteToAdministrator = async (req, res) => {
+    const componentId = req.params.componentId;
+    try {
+        const component = await Component.findByPk(componentId);
+        if (!component) {
+            return res.status(404).send({ error: 'Component not found.' });
+        }
+        component.administrator = true;
+        await component.save();
+        return res.status(200).send({ message: 'Component promoted to administrator successfully.' });
+    } catch (error) {
+        console.error('Error promoting component to administrator:', error);
+        return res.status(500).send({ error: 'Error promoting component to administrator' });
+    }
+};
+
 // Function to transform instruments data from request body
 const _transformInstrumentsData = (instruments) => {
     const instrumentsId = Object.keys(instruments).map(id => parseInt(id, 10))
@@ -84,7 +117,9 @@ const _transformInstrumentsData = (instruments) => {
 
 const ComponentController = {
     findComponentById,
-    updateComponentInstruments
+    updateComponentInstruments,
+    removeComponentFromBand,
+    promoteToAdministrator
 };
 
 export default ComponentController;

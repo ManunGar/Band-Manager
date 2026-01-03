@@ -54,4 +54,30 @@ const isMeOrAdmin = async (req, res, next) => {
     }
 };
 
-export { isInTheSameBand, isMeOrAdmin };
+// Middleware to check if the user is an admin in the same band
+const isAdminInSameBand = async (req, res, next) => {
+    const componentId = req.params.componentId;
+    const musicianId = req.user.musician.id;
+    try {
+        const component = await Component.findByPk(componentId);    
+        if (!component) {
+            return res.status(404).send({ error: 'Component not found.' });
+        }
+        const adminComponent = await Component.findOne({
+            where: {
+                bandId: component.bandId,
+                musicianId: musicianId,
+                administrator: true
+            }
+        });
+        if (!adminComponent) {
+            return res.status(403).send({ error: 'Access denied. You are not an admin in the same band as this component.' });
+        }
+        next();
+    } catch (error) {
+        console.error('Error checking admin status in the same band:', error);
+        res.status(500).send({ error: 'Error checking admin status in the same band' });
+    }
+};
+
+export { isAdminInSameBand, isInTheSameBand, isMeOrAdmin };

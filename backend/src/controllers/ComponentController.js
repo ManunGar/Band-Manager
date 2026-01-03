@@ -39,7 +39,7 @@ const updateComponentInstruments = async (req, res) => {
     const componentId = req.params.componentId;
     const transaction = await Component.sequelize.transaction();
     try {
-        const component = await Component.findByPk(componentId);
+        const component = req.component || await Component.findByPk(componentId);
         const instrumentsData = _transformInstrumentsData(instruments);
         await component.setInstruments([], { transaction }); // Remove existing associations
         for (const instrumentData of instrumentsData) {

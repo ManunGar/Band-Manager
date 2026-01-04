@@ -9,7 +9,7 @@ const Component = ({ component, seeAttendance=false, seeInstrument=true }) => {
     const navigation = useNavigation();
 
     return (
-        <TouchableOpacity onPress={() => navigation.navigate('Component')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Component', { component })} disabled={seeAttendance}>
             <View style={styles.container}>
                 <Image source={component.musician.user.profile_picture ? { uri: component.musician.user.profile_picture } : profileDefaultImage} style={{ width: 60, height: 60, borderRadius: 30 }} />
                 { !seeAttendance && component.administrator && <AdminIcon style={{ position: 'absolute', top: 40, left: 40 }} />}

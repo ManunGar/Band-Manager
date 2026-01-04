@@ -79,14 +79,19 @@ const ComponentScreen = ({ route }) => {
                 ) : (
                     <Text style={styles.noContentText}>No hay registros de asistencia</Text>
                 )}
-                <View style={{ marginTop: 30, paddingTop: 20, gap: 10 }}>
-                    <LinkText>
+                <View style={{ marginTop: 30, gap: 15 }}>
+                    {isBandAdministrator && (<LinkText>
                         {component?.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
-                    </LinkText>
-                    <LinkText style={{color: GlobalStyle.red}}>
+                    </LinkText>)}
+                    {user?.musician?.id !== component?.musicianId && isBandAdministrator && (<LinkText style={{ color: GlobalStyle.red }}>
                         Eliminar componente
-                    </LinkText>
+                    </LinkText>)}
+                    {user?.musician?.id === component?.musicianId && (
+                        <LinkText style={{ color: GlobalStyle.red }}>
+                            Salir del equipo
+                        </LinkText>)}
                 </View>
+
 
             </ScrollView>
         </View>
@@ -112,7 +117,7 @@ const styles = StyleSheet.create({
     },
     instrumentText: {
         fontFamily: 'Oswald_400',
-        fontSize: 18,
+        fontSize: 16,
         color: GlobalStyle.darkGray,
     },
     container: {

@@ -19,7 +19,6 @@ const BandScreen = ({ route }) => {
 
     useEffect(() => {
         const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
-        console.log("🚀 ~ BandScreen ~ isAdmin:", isAdmin)
         setIsBandAdministrator(isAdmin);
     }, [band, user?.musician?.id]);
 

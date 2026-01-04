@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [loadingText, setLoadingText] = useState('');
+    const [isBandAdministrator, setIsBandAdministrator] = useState(false);
 
     const login = async (userData) => {
         try {
@@ -111,7 +112,7 @@ export function AuthProvider({ children }) {
 
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, editProfilePicture, deleteProfilePicture, isLoading, loadingText }}>
+        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, editProfilePicture, deleteProfilePicture, isLoading, loadingText, isBandAdministrator, setIsBandAdministrator }}>
             {children}
         </AuthContext.Provider>
     );

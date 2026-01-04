@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import ComponentEndpoints from '../../../api/ComponentEndpoints';
 import profileDefaultImage from '../../../assets/milestones/profile_default.png';
+import FilterIcon from '../../../components/icons/FilterIcon';
 import LinkText from '../../../components/LinkText';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
@@ -10,17 +11,17 @@ import * as GlobalStyle from '../../../GlobalStyle';
 const { width: SCREENW } = Dimensions.get('window')
 const ComponentScreen = ({ route }) => {
     const [component, setComponent] = useState(null);
-    const {isBandAdministrator, user} = useContext(AuthContext);
+    const { isBandAdministrator, user } = useContext(AuthContext);
+    const componentId = route.params.component.id;
 
     useEffect(() => {
         fetchComponentDetails();
-    });
+    }, [componentId]);
 
     const fetchComponentDetails = async () => {
         try {
-            const detailedComponent = await ComponentEndpoints.getComponentDetails(route.params.component.id);
+            const detailedComponent = await ComponentEndpoints.getComponentDetails(componentId);
             setComponent(detailedComponent);
-
         } catch (error) {
             console.error("Error fetching component details:", error);
         }
@@ -44,7 +45,7 @@ const ComponentScreen = ({ route }) => {
                                 {component.instruments.map((instrument, idx) => (
                                     <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                                         <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument?.image}` }} style={{ width: 18, height: 18, marginTop: 4 }} />
-                                        <Text style={[styles.instrumentText, {borderBottomColor: GlobalStyle.yellow, borderBottomWidth: instrument.ComponentInstruments.principal ? 2 : 0}]}>{instrument?.name}</Text>
+                                        <Text style={[styles.instrumentText, { borderBottomColor: GlobalStyle.yellow, borderBottomWidth: instrument.ComponentInstruments.principal ? 2 : 0 }]}>{instrument?.name}</Text>
                                     </View>
                                 ))}
                             </View> :
@@ -55,8 +56,36 @@ const ComponentScreen = ({ route }) => {
                         )}
                     </View>
                 </View>
-
             </TopContainer>
+            <ScrollView style={styles.container}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <Text style={styles.sectionTitle}>Asistencia a eventos</Text>
+                    <FilterIcon width={22} height={21} />
+                </View>
+                {component?.attendances && component.attendances.length > 0 ? (
+                    component.attendances.map((attendance, idx) => (
+                        <View key={idx} style={{ marginBottom: 15 }}>
+                            <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, color: GlobalStyle.darkGray }}>
+                                {attendance.event.name} - {attendance.status}
+                            </Text>
+                            <Text style={{ fontFamily: 'Oswald_300', fontSize: 14, color: GlobalStyle.gray }}>
+                                {new Date(attendance.event.date).toLocaleDateString()}
+                            </Text>
+                        </View>
+                    ))
+                ) : (
+                    <Text style={styles.noContentText}>No hay registros de asistencia</Text>
+                )}
+                <View style={{ marginTop: 30, paddingTop: 20, gap: 10 }}>
+                    <LinkText>
+                        {component.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
+                    </LinkText>
+                    <LinkText style={{color: GlobalStyle.red}}>
+                        Eliminar componente
+                    </LinkText>
+                </View>
+
+            </ScrollView>
         </View>
     )
 }
@@ -82,5 +111,20 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         fontSize: 18,
         color: GlobalStyle.darkGray,
+    },
+    container: {
+        paddingInline: 25,
+        marginTop: 5
+    },
+    sectionTitle: {
+        fontFamily: 'Oswald_500',
+        fontSize: 17,
+        color: GlobalStyle.black,
+    },
+    noContentText: {
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        marginTop: 10,
     }
 })

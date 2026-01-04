@@ -13,6 +13,7 @@ const ComponentScreen = ({ route }) => {
     const [component, setComponent] = useState(null);
     const { isBandAdministrator, user } = useContext(AuthContext);
     const componentId = route.params.component.id;
+    const band = route.params.band;
 
     useEffect(() => {
         fetchComponentDetails();
@@ -32,7 +33,9 @@ const ComponentScreen = ({ route }) => {
         <View>
             <TopContainer
                 title={'Componente'}
-                editEnabled={false}>
+                editEnabled={false}
+                pictureEnabled={true}
+                pictureUrl={band?.profile_picture}>
                 <View style={styles.componentContainer}>
                     <Image source={component?.musician.user.profile_picture ? { uri: component.musician.user.profile_picture } : profileDefaultImage}
                         style={{ width: 80, height: 80, borderRadius: 50 }} />
@@ -78,7 +81,7 @@ const ComponentScreen = ({ route }) => {
                 )}
                 <View style={{ marginTop: 30, paddingTop: 20, gap: 10 }}>
                     <LinkText>
-                        {component.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
+                        {component?.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
                     </LinkText>
                     <LinkText style={{color: GlobalStyle.red}}>
                         Eliminar componente

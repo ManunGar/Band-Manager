@@ -67,7 +67,7 @@ export default function Index({ route }) {
                     data={band?.components || []}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <Component component={item} />
+                        <Component component={item} band={band}/>
                     )}
                     ItemSeparatorComponent={(<View style={{ height: 10 }}></View>)}
                     contentContainerStyle={{ gap: 10, width: '100%', minHeight: 60, paddingBottom: 40 }}

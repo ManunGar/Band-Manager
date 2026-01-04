@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import profileDefaultImage from '../assets/milestones/profile_default.png';
 import * as GlobalStyle from '../GlobalStyle';
@@ -5,8 +6,10 @@ import AdminIcon from './icons/AdminIcon';
 import BackIcon from './icons/BackIcons';
 
 const Component = ({ component, seeAttendance=false, seeInstrument=true }) => {
+    const navigation = useNavigation();
+
     return (
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Component')}>
             <View style={styles.container}>
                 <Image source={component.musician.user.profile_picture ? { uri: component.musician.user.profile_picture } : profileDefaultImage} style={{ width: 60, height: 60, borderRadius: 30 }} />
                 { !seeAttendance && component.administrator && <AdminIcon style={{ position: 'absolute', top: 40, left: 40 }} />}

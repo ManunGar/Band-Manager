@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import bandDefaultPicture from '../assets/milestones/band_default.png'
 import * as GlobalStyle from '../GlobalStyle'
 import BackIcon from './icons/BackIcons'
 import ConfigurationIcon from './icons/ConfigurationIcon'
@@ -15,8 +16,9 @@ const TopContainer = ({ children, style,
             backEnabled = true, 
             createEnabled = false,
             configEnabled = false, 
-            saveEnabled = false, 
-            onEdit, onSave, onCreate }) => {
+            saveEnabled = false,
+            pictureEnabled = false,
+            onEdit, onSave, onCreate, pictureUrl }) => {
     const navigation = useNavigation();
     
     return (
@@ -31,6 +33,14 @@ const TopContainer = ({ children, style,
                     {editEnabled && <EditIcon onPress={onEdit}/>}
                     {createEnabled && <CreateIcon onCreate={onCreate}/>}
                     {saveEnabled && <SaveIcon onSave={onSave} />}
+                    {pictureEnabled && (
+                        <Image
+                            source={pictureUrl ? { uri: pictureUrl } : bandDefaultPicture}
+                            style={{ width: 50, height: 50, borderRadius: 50 }}
+                            accessibilityRole="image"
+                            accessibilityLabel={title ? `${title} band picture` : 'Band picture'}
+                        />
+                    )}
                 </View>
             </View>
             {children}

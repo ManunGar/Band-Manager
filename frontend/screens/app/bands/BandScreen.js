@@ -1,6 +1,6 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useLinkBuilder } from '@react-navigation/native';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import TopContainer from '../../../components/TopContainer';
@@ -15,6 +15,12 @@ const Tab = createMaterialTopTabNavigator();
 
 const BandScreen = ({ route }) => {
     const { band } = route.params;
+    const { setIsBandAdministrator, user } = useContext(AuthContext);
+
+    useEffect(() => {
+        const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
+        setIsBandAdministrator(isAdmin);
+    }, [band, user?.musician?.id]);
 
     return (
         < Tab.Navigator tabBar={(props) => <MyTabBar {...props} band={band} />} >

@@ -33,7 +33,14 @@ const TopContainer = ({ children, style,
                     {editEnabled && <EditIcon onPress={onEdit}/>}
                     {createEnabled && <CreateIcon onCreate={onCreate}/>}
                     {saveEnabled && <SaveIcon onSave={onSave} />}
-                    {pictureEnabled && <Image source={pictureUrl ? { uri: pictureUrl } : bandDefaultPicture} style={{ width: 50, height: 50, borderRadius: 50 }} />}
+                    {pictureEnabled && (
+                        <Image
+                            source={pictureUrl ? { uri: pictureUrl } : bandDefaultPicture}
+                            style={{ width: 50, height: 50, borderRadius: 50 }}
+                            accessibilityRole="image"
+                            accessibilityLabel={title ? `${title} band picture` : 'Band picture'}
+                        />
+                    )}
                 </View>
             </View>
             {children}

@@ -1,4 +1,5 @@
-import { useContext, useEffect, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useCallback, useContext, useState } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import ComponentEndpoints from '../../../api/ComponentEndpoints';
 import profileDefaultImage from '../../../assets/milestones/profile_default.png';
@@ -14,14 +15,19 @@ const ComponentScreen = ({ route }) => {
     const { isBandAdministrator, user } = useContext(AuthContext);
     const componentId = route.params.component.id;
     const band = route.params.band;
+    const navigation = useNavigation();
 
-    useEffect(() => {
-        fetchComponentDetails();
-    }, [componentId]);
+    // Refresh component details when the screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            fetchComponentDetails();
+        }, [componentId])
+    )
 
     const fetchComponentDetails = async () => {
         try {
             const detailedComponent = await ComponentEndpoints.getComponentDetails(componentId);
+            console.log("🚀 ~ fetchComponentDetails ~ detailedComponent:", detailedComponent)
             setComponent(detailedComponent);
         } catch (error) {
             console.error("Error fetching component details:", error);
@@ -55,7 +61,7 @@ const ComponentScreen = ({ route }) => {
                             <Text style={styles.instrumentText}>Sin instrumento asignado</Text>
                         }
                         {(isBandAdministrator || user?.musician?.id === component?.musicianId) && (
-                            <LinkText style={{ marginTop: 10 }}>Editar instrumentos</LinkText>
+                            <LinkText style={{ marginTop: 10 }} onPress={() => navigation.navigate('EditComponent', { band, component })}>Editar instrumentos</LinkText>
                         )}
                     </View>
                 </View>

@@ -1,5 +1,5 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { useLinkBuilder } from '@react-navigation/native';
+import { useLinkBuilder, useNavigation } from '@react-navigation/native';
 import { useContext, useEffect } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
@@ -34,13 +34,14 @@ const BandScreen = ({ route }) => {
 
 function MyTabBar({ state, descriptors, navigation, band }) {
     const { buildHref } = useLinkBuilder();
-    const { user } = useContext(AuthContext);
-    const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
+    const { user, isBandAdministrator } = useContext(AuthContext);
+    const navigationScreen = useNavigation();
 
     return (
         <TopContainer
-            editEnabled={isAdmin}
-            createEnabled={isAdmin}
+            editEnabled={isBandAdministrator}
+            onEdit={() => navigationScreen.navigate('EditBand', { band })}
+            createEnabled={isBandAdministrator}
             style={{ paddingTop: 5, paddingBottom: 13 }}>
             <Image source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 70, height: 70 }} />
             <Text style={{ fontSize: 26, fontFamily: 'BebasNeue', marginTop: 5 }}>

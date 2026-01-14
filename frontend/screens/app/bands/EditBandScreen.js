@@ -96,7 +96,8 @@ const EditBandScreen = ({ route }) => {
             name: `avatar_${Date.now()}.jpg`,
             type: 'image/jpeg',
         });
-        await BandEndpoints.editBandProfilePicture(band.id, form);
+        const updatedBand = await BandEndpoints.editBandProfilePicture(band.id, form);
+        navigation.setParams({ band: updatedBand.band });
     }
 
     return (

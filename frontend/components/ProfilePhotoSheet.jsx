@@ -1,12 +1,10 @@
-import { useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Text, TouchableOpacity } from 'react-native';
-import { AuthContext } from '../contexts/AuthContext';
 import * as GlobalStyle from '../GlobalStyle';
-import { assertSizeLT3MB, pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
+import { pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
 import BottomSheet from './BottomSheet';
 
-const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
-    const { editProfilePicture, deleteProfilePicture } = useContext(AuthContext);
+const ProfilePhotoSheet = ({ sheetRef, onUploaded, deleteProfilePicture, uploadingFunction }) => {
     const [uploading, setUploading] = useState(false);
     const snapPoints = useMemo(() => ['40%'], [])
 
@@ -17,16 +15,10 @@ const ProfilePhotoSheet = ({ sheetRef, onUploaded }) => {
     const uploadingProfilePicture = async (uri) => {
         try {
             setUploading(true);
-            await assertSizeLT3MB(uri);
-            const form = new FormData();
-            form.append('profile_picture', {
-                uri: uri,
-                name: `avatar_${Date.now()}.jpg`,
-                type: 'image/jpeg',
-            });
-            await editProfilePicture(form);
+            await uploadingFunction(uri)
             onUploaded?.();
         } catch (error) {
+            console.log("🚀 ~ uploadingProfilePicture ~ error:", error)
             Alert.alert('Error', error.message || 'Hubo un error al subir la imagen.');
         } finally {
             setUploading(false);

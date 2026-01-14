@@ -33,6 +33,16 @@ const createBand = async (bandData) => {
     }
 };
 
+// Endpoint to edit band details
+const editBand = async (bandId, bandData) => {
+    try {
+        const response = await axios.put(`${baseUrl}/bands/${bandId}`, bandData);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 // Endpoint to find a band by code
 const findBandByCode = async (code) => {
     try {
@@ -85,6 +95,7 @@ export default {
     getBandDetails,
     createBand,
     findBandByCode,
+    editBand,
     joinBand,
     editBandProfilePicture,
     deleteBandProfilePicture

@@ -23,7 +23,29 @@ const updateComponentInstruments = async (componentId, data) => {
     }
 };
 
+// Endpoint to promote a component by ID
+const promoteComponent = async (componentId) => {
+    try {
+        const response = await axios.put(`${baseUrl}/components/${componentId}/promote`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
+// Endpoint to leave a component by ID
+const leaveComponent = async (componentId) => {
+    try {
+        const response = await axios.delete(`${baseUrl}/components/${componentId}/leave`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     getComponentDetails,
     updateComponentInstruments,
+    promoteComponent,
+    leaveComponent
 };

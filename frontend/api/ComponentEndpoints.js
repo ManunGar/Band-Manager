@@ -13,6 +13,17 @@ const getComponentDetails = async (componentId) => {
     }
 };
 
+// Endpoint to update component instruments
+const updateComponentInstruments = async (componentId, data) => {
+    try {
+        const response = await axios.put(`${baseUrl}/components/${componentId}`, data);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     getComponentDetails,
+    updateComponentInstruments,
 };

@@ -1,7 +1,8 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { useLinkBuilder } from '@react-navigation/native';
-import { useContext, useEffect } from 'react';
+import { useFocusEffect, useLinkBuilder, useNavigation } from '@react-navigation/native';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import BandEndpoints from '../../../api/BandEndpoints';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
@@ -14,13 +15,29 @@ import Repertoire from './stack/Repertoire';
 const Tab = createMaterialTopTabNavigator();
 
 const BandScreen = ({ route }) => {
-    const { band } = route.params;
+    const [band, setBand] = useState(route.params.band)
     const { setIsBandAdministrator, user } = useContext(AuthContext);
 
     useEffect(() => {
         const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
         setIsBandAdministrator(isAdmin);
     }, [band, user?.musician?.id]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchBandInfo();
+        }, [])
+    );
+
+    const fetchBandInfo = async () => {
+        try {
+            const data = await BandEndpoints.getBandDetails(band.id);
+            setBand(data?.band)
+        } catch (error) {
+            console.error(error)
+            logout()
+        }
+    }
 
     return (
         < Tab.Navigator tabBar={(props) => <MyTabBar {...props} band={band} />} >
@@ -34,13 +51,14 @@ const BandScreen = ({ route }) => {
 
 function MyTabBar({ state, descriptors, navigation, band }) {
     const { buildHref } = useLinkBuilder();
-    const { user } = useContext(AuthContext);
-    const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
+    const { user, isBandAdministrator } = useContext(AuthContext);
+    const navigationScreen = useNavigation();
 
     return (
         <TopContainer
-            editEnabled={isAdmin}
-            createEnabled={isAdmin}
+            editEnabled={isBandAdministrator}
+            onEdit={() => navigationScreen.navigate('EditBand', { band })}
+            createEnabled={isBandAdministrator}
             style={{ paddingTop: 5, paddingBottom: 13 }}>
             <Image source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 70, height: 70 }} />
             <Text style={{ fontSize: 26, fontFamily: 'BebasNeue', marginTop: 5 }}>
@@ -53,7 +71,7 @@ function MyTabBar({ state, descriptors, navigation, band }) {
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    style={{ marginTop: 20}}
+                    style={{ marginTop: 20 }}
                     contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', gap: 20 }}
                 >
                     {state.routes.map((route, index) => {
@@ -92,7 +110,7 @@ function MyTabBar({ state, descriptors, navigation, band }) {
                                 onPress={onPress}
                                 onLongPress={onLongPress}
                             >
-                                <Text style={{ fontFamily: 'Oswald_500', fontSize: 16, color: isFocused? GlobalStyle.yellow : GlobalStyle.gray, textTransform: 'uppercase', }}>
+                                <Text style={{ fontFamily: 'Oswald_500', fontSize: 16, color: isFocused ? GlobalStyle.yellow : GlobalStyle.gray, textTransform: 'uppercase', }}>
                                     {label}
                                 </Text>
                             </Pressable>

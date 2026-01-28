@@ -13,12 +13,13 @@ import ProfilePhotoSheet from '../../../components/ProfilePhotoSheet'
 import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyle from '../../../GlobalStyle'
+import { assertSizeLT3MB } from '../../../helpers/ImageHelpers'
 
 const { width: SCREENW } = Dimensions.get('window')
 
 const AccountDetailScreen = () => {
     const [musician, setMusician] = useState(null)
-    const { logout } = useContext(AuthContext)
+    const { logout, editProfilePicture, deleteProfilePicture  } = useContext(AuthContext)
     const sheetRef = useRef(null)
     const navigation = useNavigation()
 
@@ -50,6 +51,17 @@ const AccountDetailScreen = () => {
     const openSheet = useCallback(() => {
         sheetRef.current?.present()
     }, [])
+
+    const uploadingProfilePicture = async (uri) => {
+        await assertSizeLT3MB(uri);
+        const form = new FormData();
+        form.append('profile_picture', {
+            uri: uri,
+            name: `avatar_${Date.now()}.jpg`,
+            type: 'image/jpeg',
+        });
+        await editProfilePicture(form);
+    }
 
     const goToInstruments = () => {
         navigation.navigate('Instruments', {
@@ -129,6 +141,9 @@ const AccountDetailScreen = () => {
             {/* Image Picker component */}
             <ProfilePhotoSheet
                 sheetRef={sheetRef}
+                editProfilePicture={editProfilePicture}
+                deleteProfilePicture={deleteProfilePicture}
+                uploadingFunction={uploadingProfilePicture}
                 onUploaded={fetchAccountDetails}
             />
         </ScrollView>

@@ -99,9 +99,22 @@ const promoteToAdministrator = async (req, res) => {
         if (!component) {
             return res.status(404).send({ error: 'Component not found.' });
         }
-        component.administrator = true;
+        const administratorsCount = await Component.count({
+            where: {
+                bandId: component.bandId,
+                administrator: true
+            }
+        });
+        if (administratorsCount === 1 && component.administrator) {
+            return res.status(400).send({ error: 'A band must have at least one administrator.' });
+        }
+        if (!component.administrator) {
+            component.administrator = true;
+        } else {
+            component.administrator = false;
+        }
         await component.save();
-        return res.status(200).send({ message: 'Component promoted to administrator successfully.' });
+        return res.status(200).send({ message: component.administrator ? 'Component promoted to administrator successfully.' : 'Component demoted from administrator successfully.' });
     } catch (error) {
         console.error('Error promoting component to administrator:', error);
         return res.status(500).send({ error: 'Error promoting component to administrator' });

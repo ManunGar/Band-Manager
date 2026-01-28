@@ -20,6 +20,7 @@ export default function Index({ route }) {
 
     useFocusEffect(
         useCallback(() => {
+            fetchBandData();
             return closeSheet;
         }, [])
     );

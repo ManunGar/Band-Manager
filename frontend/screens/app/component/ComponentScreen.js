@@ -27,10 +27,39 @@ const ComponentScreen = ({ route }) => {
     const fetchComponentDetails = async () => {
         try {
             const detailedComponent = await ComponentEndpoints.getComponentDetails(componentId);
-            console.log("🚀 ~ fetchComponentDetails ~ detailedComponent:", detailedComponent)
             setComponent(detailedComponent);
         } catch (error) {
             console.error("Error fetching component details:", error);
+        }
+    };
+
+    const promoteComponent = async () => {
+        try {
+            await ComponentEndpoints.promoteComponent(componentId);
+            navigation.goBack();
+        } catch (error) {
+            console.error("Error promoting component:", error);
+        }
+    };
+
+    const leaveComponent = async () => {
+        try {
+            await ComponentEndpoints.leaveComponent(componentId);
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'MyBands' }],
+            });
+        } catch (error) {
+            console.error("Error leaving component:", error);
+        }
+    };
+
+    const deleteComponent = async () => {
+        try {
+            await ComponentEndpoints.leaveComponent(componentId);
+            navigation.goBack();
+        } catch (error) {
+            console.error("Error deleting component:", error);
         }
     };
 
@@ -86,14 +115,15 @@ const ComponentScreen = ({ route }) => {
                     <Text style={styles.noContentText}>No hay registros de asistencia</Text>
                 )}
                 <View style={{ marginTop: 30, gap: 15 }}>
-                    {isBandAdministrator && (<LinkText>
+                    {isBandAdministrator && (<LinkText onPress={promoteComponent}>
                         {component?.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
                     </LinkText>)}
-                    {user?.musician?.id !== component?.musicianId && isBandAdministrator && (<LinkText style={{ color: GlobalStyle.red }}>
+                    {user?.musician?.id !== component?.musicianId && isBandAdministrator && (<LinkText style={{ color: GlobalStyle.red }} 
+                        onPress={deleteComponent}>
                         Eliminar componente
                     </LinkText>)}
                     {user?.musician?.id === component?.musicianId && (
-                        <LinkText style={{ color: GlobalStyle.red }}>
+                        <LinkText style={{ color: GlobalStyle.red }} onPress={leaveComponent}>
                             Salir del equipo
                         </LinkText>)}
                 </View>

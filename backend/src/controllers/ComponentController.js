@@ -1,11 +1,11 @@
-import { Component, Instrument, Musician, User } from "../models/sequelize.js";
+import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to find a component by its ID
 const findComponentById = async (req, res) => {
     const componentId = req.params.componentId;
     try {
-        const component = await Component.findByPk(componentId, 
-            { 
+        const component = await Component.findByPk(componentId,
+            {
                 include: [{
                     model: Instrument,
                     as: 'instruments',
@@ -48,7 +48,7 @@ const updateComponentInstruments = async (req, res) => {
                 await component.addInstrument(instrument, { through: { principal: instrumentData.principal }, transaction });
             }
         }
-        const updatedComponent = await component.reload({ 
+        const updatedComponent = await component.reload({
             include: [{
                 model: Instrument,
                 as: 'instruments',
@@ -75,22 +75,6 @@ const updateComponentInstruments = async (req, res) => {
     }
 };
 
-// Function to remove a component from its band
-const removeComponentFromBand = async (req, res) => {
-    const componentId = req.params.componentId;
-    try {
-        const component = await Component.findByPk(componentId);
-        if (!component) {
-            return res.status(404).send({ error: 'Component not found.' });
-        }
-        await component.destroy();
-        return res.status(200).send({ message: 'Component removed from band successfully.' });
-    } catch (error) {
-        console.error('Error removing component from band:', error);
-        return res.status(500).send({ error: 'Error removing component from band' });
-    }
-};
-
 // Function to promote a component to administrator
 const promoteToAdministrator = async (req, res) => {
     const componentId = req.params.componentId;
@@ -99,12 +83,68 @@ const promoteToAdministrator = async (req, res) => {
         if (!component) {
             return res.status(404).send({ error: 'Component not found.' });
         }
-        component.administrator = true;
+        const administratorsCount = await Component.count({
+            where: {
+                bandId: component.bandId,
+                administrator: true
+            }
+        });
+        if (administratorsCount === 1 && component.administrator) {
+            return res.status(400).send({ error: 'A band must have at least one administrator.' });
+        }
+        if (!component.administrator) {
+            component.administrator = true;
+        } else {
+            component.administrator = false;
+        }
         await component.save();
-        return res.status(200).send({ message: 'Component promoted to administrator successfully.' });
+        return res.status(200).send({ message: component.administrator ? 'Component promoted to administrator successfully.' : 'Component demoted from administrator successfully.' });
     } catch (error) {
         console.error('Error promoting component to administrator:', error);
         return res.status(500).send({ error: 'Error promoting component to administrator' });
+    }
+};
+
+// Function to allow a component to leave a band
+const leaveBand = async (req,res) => {
+    const componentId = req.params.componentId;
+    const transaction = await Component.sequelize.transaction();
+    try {
+        const component = await Component.findByPk(componentId);
+        if (!component) {
+            return res.status(404).send({ error: 'Component not found.' });
+        }
+        const componentCount = await Component.count({
+            where: {
+                bandId: component.bandId
+            }
+        });
+        // Ensure that the band will have at least one administrator
+        const administratorsCount = await Component.count({
+            where: {
+                bandId: component.bandId,
+                administrator: true
+            }
+        });
+        if (administratorsCount === 1 && component.administrator && componentCount > 1) {
+            return res.status(400).send({ error: 'A band must have at least one administrator.' });
+        }
+        // Check if the band have only one component
+        if (componentCount <= 1) {
+            await Band.destroy({
+                where: {
+                    id: component.bandId
+                },
+                transaction
+            });
+        }
+        await component.destroy({ transaction });
+        await transaction.commit();
+        return res.status(200).send({ message: 'Component has left the band successfully.' });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error leaving band:', error);
+        return res.status(500).send({ error: 'Error leaving band' });
     }
 };
 
@@ -118,8 +158,8 @@ const _transformInstrumentsData = (instruments) => {
 const ComponentController = {
     findComponentById,
     updateComponentInstruments,
-    removeComponentFromBand,
-    promoteToAdministrator
+    promoteToAdministrator,
+    leaveBand
 };
 
 export default ComponentController;

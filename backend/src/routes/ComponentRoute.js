@@ -20,17 +20,19 @@ const loadFileRoutes = function (app) {
             handleValidation,
             ComponentController.updateComponentInstruments
         )
-        .delete(
-            isLoggedIn,
-            isMeOrAdmin,
-            ComponentController.removeComponentFromBand
-        );
     // Route to promote a component to administrator
     app.route('/components/:componentId/promote')
         .put(
             isLoggedIn,
             isAdminInSameBand,
             ComponentController.promoteToAdministrator
+        )
+    // Route for a component to leave the band
+    app.route('/components/:componentId/leave')
+        .delete(
+            isLoggedIn,
+            isMeOrAdmin,
+            ComponentController.leaveBand
         )
         
 

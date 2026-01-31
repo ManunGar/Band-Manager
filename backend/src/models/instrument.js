@@ -30,6 +30,16 @@ const loadModel = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       });
+
+      // Event relationship with Instrument (Many-to-Many)
+      const InstrumentAttendance = sequelize.define('InstrumentAttendances', {});
+      Instrument.belongsToMany(models.Event, {
+        through: InstrumentAttendance,
+        as: 'eventsAttended',
+        foreignKey: 'instrumentId',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
+      });
     }
   }
   Instrument.init({

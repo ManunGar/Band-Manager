@@ -47,6 +47,9 @@ const loadModel = (sequelize, DataTypes) => {
 
       // Performance relationship with Event (One-to-One)
       Event.hasOne(models.Performance, { foreignKey: 'eventId' });
+
+      // Rehearsal relationship with Event (One-to-One)
+      Event.hasOne(models.Rehearsal, { foreignKey: 'eventId' });
     }
   }
   Event.init({

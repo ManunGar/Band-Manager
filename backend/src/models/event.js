@@ -44,6 +44,9 @@ const loadModel = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       });
+
+      // Performance relationship with Event (One-to-One)
+      Event.hasOne(models.Performance, { foreignKey: 'eventId' });
     }
   }
   Event.init({

@@ -1,8 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
+import { Model } from "sequelize";
+const loadModel = (sequelize, DataTypes) => {
   class Rehearsal extends Model {
     /**
      * Helper method for defining associations.
@@ -30,3 +27,5 @@ module.exports = (sequelize, DataTypes) => {
   });
   return Rehearsal;
 };
+
+export default loadModel;

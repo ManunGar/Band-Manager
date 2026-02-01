@@ -67,6 +67,8 @@ module.exports = {
         defaultValue: Sequelize.NOW
       }
     });
+    await queryInterface.addConstraint('MusicianLevels', { fields: ['musicianId', 'instrumentId'], type: 'primary key', name: 'MusicianLevels_pkey' });
+
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('MusicianLevels');

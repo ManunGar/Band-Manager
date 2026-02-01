@@ -11,6 +11,7 @@ module.exports = {
       },
       bandId: {
         type: Sequelize.INTEGER,
+        allowNull: false,
         references: {
           model: 'Bands',
           key: 'id'
@@ -55,7 +56,7 @@ module.exports = {
           key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE' 
+        onDelete: 'CASCADE'
       },
       present: {
         type: Sequelize.BOOLEAN,
@@ -99,7 +100,7 @@ module.exports = {
           key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE' 
+        onDelete: 'CASCADE'
       },
       createdAt: {
         allowNull: false,
@@ -112,10 +113,13 @@ module.exports = {
         defaultValue: Sequelize.NOW
       }
     })
+    await queryInterface.addConstraint('InstrumentAttendances', { fields: ['eventId', 'instrumentId'], type: 'primary key', name: 'InstrumentAttendances_pkey' });
+    await queryInterface.addConstraint('EventAttendances', { fields: ['eventId', 'componentId'], type: 'primary key', name: 'EventAttendances_pkey' });
+
   },
-    async down(queryInterface, Sequelize) {
-      await queryInterface.dropTable('EventAttendances');
-      await queryInterface.dropTable('InstrumentAttendances');
-      await queryInterface.dropTable('Events');
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('EventAttendances');
+    await queryInterface.dropTable('InstrumentAttendances');
+    await queryInterface.dropTable('Events');
   }
 };

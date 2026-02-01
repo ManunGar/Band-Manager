@@ -83,6 +83,8 @@ module.exports = {
         defaultValue: Sequelize.NOW
       }
     });
+    await queryInterface.addConstraint('ComponentInstruments', { fields: ['componentId', 'instrumentId'], type: 'primary key', name: 'ComponentInstruments_pkey' });
+
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('ComponentInstruments');

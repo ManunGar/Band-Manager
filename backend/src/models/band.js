@@ -9,6 +9,9 @@ const loadModel = (sequelize, DataTypes) => {
     static associate(models) {
       // Component relationship with Band (One-to-Many)
       Band.hasMany(models.Component, { foreignKey: 'bandId', as: 'components' });
+
+      // Event relationship with Band (One-to-Many)
+      Band.hasMany(models.Event, { foreignKey: 'bandId', as: 'events' });
     }
   }
   Band.init({

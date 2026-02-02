@@ -14,8 +14,7 @@ const loadModel = (sequelize, DataTypes) => {
       const EventAttendance = sequelize.define('EventAttendances', {
         present: {
           type: DataTypes.BOOLEAN,
-          allowNull: false,
-          defaultValue: false
+          allowNull: true
         },
         alleged: {
           type: DataTypes.BOOLEAN,

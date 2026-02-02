@@ -32,7 +32,7 @@ const BandScreen = ({ route }) => {
     const fetchBandInfo = async () => {
         try {
             const data = await BandEndpoints.getBandDetails(band.id);
-            setBand(data?.band)
+            setBand(data)
         } catch (error) {
             console.error(error)
             logout()

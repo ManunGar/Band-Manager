@@ -21,7 +21,7 @@ const accountDetails = async (req, res) => {
         if (!userDetails) {
             return res.status(404).send({ error: 'User not found' });
         }
-        return res.status(200).send({ musician: userDetails });
+        return res.status(200).send(userDetails);
     } catch (error) {
         console.error('Error in accountDetails:', error);
         return res.status(500).send({ error: 'Error fetching account details' });

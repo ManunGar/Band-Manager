@@ -37,7 +37,7 @@ const loadFileRoutes = function (app) {
     app.route('/user/edit/profile-picture')
         .put(
             isLoggedIn,
-            handleFilesUpload('profile_picture', process.env.PROFILE_PICTURE_FOLDER, null, null),
+            handleFilesUpload('profile_picture', process.env.PROFILE_PICTURE_FOLDER),
             UserValidation.updateProfilePicture,
             handleValidation,
             UserController.editProfilePicture

@@ -28,8 +28,22 @@ const loadModel = (sequelize, DataTypes) => {
       Component.belongsTo(models.Band, { foreignKey: 'bandId', as: 'band' });
 
       // Event relationship with Component (Many-to-Many)
+      const EventAttendance = sequelize.define('EventAttendances', {
+        present: {
+          type: DataTypes.BOOLEAN,
+          allowNull: true
+        },
+        alleged: {
+          type: DataTypes.BOOLEAN,
+          allowNull: true,
+        },
+        reason: {
+          type: DataTypes.STRING,
+          allowNull: true
+        }
+      });
       Component.belongsToMany(models.Event, {
-        through: 'EventAttendance',
+        through: EventAttendance,
         as: 'eventsAttended',
         foreignKey: 'componentId',
         onDelete: 'CASCADE',

@@ -19,8 +19,7 @@ const loadModel = (sequelize, DataTypes) => {
         },
         alleged: {
           type: DataTypes.BOOLEAN,
-          allowNull: false,
-          defaultValue: false
+          allowNull: true,
         },
         reason: {
           type: DataTypes.STRING,

@@ -67,7 +67,7 @@ const updateComponentInstruments = async (req, res) => {
             transaction
         });
         await transaction.commit();
-        return res.status(200).send(updatedComponent);
+        return res.status(200).send({ message: 'Component instruments updated successfully', component: updatedComponent });
     } catch (error) {
         await transaction.rollback();
         console.error('Error updating component instruments:', error);

@@ -12,7 +12,7 @@ const listMyBands = async (req, res) => {
                 where: { musicianId }
             }]
         });
-        res.status(200).send({ bands });
+        res.status(200).send( bands );
     } catch (error) {
         console.error('Error fetching my bands:', error);
         res.status(500).send({ error: 'Error fetching my bands' });
@@ -53,7 +53,7 @@ const createBand = async (req, res) => {
         }
 
         await transaction.commit();
-        res.status(201).send({ band });
+        res.status(201).send({ message: 'Band created successfully', band });
     } catch (error) {
         await transaction.rollback();
         console.error('Error creating band:', error);
@@ -96,7 +96,7 @@ const findBandById = async (req, res) => {
             const bId = b.instruments[0]?.id ?? Infinity;
             return aId - bId;
         });
-        res.status(200).send({ band });
+        res.status(200).send( band );
     } catch (error) {
         console.error('Error fetching band by ID:', error);
         res.status(500).send({ error: 'Error fetching band by ID' });
@@ -126,7 +126,7 @@ const findBandByCode = async (req, res) => {
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
-        res.status(200).send({ band });
+        res.status(200).send( band );
     } catch (error) {
         console.error('Error fetching band by code:', error);
         res.status(500).send({ error: 'Error fetching band by code' });
@@ -178,7 +178,7 @@ const updateBand = async (req, res) => {
             phone: req.body.phone,
             type: req.body.type
         });
-        res.status(200).send({ band });
+        res.status(200).send({ message: 'Band updated successfully', band });
     } catch (error) {
         console.error('Error updating band:', error);
         res.status(500).send({ error: 'Error updating band' });
@@ -214,7 +214,7 @@ const editBandProfilePicture = async (req, res) => {
             profile_picture: req.body.profile_picture
         });
         const updatedBand = await Band.findByPk(bandId);
-        res.status(200).send({ band: updatedBand });
+        res.status(200).send({ message: 'Band profile picture updated successfully', band: updatedBand });
     } catch (error) {
         console.error('Error updating band profile picture:', error);
         res.status(500).send({ error: 'Error updating band profile picture' });
@@ -235,7 +235,7 @@ const deleteBandProfilePicture = async (req, res) => {
         });
         await deleteFileFromCloudinary(bandProfilePictureUrl, Band);
         const updatedBand = await Band.findByPk(bandId);
-        res.status(200).send({ band: updatedBand });
+        res.status(200).send({ message: 'Band profile picture deleted successfully', band: updatedBand });
     } catch (error) {
         console.error('Error deleting band profile picture:', error);
         res.status(500).send({ error: 'Error deleting band profile picture' });

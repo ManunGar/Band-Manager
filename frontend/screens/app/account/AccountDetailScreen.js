@@ -30,7 +30,7 @@ const AccountDetailScreen = () => {
     const fetchAccountDetails = async () => {
         try {
             const data = await MusicianEndpoints.accountDetails()
-            setMusician(data?.musician)
+            setMusician(data)
         } catch (error) {
             console.error(error)
             logout()

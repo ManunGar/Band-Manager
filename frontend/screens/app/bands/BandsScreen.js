@@ -29,7 +29,7 @@ const BandsScreen = () => {
     const fetchBands = async () => {
         try {
             const bands = await BandEndpoints.listMyBands();
-            setBands(bands.bands);
+            setBands(bands);
         } catch (error) {
             console.error("Error fetching bands:", error);
         }
@@ -40,10 +40,10 @@ const BandsScreen = () => {
             const band = await BandEndpoints.findBandByCode(code);
             setVisible(false);
             setCode('');
-            if (band?.band?.components?.some(component => component.musicianId === user.musician?.id)) {
-                navigation.navigate('BandDetails', { band: band.band });
+            if (band?.components?.some(component => component.musicianId === user.musician?.id)) {
+                navigation.navigate('BandDetails', { band });
             } else {
-                navigation.navigate('JoinBand', { band: band.band });
+                navigation.navigate('JoinBand', { band });
             }
         } catch (error) {
             Alert.alert('Error', 'No se encontró ninguna banda con ese código.');

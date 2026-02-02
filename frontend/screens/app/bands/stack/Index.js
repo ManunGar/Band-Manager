@@ -27,7 +27,7 @@ export default function Index({ route }) {
 
     const fetchBandData = async () => {
         const fetchedData = await BandEndpoints.getBandDetails(bandId);
-        setBand(fetchedData.band);
+        setBand(fetchedData);
     }
 
     const openSheet = useCallback(() => {

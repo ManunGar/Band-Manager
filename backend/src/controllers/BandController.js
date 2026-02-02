@@ -209,7 +209,7 @@ const editBandProfilePicture = async (req, res) => {
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
-        await addFilenameToBody(req, 'profile_picture', Band, 'bandId');
+        await addFilenameToBody(req, 'profile_picture', Band, 'bandId', 'bands');
         await band.update({
             profile_picture: req.body.profile_picture
         });
@@ -233,7 +233,7 @@ const deleteBandProfilePicture = async (req, res) => {
         await band.update({
             profile_picture: null
         });
-        await deleteFileFromCloudinary(bandProfilePictureUrl, Band);
+        await deleteFileFromCloudinary(bandProfilePictureUrl, 'bands');
         const updatedBand = await Band.findByPk(bandId);
         res.status(200).send({ message: 'Band profile picture deleted successfully', band: updatedBand });
     } catch (error) {

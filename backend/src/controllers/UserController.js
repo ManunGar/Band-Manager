@@ -165,7 +165,7 @@ const deleteProfilePicture = async (req, res) => {
             attributes: { exclude: ['password'] },
             include: [{ model: Musician, as: 'musician', include: [{ model: Instrument, as: 'instruments' }] }]
         });
-        await deleteFileFromCloudinary(profilePictureUrl);
+        await deleteFileFromCloudinary(profilePictureUrl, 'users');
         res.status(200).send({ message: 'Profile picture updated successfully', user: updatedUser });
 
     } catch (error) {

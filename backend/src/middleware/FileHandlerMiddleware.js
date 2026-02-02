@@ -4,7 +4,7 @@ import multer from 'multer'
 import { User } from '../models/sequelize.js'
 
 // Function to add filename to request body after uploading to Cloudinary
-const addFilenameToBody = async (req, fieldName, model, idPathParamName) => {
+const addFilenameToBody = async (req, fieldName, model, idPathParamName, folder) => {
   if (req.file?.fieldname === fieldName) {
     // Configure Cloudinary
     cloudinary.config({
@@ -16,18 +16,18 @@ const addFilenameToBody = async (req, fieldName, model, idPathParamName) => {
     if (req.params[idPathParamName]) {
       const entity = await model.findByPk(req.params[idPathParamName])
       if (!entity) { return res.status(404).send({ errors: [{ type: 'Not found', msg: `${idPathParamName} no encontrado` }] }) }
-      if (entity[fieldName] && entity[fieldName].includes('bandmanager')) {
-        const imageId = `bandmanager/${model.name.toLowerCase()}` + entity[fieldName].split(`bandmanager/${model.name.toLowerCase()}`)[1].split('.')[0]
+      if (entity[fieldName] && entity[fieldName].includes(`bandmanager/${folder}`)) {
+        const imageId = `bandmanager/${folder}` + entity[fieldName].split(`bandmanager/${folder}`)[1].split('.')[0]
         await cloudinary.uploader.destroy(imageId)
       }
     }
     //Add file to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, { folder: `bandmanager/${model.name.toLowerCase()}` })
+    const result = await cloudinary.uploader.upload(req.file.path, { folder: `bandmanager/${folder}` })
     if (fs.existsSync(req.file.path)) await fs.unlinkSync(req.file.path) // Delete local file after upload
     req.body[fieldName] = result.secure_url
   }
 }
-// Function to add profile picture to request body after uploading to Cloudinary
+// Function to add profile picture (users) to request body after uploading to Cloudinary
 const addProfilePictureToBody = async (req) => {
   const user = req.user;
   if (req.file?.fieldname === 'profile_picture') {
@@ -41,32 +41,32 @@ const addProfilePictureToBody = async (req) => {
     if (user?.id) {
       const entity = await User.findByPk(user.id)
       if (!entity) { return res.status(404).send({ errors: [{ type: 'Not found', msg: `Usuario no encontrado` }] }) }
-      if (entity.profile_picture && entity.profile_picture.includes('bandmanager')) {
-        const imageId = 'bandmanager/' + entity.profile_picture.split('/bandmanager/')[1].split('.')[0]
+      if (entity.profile_picture && entity.profile_picture.includes('/bandmanager/users/')) {
+        const imageId = 'bandmanager/users/' + entity.profile_picture.split('/bandmanager/users/')[1].split('.')[0]
         await cloudinary.uploader.destroy(imageId)
       }
     }
     //Add file to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, { folder: "bandmanager" })
+    const result = await cloudinary.uploader.upload(req.file.path, { folder: "bandmanager/users" })
     if (fs.existsSync(req.file.path)) await fs.unlinkSync(req.file.path) // Delete local file after upload
     req.body.profile_picture = result.secure_url
   }
 }
 
 // Function to delete file from Cloudinary
-const deleteFileFromCloudinary = async (fileUrl, model) => {
+const deleteFileFromCloudinary = async (fileUrl, folder) => {
   cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.CLOUDINARY_KEY,
     api_secret: process.env.CLOUDINARY_SECRET
   })
   if (fileUrl && fileUrl.includes('bandmanager')) {
-    const imageId = `bandmanager/${model.name.toLowerCase()}` + fileUrl.split(`bandmanager/${model.name.toLowerCase()}`)[1].split('.')[0]
+    const imageId = `bandmanager/${folder}` + fileUrl.split(`bandmanager/${folder}`)[1].split('.')[0]
     await cloudinary.uploader.destroy(imageId)
   }
 }
 
-const handleFilesUpload = (fileName, folder, model, idPathParamName) => (req, res, next) => {
+const handleFilesUpload = (fileName, folder) => (req, res, next) => {
   // Configure multer storage
   const storage = multer.diskStorage({
     destination: function (req, file, cb) {

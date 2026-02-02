@@ -44,7 +44,7 @@ const loadFileRoutes = function (app) {
         .put(
             isLoggedIn,
             isBandAdmin, // Ensure the user is an admin of the band
-            handleFilesUpload('profile_picture', process.env.BAND_PROFILE_PICTURE_FOLDER, null, null),
+            handleFilesUpload('profile_picture', process.env.BAND_PROFILE_PICTURE_FOLDER),
             BandValidation.updateProfilePicture,
             handleValidation,
             BandController.editBandProfilePicture

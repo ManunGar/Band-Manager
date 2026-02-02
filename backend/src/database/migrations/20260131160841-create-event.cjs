@@ -65,8 +65,7 @@ module.exports = {
       },
       alleged: {
         type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
+        allowNull: true
       },
       reason: {
         type: Sequelize.STRING,

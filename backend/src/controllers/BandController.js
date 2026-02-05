@@ -1,5 +1,5 @@
 import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
-import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
+import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
 // Function to list bands of the logged-in musician
 const listMyBands = async (req, res) => {
@@ -242,6 +242,55 @@ const deleteBandProfilePicture = async (req, res) => {
     }
 };
 
+// Function to add a event to a band by its ID
+const addEventToBand = async (req, res) => {
+    const bandId = req.params.bandId;
+    const eventType = req.body.eventType;
+    const transaction = await Band.sequelize.transaction();
+    try {
+        const event = await Event.create({
+            date: req.body.date,
+            initialTime: req.body.initialTime,
+            endTime: req.body.endTime,
+            bandId: bandId
+        }, { transaction });
+        if (eventType === 'performances') {
+            await Performance.create({
+                name: req.body.name,
+                place: req.body.place,
+                comment: req.body.comment,
+                type: req.body.type,                
+                eventId: event.id
+            }, { transaction });
+            if (req.file) {
+                await addFilenameToBody(req, 'picture', Performance, 'eventId', 'performances');
+                await Performance.update({
+                    picture: req.body.picture
+                }, {
+                    where: { eventId: event.id },
+                    transaction
+                });
+            }
+        } else if (eventType === 'rehearsals') {
+            await Rehearsal.create({
+                eventId: event.id
+            }, { transaction });
+        }
+        if (req.body.instruments) {
+            const instrumentIds = typeof req.body.instruments === 'string' ? JSON.parse(req.body.instruments) : req.body.instruments;
+            for (const instrumentId of instrumentIds) {
+                await event.addInstrumentsAttended(instrumentId, { transaction });
+            }
+        }
+        await transaction.commit();
+        res.status(201).send({ message: 'Event added to band successfully', event });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error adding event to band:', error);
+        res.status(500).send({ error: 'Error adding event to band' });
+    }
+};
+
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -276,7 +325,8 @@ const BandController = {
     updateBand,
     deleteBand,
     editBandProfilePicture,
-    deleteBandProfilePicture
+    deleteBandProfilePicture,
+    addEventToBand
 };
 
 export default BandController;

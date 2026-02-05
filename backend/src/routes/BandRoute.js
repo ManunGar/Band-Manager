@@ -72,6 +72,17 @@ const loadFileRoutes = function (app) {
             handleValidation,
             BandController.joinBand
         )
+
+    // Event's bands route
+    app.route('/bands/:bandId/events')
+        .post(
+            isLoggedIn,
+            isBandAdmin, // Ensure the user is an admin of the band
+            handleFilesUpload('picture', process.env.PERFORMANCE_PICTURE_FOLDER),
+            BandValidation.addEvent,
+            handleValidation,
+            BandController.addEventToBand
+        )
 }
 
 export default loadFileRoutes

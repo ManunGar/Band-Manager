@@ -1,0 +1,142 @@
+import { check } from "express-validator";
+import { checkFileIsImage, checkFileMaxSize } from "./FileValidationHelper.js";
+
+const maxFileSize = 2 * 1024 * 1024 // 2MB
+
+const _instrumentsAttendanceExist = async (value, { req }) => {
+    const instrumentIds = typeof value === 'string' ? JSON.parse(value) : value
+    if (!Array.isArray(instrumentIds)) {
+        return Promise.reject(new Error('Instruments must be an array of instrument IDs'));
+    }
+    for (const instrumentId of instrumentIds) {
+        if (Number.isNaN(instrumentId) || instrumentId <= 0) {
+            return Promise.reject(new Error(`Invalid instrument id: ${instrumentId}`));
+        }
+    }
+    const instruments = await Instrument.findAll({ where: { id: instrumentIds } });
+    if (instruments.length !== instrumentIds.length) {
+        return Promise.reject(new Error('One or more instruments do not exist'));
+    }
+    return Promise.resolve();
+}
+
+const _endTimeAfterInitialTime = async (value, { req }) => {
+    const initialTime = req.body.initialTime;
+    if (!initialTime) return Promise.resolve();
+
+    const [initHour, initMin] = initialTime.split(':').map(Number);
+    const [endHour, endMin] = value.split(':').map(Number);
+
+    const initMinutes = initHour * 60 + initMin;
+    const endMinutes = endHour * 60 + endMin;
+
+    if (endMinutes <= initMinutes) {
+        return Promise.reject(new Error('End time must be after initial time'));
+    }
+    return Promise.resolve();
+}
+
+const create = [
+    check('eventType')
+        .exists().withMessage('Event type is required')
+        .isString().withMessage('Event type must be a string')
+        .notEmpty().withMessage('Event type cannot be empty')
+        .isIn(['performances', 'rehearsals']).withMessage('Event type must be either "performances" or "rehearsals"'),
+    check('date')
+        .exists().withMessage('Date is required')
+        .isISO8601().withMessage('Date must be a valid ISO 8601 date')
+        .toDate()
+        .custom((value, { req }) => {
+            const eventDate = new Date(value);
+            const now = new Date();
+            if (eventDate <= now) {
+                throw new Error('Event date must be in the future');
+            }
+            return true;
+        }),
+    check('initialTime')
+        .exists().withMessage('Initial time is required')
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Initial time must be in HH:MM format'),
+    check('endTime')
+        .exists().withMessage('End time is required')
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('End time must be in HH:MM format')
+        .custom(_endTimeAfterInitialTime),
+    check('name')
+        .if(check('eventType').equals('performances'))
+        .exists().withMessage('Performance name is required')
+        .isString().withMessage('Performance name must be a string')
+        .notEmpty().withMessage('Performance name cannot be empty'),
+    check('type')
+        .if(check('eventType').equals('performances'))
+        .exists().withMessage('Performance type is required')
+        .isString().withMessage('Performance type must be a string')
+        .notEmpty().withMessage('Performance type cannot be empty'),
+    check('comment')
+        .optional()
+        .isString().withMessage('Comment must be a string'),
+    check('place')
+        .if(check('eventType').equals('performances'))
+        .exists().withMessage('Performance place is required')
+        .isString().withMessage('Performance place must be a string')
+        .notEmpty().withMessage('Performance place cannot be empty'),
+    check('picture')
+        .optional()
+        .custom((value, { req }) => {
+            return checkFileIsImage(req, 'profile_picture')
+        }).withMessage('Sube una imagen con formato (jpeg, png).'),
+    check('picture').optional().custom((value, { req }) => {
+        return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+    }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+    check('instruments').optional()
+        .custom(_instrumentsAttendanceExist)
+
+]
+
+const update = [
+    check('date')
+        .optional()
+        .isISO8601().withMessage('Date must be a valid ISO 8601 date')
+        .toDate()
+        .custom((value, { req }) => {
+            const eventDate = new Date(value);
+            const now = new Date();
+            if (eventDate <= now) {
+                throw new Error('Event date must be in the future');
+            }
+            return true;
+        }),
+    check('initialTime')
+        .optional()
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Initial time must be in HH:MM format'),
+    check('endTime')
+        .optional()
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('End time must be in HH:MM format')
+        .custom(_endTimeAfterInitialTime),
+    check('name')
+        .optional()
+        .isString().withMessage('Performance name must be a string')
+        .notEmpty().withMessage('Performance name cannot be empty'),
+    check('type')
+        .optional()
+        .isString().withMessage('Performance type must be a string')
+        .notEmpty().withMessage('Performance type cannot be empty'),
+    check('comment')
+        .optional()
+        .isString().withMessage('Comment must be a string'),
+    check('place')
+        .optional()
+        .isString().withMessage('Performance place must be a string')
+        .notEmpty().withMessage('Performance place cannot be empty'),
+    check('picture')
+        .optional()
+        .custom((value, { req }) => {
+            return checkFileIsImage(req, 'profile_picture')
+        }).withMessage('Sube una imagen con formato (jpeg, png).'),
+    check('picture').optional().custom((value, { req }) => {
+        return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+    }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+    check('instruments').optional()
+        .custom(_instrumentsAttendanceExist)
+]
+
+export { create, update };

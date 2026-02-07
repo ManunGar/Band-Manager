@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { isBandMember } from "../middleware/BandMiddleware.js";
+import { addFilenameToBody } from "../middleware/FileHandlerMiddleware.js";
 import { Component, Event, Instrument, Performance, Rehearsal } from "../models/sequelize.js";
 
 // Function to handle listing events
@@ -132,8 +133,45 @@ const listEvents = async (req, res) => {
 
 }
 
+// Function to edit an event (only for event administrators)
+const editEvent = async (req, res) => {
+    const eventId = req.params.eventId;
+    const transaction = await Event.sequelize.transaction();
+    try {
+        await Event.update( req.body, { where: { id: eventId }, transaction });
+        const performances = await Performance.findOne({ where: { eventId }, transaction });
+        if (performances) {
+            await Performance.update( req.body, { where: { eventId }, transaction });
+            if (req.file) {
+                await addFilenameToBody(req, 'picture', Performance, 'eventId', 'performances');
+                await Performance.update({
+                    picture: req.body.picture
+                }, {
+                    where: { eventId: eventId },
+                    transaction
+                });
+            }
+        }
+        const updatedEvent = await Event.findByPk(eventId, { transaction });
+        if (req.body.instruments) {
+            await updatedEvent.setInstrumentsAttended([], { transaction }); // Remove existing associations
+            const instrumentIds = typeof req.body.instruments === 'string' ? JSON.parse(req.body.instruments) : req.body.instruments;
+            for (const instrumentId of instrumentIds) {
+                await updatedEvent.addInstrumentsAttended(instrumentId, { transaction });
+            }
+        }
+        await transaction.commit();
+        res.status(200).send(updatedEvent);
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error editing event:', error);
+        res.status(500).send({ error: 'Error editing event' });
+    }
+}
+
 const EventController = {
-    listEvents
+    listEvents,
+    editEvent
 }
 
 export default EventController;

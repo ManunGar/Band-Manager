@@ -1,5 +1,9 @@
 import EventController from "../controllers/EventController.js"
 import { isLoggedIn } from "../middleware/AuthMiddleware.js"
+import { isEventAdmin } from "../middleware/EventMiddleware.js"
+import { handleFilesUpload } from "../middleware/FileHandlerMiddleware.js"
+import * as EventValidation from "../validations/EventValidation.js"
+import { handleValidation } from "../validations/HandleValidation.js"
 
 const loadFileRoutes = function (app) {
     // List events route
@@ -7,6 +11,17 @@ const loadFileRoutes = function (app) {
         .get(
             isLoggedIn,
             EventController.listEvents
+        )
+    
+    // Events CRUD routes
+    app.route('/events/:eventId')
+        .put(
+            isLoggedIn,
+            isEventAdmin, // Ensure the user is an admin of the event
+            handleFilesUpload('picture', process.env.PERFORMANCE_PICTURE_FOLDER),
+            EventValidation.update,
+            handleValidation,
+            EventController.editEvent
         )
 }
 

@@ -33,6 +33,14 @@ const loadFileRoutes = function (app) {
             handleValidation,
             EventController.updateComponentAttendance
         )
+
+    // Attendace GET and PUT route
+    app.route('/events/:eventId/attendance')
+        .get(
+            isLoggedIn,
+            isEventAdmin,
+            EventController.getEventAttendance
+        )
 }
 
 export default loadFileRoutes

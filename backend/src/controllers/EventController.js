@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { isBandMember } from "../middleware/BandMiddleware.js";
 import { addFilenameToBody } from "../middleware/FileHandlerMiddleware.js";
-import { Band, Component, Event, Instrument, Performance, Rehearsal } from "../models/sequelize.js";
+import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
 // Function to handle listing events
 const listEvents = async (req, res) => {
@@ -210,10 +210,68 @@ const updateComponentAttendance = async (req, res) => {
     }
 }
 
+// Function to retrieve event attendance (only for event administrators)
+const getEventAttendance = async (req, res) => {
+    const eventId = req.params.eventId;
+    try {
+        const event = await Event.findByPk(eventId, {
+            include: [{
+                model: Band,
+                as: 'band',
+                include: {
+                    model: Component,
+                    as: 'components',
+                    include: [{
+                        model: Instrument,
+                        as: 'instruments',
+                        through: {
+                            where: {
+                                principal: true
+                            }
+                        }
+                    }, {
+                        model: Musician,
+                        as: 'musician',
+                        include: {
+                            model: User,
+                            as: 'user',
+                            attributes: ['id', 'full_name', 'profile_picture']
+                        }
+                    }]
+                }
+            }, {
+                model: Component,
+                as: 'attendees'
+            }, {
+                model: Instrument,
+                as: 'instrumentsAttended'
+            }]
+        })
+        // Filter components participants and include attendance status
+        const componentsAttendees = event.attendees;
+        const componentsAttendance = event.band.components
+            .filter(component => component.instruments.some(instrument => event.instrumentsAttended.length === 0 || event.instrumentsAttended.some(i => i.id === instrument.id)))
+            .map(component => {
+                const attendanceRecord = componentsAttendees.find(att => att.id === component.id);
+                return {
+                    component,
+                    present: attendanceRecord ? attendanceRecord.EventAttendances.present : null,
+                    reason: attendanceRecord ? attendanceRecord.EventAttendances.reason : null,
+                    alleged: attendanceRecord ? attendanceRecord.EventAttendances.alleged : null
+                };
+            })
+        res.status(200).send(componentsAttendance);
+    } catch (error) {
+        console.error('Error retrieving event attendance:', error);
+        res.status(500).send({ error: 'Error retrieving event attendance' });
+    }
+}
+
 const EventController = {
     listEvents,
     editEvent,
-    updateComponentAttendance
+    updateComponentAttendance,
+    getEventAttendance
 }
 
 export default EventController;

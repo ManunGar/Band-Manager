@@ -46,6 +46,7 @@ const loadModel = (sequelize, DataTypes) => {
         through: EventAttendance,
         as: 'eventsAttended',
         foreignKey: 'componentId',
+        otherKey: 'eventId',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       });

@@ -1,4 +1,5 @@
 import { check } from "express-validator";
+import { Instrument } from "../models/sequelize.js";
 import { checkFileIsImage, checkFileMaxSize } from "./FileValidationHelper.js";
 
 const maxFileSize = 2 * 1024 * 1024 // 2MB
@@ -139,4 +140,14 @@ const update = [
         .custom(_instrumentsAttendanceExist)
 ]
 
-export { create, update };
+const componentAttendance = [
+    check('present')
+        .exists().withMessage('Present field is required')
+        .isBoolean().withMessage('Present field must be a boolean'),
+    check('reason')
+        .optional()
+        .isString().withMessage('Reason must be a string')
+]
+
+export { componentAttendance, create, update };
+

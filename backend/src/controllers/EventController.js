@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { isBandMember } from "../middleware/BandMiddleware.js";
 import { addFilenameToBody } from "../middleware/FileHandlerMiddleware.js";
-import { Component, Event, Instrument, Performance, Rehearsal } from "../models/sequelize.js";
+import { Band, Component, Event, Instrument, Performance, Rehearsal } from "../models/sequelize.js";
 
 // Function to handle listing events
 const listEvents = async (req, res) => {
@@ -152,6 +152,7 @@ const editEvent = async (req, res) => {
                 });
             }
         }
+        // Change event's associated instruments if provided
         const updatedEvent = await Event.findByPk(eventId, { transaction });
         if (req.body.instruments) {
             await updatedEvent.setInstrumentsAttended([], { transaction }); // Remove existing associations
@@ -169,9 +170,50 @@ const editEvent = async (req, res) => {
     }
 }
 
+// Function to handle component attendance updates (only for event participants)
+const updateComponentAttendance = async (req, res) => {
+    const eventId = req.params.eventId;
+    const musicianId = req.user.musician.id;
+    const transaction = await Event.sequelize.transaction();
+    try {
+        const event = await Event.findByPk(eventId, {
+            include: {
+                model: Band,
+                as: 'band',
+                include: {
+                    model: Component,
+                    as: 'components',
+                    where: {
+                        musicianId: musicianId
+                    }
+                }
+            },
+            transaction
+        });
+
+        const componentId = event.band.components[0].id;
+        // Access EventAttendances table directly to update or create
+        const EventAttendances = Event.sequelize.models.EventAttendances;
+        await EventAttendances.upsert({
+            eventId: eventId,
+            componentId: componentId,
+            present: req.body.present,
+            reason: req.body.reason
+        }, { transaction });
+        
+        await transaction.commit();
+        res.status(200).send({ message: 'Component attendance updated successfully' });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error updating component attendance:', error);
+        res.status(500).send({ error: 'Error updating component attendance' });
+    }
+}
+
 const EventController = {
     listEvents,
-    editEvent
+    editEvent,
+    updateComponentAttendance
 }
 
 export default EventController;

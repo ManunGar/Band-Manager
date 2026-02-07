@@ -1,6 +1,6 @@
 import EventController from "../controllers/EventController.js"
 import { isLoggedIn } from "../middleware/AuthMiddleware.js"
-import { isEventAdmin } from "../middleware/EventMiddleware.js"
+import { isEventAdmin, isEventParticipant } from "../middleware/EventMiddleware.js"
 import { handleFilesUpload } from "../middleware/FileHandlerMiddleware.js"
 import * as EventValidation from "../validations/EventValidation.js"
 import { handleValidation } from "../validations/HandleValidation.js"
@@ -22,6 +22,16 @@ const loadFileRoutes = function (app) {
             EventValidation.update,
             handleValidation,
             EventController.editEvent
+        )
+
+    // Components attendance route
+    app.route('/events/:eventId/component-attendance')
+        .put(
+            isLoggedIn,
+            isEventParticipant,
+            EventValidation.componentAttendance,
+            handleValidation,
+            EventController.updateComponentAttendance
         )
 }
 

@@ -140,4 +140,17 @@ const update = [
         .custom(_instrumentsAttendanceExist)
 ]
 
-export { create, update };
+const componentAttendance = [
+    check('present')
+        .exists().withMessage('Present field is required')
+        .isBoolean().withMessage('Present field must be a boolean'),
+    check('comment')
+        .optional()
+        .isString().withMessage('Comment must be a string'),
+    check('reason')
+        .optional()
+        .isString().withMessage('Reason must be a string')
+]
+
+export { componentAttendance, create, update };
+

@@ -198,7 +198,6 @@ const updateComponentAttendance = async (req, res) => {
             eventId: eventId,
             componentId: componentId,
             present: req.body.present,
-            alleged: req.body.alleged,
             reason: req.body.reason
         }, { transaction });
         

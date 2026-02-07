@@ -1,4 +1,5 @@
 import { check } from "express-validator";
+import { Instrument } from "../models/sequelize.js";
 import { checkFileIsImage, checkFileMaxSize } from "./FileValidationHelper.js";
 
 const maxFileSize = 2 * 1024 * 1024 // 2MB

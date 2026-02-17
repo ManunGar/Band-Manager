@@ -41,6 +41,13 @@ const loadFileRoutes = function (app) {
             isEventAdmin,
             EventController.getEventAttendance
         )
+        .put(
+            isLoggedIn,
+            isEventAdmin,
+            EventValidation.attendance,
+            handleValidation,
+            EventController.updateEventAttendance
+        )
 }
 
 export default loadFileRoutes

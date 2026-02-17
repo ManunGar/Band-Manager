@@ -18,30 +18,30 @@ const listEvents = async (req, res) => {
             }
         }
         // Get musician's components with their instruments and band info
-        const musicianComponents = await Component.findAll({ 
-            where: { musicianId }, 
+        const musicianComponents = await Component.findAll({
+            where: { musicianId },
             include: [
-                { 
-                    model: Instrument, 
+                {
+                    model: Instrument,
                     as: 'instruments',
                     attributes: ['id'],
                     through: { attributes: [] }
                 }
             ]
         });
-        
+
         let where = {};
         // Build where array based on bandId
         if (bandIdNumber) {
             req.params.bandId = bandIdNumber;
-            isBandMember(req, res, () => {}); // Ensure the user is a member of the specified band
+            isBandMember(req, res, () => { }); // Ensure the user is a member of the specified band
             where.bandId = bandIdNumber;
         } else {
             // If no bandId provided, fetch events for all bands the musician is part of
             const bandIds = musicianComponents.map(component => component.bandId);
             where.bandId = bandIds;
         }
-        
+
         // Build where condition based on timeScope
         const now = new Date();
         if (timeScope === 'past') {
@@ -73,7 +73,7 @@ const listEvents = async (req, res) => {
                 }
             ];
         }
-        
+
         // Build include array based on type
         let include = [];
         if (type === 'performances') {
@@ -87,44 +87,44 @@ const listEvents = async (req, res) => {
             include.push({ model: Performance, required: false });
             include.push({ model: Rehearsal, required: false });
         }
-        
+
         // Always include instruments to check attendance
-        include.push({ 
-            model: Instrument, 
+        include.push({
+            model: Instrument,
             as: 'instrumentsAttended',
             required: false,
             through: { attributes: [] }
         });
-        
+
         // Determine order based on timeScope
         const order = timeScope === 'past' ? [['date', 'DESC']] : [['date', 'ASC']];
-        
+
         // Fetch events based on constructed query
         const events = await Event.findAll({
             where: where,
             include: include,
             order: order
         });
-        
+
         // Filter events based on component's instrument participation
         const filteredEvents = events.filter(event => {
             // Find the component for this band
             const component = musicianComponents.find(c => c.bandId === event.bandId);
             if (!component) return false;
-            
+
             // If component is administrator, they can see all events
             if (component.administrator) return true;
-            
+
             // If event has no instruments, all instruments participate
             if (!event.instrumentsAttended || event.instrumentsAttended.length === 0) return true;
-            
+
             // Check if any of the component's instruments participate in the event
             const componentInstrumentIds = component.instruments.map(i => i.id);
             const eventInstrumentIds = event.instrumentsAttended.map(i => i.id);
-            
+
             return componentInstrumentIds.some(id => eventInstrumentIds.includes(id));
         });
-        
+
         res.status(200).send(filteredEvents);
     } catch (error) {
         console.error('Error listing events:', error);
@@ -138,10 +138,10 @@ const editEvent = async (req, res) => {
     const eventId = req.params.eventId;
     const transaction = await Event.sequelize.transaction();
     try {
-        await Event.update( req.body, { where: { id: eventId }, transaction });
+        await Event.update(req.body, { where: { id: eventId }, transaction });
         const performances = await Performance.findOne({ where: { eventId }, transaction });
         if (performances) {
-            await Performance.update( req.body, { where: { eventId }, transaction });
+            await Performance.update(req.body, { where: { eventId }, transaction });
             if (req.file) {
                 await addFilenameToBody(req, 'picture', Performance, 'eventId', 'performances');
                 await Performance.update({
@@ -200,7 +200,7 @@ const updateComponentAttendance = async (req, res) => {
             present: req.body.present,
             reason: req.body.reason
         }, { transaction });
-        
+
         await transaction.commit();
         res.status(200).send({ message: 'Component attendance updated successfully' });
     } catch (error) {
@@ -267,11 +267,79 @@ const getEventAttendance = async (req, res) => {
     }
 }
 
+// Function to handle components attendances in a performance or rehearsal (only for event administrators)
+const updateEventAttendance = async (req, res) => {
+    const eventId = req.params.eventId;
+    const transaction = await Event.sequelize.transaction();
+    try {
+        const event = await Event.findByPk(eventId, {
+            include: [{
+                model: Band,
+                as: 'band',
+                include: {
+                    model: Component,
+                    as: 'components',
+                    attributes: ['id'],
+                    include: {
+                        model: Instrument,
+                        as: 'instruments',
+                        through: {
+                            where: {
+                                principal: true
+                            }
+                        }
+                    }
+
+                }
+            }, {
+                model: Instrument,
+                as: 'instrumentsAttended'
+            }]
+        });
+        const EventAttendances = Event.sequelize.models.EventAttendances;
+        // Update or create attendance records for components marked as present
+        for (const componentAttendance of req.body.componentsPresent) {
+            await EventAttendances.upsert({
+                eventId: eventId,
+                componentId: componentAttendance,
+                present: true,
+                alleged: null
+            }, { transaction });
+        }
+        // Update or create attendance records for components marked as absent
+        for (const componentAbsence of req.body.componentsAbsent) {
+            await EventAttendances.upsert({
+                eventId: eventId,
+                componentId: componentAbsence,
+                present: false,
+                alleged: null
+            }, { transaction });
+        }
+        // Update or create attendance records for components marked as alleged
+        for (const componentAlleged of req.body.componentsAlleged) {
+            await EventAttendances.upsert({
+                eventId: eventId,
+                componentId: componentAlleged,
+                present: false,
+                alleged: true,
+                reason: componentAlleged.reason
+            }, { transaction });
+        }
+        await transaction.commit();
+        res.status(200).send({ message: 'Event attendance updated successfully' });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error updating event attendance:', error);
+        res.status(500).send({ error: 'Error updating event attendance' });
+    }
+}
+
 const EventController = {
     listEvents,
     editEvent,
     updateComponentAttendance,
-    getEventAttendance
+    getEventAttendance,
+    updateEventAttendance
 }
 
 export default EventController;

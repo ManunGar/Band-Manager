@@ -1,5 +1,5 @@
 import { check } from "express-validator";
-import { Instrument } from "../models/sequelize.js";
+import { Band, Component, Event, Instrument } from "../models/sequelize.js";
 import { checkFileIsImage, checkFileMaxSize } from "./FileValidationHelper.js";
 
 const maxFileSize = 2 * 1024 * 1024 // 2MB
@@ -35,6 +35,58 @@ const _endTimeAfterInitialTime = async (value, { req }) => {
         return Promise.reject(new Error('End time must be after initial time'));
     }
     return Promise.resolve();
+}
+
+const _checkComponentsParticipants = async (value, { req }) => {
+    const eventId = Number(req.params.eventId);
+    const areNumbers = value.every(id => typeof id === 'number' && Number.isInteger(id) && id > 0);
+    if (!areNumbers) {
+        return Promise.reject(new Error('Components present must be an array of valid component IDs'));
+    }
+    try {
+        const event = await Event.findByPk(eventId, {
+            include: [{
+                model: Band,
+                as: 'band',
+                include: {
+                    model: Component,
+                    as: 'components',
+                    attributes: ['id'],
+                    include: {
+                        model: Instrument,
+                        as: 'instruments',
+                        through: {
+                            attributes: ['principal'],
+                            where: { principal: true }
+                        }
+                    }
+
+                }
+            }, {
+                model: Instrument,
+                as: 'instrumentsAttended'
+            }]
+        });
+        if (!event) { return Promise.reject(new Error('Event not found')); }
+        const bandComponentIds = event.band.components.map(c => c.id);
+        for (const componentId of value) {
+            if (!bandComponentIds.includes(componentId)) {
+                return Promise.reject(new Error(`Component with id ${componentId} is not part of the band`));
+            }
+            if (event.instrumentsAttended && event.instrumentsAttended.length > 0) {
+                const component = event.band.components.find(c => c.id === componentId);
+                const componentInstrumentIds = component.instruments.map(i => i.id);
+                const eventInstrumentIds = event.instrumentsAttended.map(i => i.id);
+                const isParticipant = componentInstrumentIds.some(id => eventInstrumentIds.includes(id));
+                if (!isParticipant) {
+                    return Promise.reject(new Error(`Component with id ${componentId} is not a participant of the event`));
+                }
+            }
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error('Error validating band components'));
+    }
 }
 
 const create = [
@@ -149,5 +201,20 @@ const componentAttendance = [
         .isString().withMessage('Reason must be a string')
 ]
 
-export { componentAttendance, create, update };
+const attendance = [
+    check('componentsPresent')
+        .optional()
+        .isArray().withMessage('Components present must be an array of component IDs')
+        .custom(_checkComponentsParticipants),
+    check('componentsAbsent')
+        .optional()
+        .isArray().withMessage('Components absent must be an array of component IDs')
+        .custom(_checkComponentsParticipants),
+    check('componentsAlleged')
+        .optional()
+        .isArray().withMessage('Components alleged must be an array of component IDs')
+        .custom(_checkComponentsParticipants)
+]
+
+export { attendance, componentAttendance, create, update };
 

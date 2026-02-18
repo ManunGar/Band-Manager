@@ -23,10 +23,10 @@ const AppNav = () => {
 
     const init = async () => {
         await getToken();
-        console.log('AppNav user:', user);
         setTimeout(() => {
             setIsReady(true);
         }, 2000);
+        console.log('AppNav user:', user);
     }
 
     useEffect(() => {

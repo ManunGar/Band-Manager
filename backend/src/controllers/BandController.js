@@ -1,3 +1,4 @@
+import Sequelize from "sequelize";
 import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
@@ -85,6 +86,17 @@ const findBandById = async (req, res) => {
                         attributes: ['principal'],
                         where: { principal: true }
                     }
+                }]
+            }, {
+                model: Event,
+                as: 'events',
+                where: Sequelize.literal("CONCAT(DATE(`events`.`date`), ' ', `events`.`endTime`) >= NOW()"),
+                include: [{
+                    model: Performance,
+                    required: false
+                }, {
+                    model: Rehearsal,
+                    required: false
                 }]
             }]
         });

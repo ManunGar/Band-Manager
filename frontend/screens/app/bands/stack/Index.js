@@ -1,11 +1,13 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import BandEndpoints from '../../../../api/BandEndpoints';
 import BottomSheet from '../../../../components/BottomSheet';
 import Button from '../../../../components/Button';
 import Component from '../../../../components/Component';
 import LinkText from '../../../../components/LinkText';
+import UpcomingEvent from '../../../../components/UpcomingEnvent';
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 export default function Index({ route }) {
@@ -20,7 +22,6 @@ export default function Index({ route }) {
 
     useFocusEffect(
         useCallback(() => {
-            fetchBandData();
             return closeSheet;
         }, [])
     );
@@ -39,7 +40,8 @@ export default function Index({ route }) {
     }, [])
 
     return (
-        <View style={{ paddingInline: 25, gap: 20 }}>
+        <ScrollView style={{ paddingInline: 25 }}>
+            {/* UPCOMING EVENT LIST */}
             <View>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Próximos eventos</Text>
@@ -49,17 +51,19 @@ export default function Index({ route }) {
                     data={band?.events || []}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <Component component={item} />
+                        <UpcomingEvent event={item} />
                     )}
                     horizontal
-                    contentContainerStyle={{ gap: 10, width: '100%', minHeight: 60 }}
-                    ItemSeparatorComponent={(<View style={{ height: 10 }}></View>)}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 10, minHeight: 60, paddingRight: 25 }}
+                    ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
                     ListEmptyComponent={() => {
-                        return <Text style={styles.noContentText}>No hay eventos existentes</Text>
+                        return <Text style={styles.noContentText}>No hay próximos eventos existentes</Text>
                     }}
                 />
             </View>
-            <View>
+            {/* MEMBER LIST */}
+            <View style={{ marginTop: 30 }}>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Miembros ({band?.components.length})</Text>
                     <LinkText onPress={openSheet}>Añadir miembro</LinkText>
@@ -70,6 +74,7 @@ export default function Index({ route }) {
                     renderItem={({ item }) => (
                         <Component component={item} band={band}/>
                     )}
+                    scrollEnabled={false}
                     ItemSeparatorComponent={(<View style={{ height: 10 }}></View>)}
                     contentContainerStyle={{ gap: 10, width: '100%', minHeight: 60, paddingBottom: 40 }}
                     ListEmptyComponent={() => {
@@ -78,6 +83,7 @@ export default function Index({ route }) {
                 />
 
             </View>
+            {/* ADD MEMBER MODAL */}
             <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{paddingInline: 20}}>
                 <Text style={{ fontFamily: 'Oswald_500', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
                     Añade nuevos componentes a tu equipo mediante el código de invitación:
@@ -98,7 +104,7 @@ export default function Index({ route }) {
                     Compartir
                 </Button>
             </BottomSheet>
-        </View>
+        </ScrollView>
     );
 }
 

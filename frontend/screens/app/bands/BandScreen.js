@@ -40,9 +40,12 @@ const BandScreen = ({ route }) => {
     }
 
     return (
-        < Tab.Navigator tabBar={(props) => <MyTabBar {...props} band={band} />} >
+        < Tab.Navigator 
+            tabBar={(props) => <MyTabBar {...props} band={band} />}
+            screenOptions={{ swipeEnabled: false }}
+        >
             <Tab.Screen name="Inicio" component={Index} initialParams={{ bandId: band?.id }} />
-            <Tab.Screen name="Actuaciones" component={Performances} />
+            <Tab.Screen name="Actuaciones" component={Performances} initialParams={{ bandId: band?.id }}/>
             <Tab.Screen name="Ensayos" component={Rehearsal} initialParams={{ bandId: band?.id }} />
             <Tab.Screen name="Repertorio" component={Repertoire} initialParams={{ bandId: band?.id }} />
         </Tab.Navigator >

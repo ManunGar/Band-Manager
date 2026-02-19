@@ -96,6 +96,17 @@ const listEvents = async (req, res) => {
             through: { attributes: [] }
         });
 
+        // Include attendees with EventAttendances data
+        include.push({
+            model: Component,
+            as: 'attendees',
+            required: false,
+            through: {
+                attributes: ['present', 'alleged', 'reason']
+            },
+            attributes: ['id']
+        });
+
         // Determine order based on timeScope
         const order = timeScope === 'past' ? [['date', 'DESC']] : [['date', 'ASC']];
 
@@ -125,7 +136,28 @@ const listEvents = async (req, res) => {
             return componentInstrumentIds.some(id => eventInstrumentIds.includes(id));
         });
 
-        res.status(200).send(filteredEvents);
+        // Add attendance information for the musician's component in each event
+        const eventsWithAttendance = filteredEvents.map(event => {
+            const eventJson = event.toJSON();
+            const component = musicianComponents.find(c => c.bandId === event.bandId);
+            
+            // Find attendance record for this component
+            const attendanceRecord = eventJson.attendees?.find(attendee => attendee.id === component.id);
+            
+            // Add attendance data to the event
+            eventJson.attendance = {
+                present: attendanceRecord?.EventAttendances?.present ?? null,
+                alleged: attendanceRecord?.EventAttendances?.alleged ?? null,
+                reason: attendanceRecord?.EventAttendances?.reason ?? null
+            };
+            
+            // Remove attendees array as it's not needed in the response
+            delete eventJson.attendees;
+            
+            return eventJson;
+        });
+
+        res.status(200).send(eventsWithAttendance);
     } catch (error) {
         console.error('Error listing events:', error);
         res.status(500).send({ error: 'Error listing events' });

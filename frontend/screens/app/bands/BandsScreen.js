@@ -66,7 +66,7 @@ const BandsScreen = () => {
                 editEnabled={false}
                 createEnabled={true}
                 onCreate={openSheet}
-                style={{ paddingBottom: 24, paddingTop: 24, alignItems: 'none' }}>
+                style={{ paddingBottom: 24, paddingTop: 18, alignItems: 'none' }}>
                 <Text style={styles.title}>Bandas</Text>
             </TopContainer>
             <FlatList
@@ -148,7 +148,7 @@ export default BandsScreen
 
 const styles = StyleSheet.create({
     title: {
-        fontSize: 40,
+        fontSize: 36,
         fontFamily: 'BebasNeue'
     },
     noBandsText: {

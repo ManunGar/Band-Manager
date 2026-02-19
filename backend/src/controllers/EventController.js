@@ -107,6 +107,13 @@ const listEvents = async (req, res) => {
             attributes: ['id']
         });
 
+        //Include band picture and name for frontend display
+        include.push({
+            model: Band,
+            as: 'band',
+            attributes: ['id', 'name', 'profile_picture']
+        });
+
         // Determine order based on timeScope
         const order = timeScope === 'past' ? [['date', 'DESC']] : [['date', 'ASC']];
 

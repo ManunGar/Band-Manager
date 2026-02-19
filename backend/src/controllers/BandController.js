@@ -13,7 +13,7 @@ const listMyBands = async (req, res) => {
                 where: { musicianId }
             }]
         });
-        res.status(200).send( bands );
+        res.status(200).send(bands);
     } catch (error) {
         console.error('Error fetching my bands:', error);
         res.status(500).send({ error: 'Error fetching my bands' });
@@ -97,18 +97,68 @@ const findBandById = async (req, res) => {
                 }, {
                     model: Rehearsal,
                     required: false
-                }]
-            }]
+                },
+                {
+                    model: Instrument,
+                    as: 'instrumentsAttended',
+                    required: false,
+                    through: { attributes: [] }
+                }],
+                required: false
+            }],
+            order: [
+                [{ model: Event, as: 'events' }, 'date', 'ASC'],
+                [{ model: Event, as: 'events' }, 'initialTime', 'ASC']
+            ]
         });
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
+        // Sort components by the ID of their principal instrument
         band.components = band.components.sort((a, b) => {
             const aId = a.instruments[0]?.id ?? Infinity;
             const bId = b.instruments[0]?.id ?? Infinity;
             return aId - bId;
         });
-        res.status(200).send( band );
+        console.log("Events before: ", band.events.length);
+        
+        // Convert to plain object to avoid Sequelize instance issues
+        const bandData = band.toJSON();
+        
+        // Get my component (with principal instruments only)
+        const myComponent = bandData.components.find(component => component.musicianId == req.user.musician.id);
+        
+        if (myComponent) {            
+            // Filter events based on component's principal instruments participation
+            bandData.events = bandData.events.filter(event => {
+                // If my component is administrator, return true
+                if (myComponent.administrator) {
+                    return true;
+                }
+                // If the event has no instruments attended, return true
+                if (!event.instrumentsAttended || event.instrumentsAttended.length === 0) {
+                    return true;
+                }
+                // Check if any of my component's principal instruments are in the event's instruments attended
+                const myPrincipalInstrumentIds = myComponent.instruments.map(instr => instr.id);
+                const hasMatch = event.instrumentsAttended.some(instr => myPrincipalInstrumentIds.includes(instr.id));
+                return hasMatch;
+            });
+            
+            // Re-sort events after filtering to ensure correct order
+            bandData.events.sort((a, b) => {
+                const dateCompare = new Date(a.date) - new Date(b.date);
+                if (dateCompare !== 0) return dateCompare;
+                // If dates are equal, compare by initialTime
+                if (a.initialTime && b.initialTime) {
+                    return a.initialTime.localeCompare(b.initialTime);
+                }
+                return 0;
+            });
+        }
+        
+        console.log("Events after: ", bandData.events.length);
+        res.status(200).send(bandData);
     } catch (error) {
         console.error('Error fetching band by ID:', error);
         res.status(500).send({ error: 'Error fetching band by ID' });
@@ -138,7 +188,7 @@ const findBandByCode = async (req, res) => {
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
-        res.status(200).send( band );
+        res.status(200).send(band);
     } catch (error) {
         console.error('Error fetching band by code:', error);
         res.status(500).send({ error: 'Error fetching band by code' });
@@ -271,7 +321,7 @@ const addEventToBand = async (req, res) => {
                 name: req.body.name,
                 place: req.body.place,
                 comment: req.body.comment,
-                type: req.body.type,                
+                type: req.body.type,
                 eventId: event.id
             }, { transaction });
             if (req.file) {

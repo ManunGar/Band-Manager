@@ -3,6 +3,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../../../contexts/AuthContext';
 import ComponentScreen from '../component/ComponentScreen';
 import EditComponentScreen from '../component/EditComponentScreen';
+import EventScreen from '../events/EventScreen';
 import BandCreate from './BandCreate';
 import BandScreen from './BandScreen';
 import BandsScreen from './BandsScreen';
@@ -28,6 +29,8 @@ const Bands = () => {
             {/* COMPONENT */}
             <Stack.Screen name="Component" component={ComponentScreen} />
             <Stack.Screen name="EditComponent" component={EditComponentScreen} />
+            {/* EVENT */}
+            <Stack.Screen name="Event" component={EventScreen} />
         </Stack.Navigator>
     )
 }

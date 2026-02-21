@@ -120,11 +120,16 @@ const getEvent = async (req, res) => {
         const eventJson = event.toJSON();
         const component = eventJson.band.components[0];
         
+        // Check if component is administrator or participates in the event
+        const isAdmin = component.administrator;
+        const participates = _checkComponentParticipation(component, eventJson);
+        
+        if (!isAdmin && !participates) {
+            return res.status(403).send({ error: 'No tienes permisos para ver este evento' });
+        }
+        
         // Add attendance information using the auxiliary function
         _addAttendanceInfo(eventJson, component);
-        
-        // Clean up unnecessary data
-        delete eventJson.band.components;
         
         res.status(200).send(eventJson);
     } catch (error) {

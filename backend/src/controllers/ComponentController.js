@@ -1,4 +1,5 @@
-import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
+import { Op } from "sequelize";
+import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
 // Function to find a component by its ID
 const findComponentById = async (req, res) => {
@@ -20,6 +21,19 @@ const findComponentById = async (req, res) => {
                         required: true,
                         attributes: ['id', 'full_name', 'profile_picture']
                     }]
+                }, {
+                    model: Event,
+                    as: 'eventsAttended',
+                    required: false,
+                    where: {
+                        date: {
+                            [Op.lt]: new Date()
+                        }
+                    },
+                    include: [
+                        {model: Performance, required: false},
+                        {model: Rehearsal, required: false}
+                    ]
                 }]
             }
         );
@@ -106,7 +120,7 @@ const promoteToAdministrator = async (req, res) => {
 };
 
 // Function to allow a component to leave a band
-const leaveBand = async (req,res) => {
+const leaveBand = async (req, res) => {
     const componentId = req.params.componentId;
     const transaction = await Component.sequelize.transaction();
     try {

@@ -16,7 +16,7 @@ const Agenda = () => {
             animation: 'slide_from_right'
         }}>
             {/* EVENT */}
-            <Stack.Screen name="Agenda" component={AgendaScreen} />
+            <Stack.Screen name="Index" component={AgendaScreen} />
             <Stack.Screen name="Event" component={EventScreen} />
         </Stack.Navigator>
     )

@@ -3,11 +3,13 @@ import { isBandMember } from "../middleware/BandMiddleware.js";
 import { addFilenameToBody } from "../middleware/FileHandlerMiddleware.js";
 import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
+// ==================== Controller Functions ====================
+
 // Function to handle listing events
 const listEvents = async (req, res) => {
     const { timeScope, type, bandId } = req.query;
     const musicianId = req.user.musician.id;
-    // Logic to list events based on query parameters
+    
     try {
         // Validate and convert bandId to number if provided
         let bandIdNumber;
@@ -16,152 +18,44 @@ const listEvents = async (req, res) => {
             if (isNaN(bandIdNumber) || !Number.isInteger(bandIdNumber)) {
                 return res.status(400).send({ error: 'bandId debe ser un número válido' });
             }
-        }
-        // Get musician's components with their instruments and band info
-        const musicianComponents = await Component.findAll({
-            where: { musicianId },
-            include: [
-                {
-                    model: Instrument,
-                    as: 'instruments',
-                    attributes: ['id'],
-                    through: { attributes: [] }
-                }
-            ]
-        });
-
-        let where = {};
-        // Build where array based on bandId
-        if (bandIdNumber) {
+            // Ensure the user is a member of the specified band
             req.params.bandId = bandIdNumber;
-            isBandMember(req, res, () => { }); // Ensure the user is a member of the specified band
-            where.bandId = bandIdNumber;
-        } else {
-            // If no bandId provided, fetch events for all bands the musician is part of
-            const bandIds = musicianComponents.map(component => component.bandId);
-            where.bandId = bandIds;
+            isBandMember(req, res, () => { });
         }
+        
+        // Get musician's components with their instruments
+        const musicianComponents = await _getMusicianComponents(musicianId);
 
-        // Build where condition based on timeScope
-        const now = new Date();
-        if (timeScope === 'past') {
-            // Events that have already ended
-            where[Op.or] = [
-                {
-                    date: { [Op.lt]: now },
-                    endTime: null
-                },
-                {
-                    [Op.and]: [
-                        { date: { [Op.lte]: now } },
-                        { endTime: { [Op.ne]: null } }
-                    ]
-                }
-            ];
-        } else {
-            // 'upcoming' or any other value - events that haven't ended yet
-            where[Op.or] = [
-                {
-                    date: { [Op.gt]: now },
-                    endTime: null
-                },
-                {
-                    [Op.and]: [
-                        { date: { [Op.gte]: now } },
-                        { endTime: { [Op.ne]: null } }
-                    ]
-                }
-            ];
-        }
+        // Build where clause
+        const where = {
+            bandId: _buildBandIdFilter(bandIdNumber, musicianComponents),
+            ..._buildTimeScopeFilter(timeScope)
+        };
 
-        // Build include array based on type
-        let include = [];
-        if (type === 'performances') {
-            // Only events with performances (excludes rehearsals)
-            include.push({ model: Performance, required: true });
-        } else if (type === 'rehearsals') {
-            // Only events with rehearsals (excludes performances)
-            include.push({ model: Rehearsal, required: true });
-        } else {
-            // Events with either performances or rehearsals
-            include.push({ model: Performance, required: false });
-            include.push({ model: Rehearsal, required: false });
-        }
-
-        // Always include instruments to check attendance
-        include.push({
-            model: Instrument,
-            as: 'instrumentsAttended',
-            required: false,
-            through: { attributes: [] }
-        });
-
-        // Include attendees with EventAttendances data
-        include.push({
-            model: Component,
-            as: 'attendees',
-            required: false,
-            through: {
-                attributes: ['present', 'alleged', 'reason']
-            },
-            attributes: ['id']
-        });
-
-        //Include band picture and name for frontend display
-        include.push({
-            model: Band,
-            as: 'band',
-            attributes: ['id', 'name', 'profile_picture']
-        });
-
-        // Determine order based on timeScope
+        // Build include array and order
+        const include = _buildEventIncludes(type);
         const order = timeScope === 'past' ? [['date', 'DESC']] : [['date', 'ASC']];
 
-        // Fetch events based on constructed query
-        const events = await Event.findAll({
-            where: where,
-            include: include,
-            order: order
-        });
+        // Fetch events
+        const events = await Event.findAll({ where, include, order });
 
-        // Filter events based on component's instrument participation
+        // Filter events based on component's participation or admin status
         const filteredEvents = events.filter(event => {
-            // Find the component for this band
             const component = musicianComponents.find(c => c.bandId === event.bandId);
             if (!component) return false;
-
+            
             // If component is administrator, they can see all events
             if (component.administrator) return true;
-
-            // If event has no instruments, all instruments participate
-            if (!event.instrumentsAttended || event.instrumentsAttended.length === 0) return true;
-
-            // Check if any of the component's instruments participate in the event
-            const componentInstrumentIds = component.instruments.map(i => i.id);
-            const eventInstrumentIds = event.instrumentsAttended.map(i => i.id);
-
-            return componentInstrumentIds.some(id => eventInstrumentIds.includes(id));
+            
+            // Otherwise, check if component participates in the event
+            return _checkComponentParticipation(component, event);
         });
 
-        // Add attendance information for the musician's component in each event
+        // Add attendance information for each event
         const eventsWithAttendance = filteredEvents.map(event => {
             const eventJson = event.toJSON();
             const component = musicianComponents.find(c => c.bandId === event.bandId);
-            
-            // Find attendance record for this component
-            const attendanceRecord = eventJson.attendees?.find(attendee => attendee.id === component.id);
-            
-            // Add attendance data to the event
-            eventJson.attendance = {
-                present: attendanceRecord?.EventAttendances?.present ?? null,
-                alleged: attendanceRecord?.EventAttendances?.alleged ?? null,
-                reason: attendanceRecord?.EventAttendances?.reason ?? null
-            };
-            
-            // Remove attendees array as it's not needed in the response
-            delete eventJson.attendees;
-            
-            return eventJson;
+            return _addAttendanceInfo(eventJson, component);
         });
 
         res.status(200).send(eventsWithAttendance);
@@ -356,7 +250,7 @@ const getEventAttendance = async (req, res) => {
         // Filter components participants and include attendance status
         const componentsAttendees = event.attendees;
         const componentsAttendance = event.band.components
-            .filter(component => component.instruments.some(instrument => event.instrumentsAttended.length === 0 || event.instrumentsAttended.some(i => i.id === instrument.id)))
+            .filter(component => _checkComponentParticipation(component, event))
             .map(component => {
                 const attendanceRecord = componentsAttendees.find(att => att.id === component.id);
                 return {
@@ -440,12 +334,167 @@ const updateEventAttendance = async (req, res) => {
     }
 }
 
+// ==================== Auxiliary Functions ====================
+
+// Get musician's components with their principal instruments
+const _getMusicianComponents = async (musicianId) => {
+    return await Component.findAll({
+        where: { musicianId },
+        include: [
+            {
+                model: Instrument,
+                as: 'instruments',
+                attributes: ['id'],
+                through: {
+                    where: {
+                        principal: true
+                    },
+                    attributes: []
+                }
+            }
+        ]
+    });
+};
+
+// Build bandId filter for events query
+const _buildBandIdFilter = (bandIdNumber, musicianComponents) => {
+    if (bandIdNumber) {
+        return bandIdNumber;
+    }
+    // If no bandId provided, fetch events for all bands the musician is part of
+    return musicianComponents.map(component => component.bandId);
+};
+
+// Build timeScope filter for events query
+const _buildTimeScopeFilter = (timeScope) => {
+    const now = new Date();
+    const filter = {};
+    
+    if (timeScope === 'past') {
+        // Events that have already ended
+        filter[Op.or] = [
+            {
+                date: { [Op.lt]: now },
+                endTime: null
+            },
+            {
+                [Op.and]: [
+                    { date: { [Op.lte]: now } },
+                    { endTime: { [Op.ne]: null } }
+                ]
+            }
+        ];
+    } else {
+        // 'upcoming' or any other value - events that haven't ended yet
+        filter[Op.or] = [
+            {
+                date: { [Op.gt]: now },
+                endTime: null
+            },
+            {
+                [Op.and]: [
+                    { date: { [Op.gte]: now } },
+                    { endTime: { [Op.ne]: null } }
+                ]
+            }
+        ];
+    }
+    
+    return filter;
+};
+
+// Build include array for events query based on type
+const _buildEventIncludes = (type) => {
+    const include = [];
+    
+    if (type === 'performances') {
+        // Only events with performances (excludes rehearsals)
+        include.push({ model: Performance, required: true });
+    } else if (type === 'rehearsals') {
+        // Only events with rehearsals (excludes performances)
+        include.push({ model: Rehearsal, required: true });
+    } else {
+        // Events with either performances or rehearsals
+        include.push({ model: Performance, required: false });
+        include.push({ model: Rehearsal, required: false });
+    }
+
+    // Always include instruments to check attendance
+    include.push({
+        model: Instrument,
+        as: 'instrumentsAttended',
+        required: false,
+        through: { attributes: [] }
+    });
+
+    // Include attendees with EventAttendances data
+    include.push({
+        model: Component,
+        as: 'attendees',
+        required: false,
+        through: {
+            attributes: ['present', 'alleged', 'reason']
+        },
+        attributes: ['id']
+    });
+
+    // Include band picture and name for frontend display
+    include.push({
+        model: Band,
+        as: 'band',
+        attributes: ['id', 'name', 'profile_picture']
+    });
+    
+    return include;
+};
+
+// Check if component participates in the event based on principal instrument
+const _checkComponentParticipation = (component, event) => {
+    // If event has no instruments, all components participate
+    if (!event.instrumentsAttended || event.instrumentsAttended.length === 0) {
+        return true;
+    }
+    
+    // Check if the component's principal instrument matches the event's instruments
+    const componentInstrumentIds = component.instruments.map(i => i.id);
+    const eventInstrumentIds = event.instrumentsAttended.map(i => i.id);
+    
+    return componentInstrumentIds.some(id => eventInstrumentIds.includes(id));
+};
+
+// Add attendance information to event
+const _addAttendanceInfo = (eventJson, component) => {
+    const participates = _checkComponentParticipation(component, eventJson);
+    
+    // Find attendance record for this component
+    const attendanceRecord = eventJson.attendees?.find(attendee => attendee.id === component.id);
+    
+    // Add participation and attendance data to the event
+    eventJson.attendance = {
+        participates,
+        present: attendanceRecord?.EventAttendances?.present ?? null,
+        alleged: attendanceRecord?.EventAttendances?.alleged ?? null,
+        reason: attendanceRecord?.EventAttendances?.reason ?? null
+    };
+    
+    // Remove attendees array as it's not needed in the response
+    delete eventJson.attendees;
+    
+    return eventJson;
+};
+
 const EventController = {
     listEvents,
+    getEvent,
     editEvent,
     updateComponentAttendance,
     getEventAttendance,
     updateEventAttendance
 }
+
+// Export auxiliary functions for reuse in other controllers
+export {
+    _addAttendanceInfo, _buildBandIdFilter, _buildEventIncludes, _buildTimeScopeFilter, _checkComponentParticipation, _getMusicianComponents
+};
 
 export default EventController;

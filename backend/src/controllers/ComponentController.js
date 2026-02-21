@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Band, Component, Event, Instrument, Musician, User } from "../models/sequelize.js";
+import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
 // Function to find a component by its ID
 const findComponentById = async (req, res) => {
@@ -30,9 +30,10 @@ const findComponentById = async (req, res) => {
                             [Op.lt]: new Date()
                         }
                     },
-                    through: {
-                        attributes: ['present', 'alleged', 'reason']
-                    }
+                    include: [
+                        {model: Performance, required: false},
+                        {model: Rehearsal, required: false}
+                    ]
                 }]
             }
         );

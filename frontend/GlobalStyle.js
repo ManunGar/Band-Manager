@@ -10,8 +10,9 @@ const darkRed = '#866969';
 const green = '#269338';
 const red = '#EA3535';
 const gray = '#8C8C8C';
-const darkGray = '#717171'
+const darkGray = '#717171';
+const lightGray = '#D9D9D9';
 
 
-export { black, blue, darkGray, darkGreen, darkRed, gray, green, lightBackground, lightGreen, lightRed, red, white, yellow };
+export { black, blue, darkGray, darkGreen, darkRed, gray, green, lightBackground, lightGray, lightGreen, lightRed, red, white, yellow };
 

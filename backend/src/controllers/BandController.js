@@ -1,6 +1,7 @@
 import Sequelize from "sequelize";
 import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
+import { _checkComponentParticipation } from "./EventController.js";
 
 // Function to list bands of the logged-in musician
 const listMyBands = async (req, res) => {
@@ -120,7 +121,6 @@ const findBandById = async (req, res) => {
             const bId = b.instruments[0]?.id ?? Infinity;
             return aId - bId;
         });
-        console.log("Events before: ", band.events.length);
         
         // Convert to plain object to avoid Sequelize instance issues
         const bandData = band.toJSON();
@@ -135,14 +135,8 @@ const findBandById = async (req, res) => {
                 if (myComponent.administrator) {
                     return true;
                 }
-                // If the event has no instruments attended, return true
-                if (!event.instrumentsAttended || event.instrumentsAttended.length === 0) {
-                    return true;
-                }
-                // Check if any of my component's principal instruments are in the event's instruments attended
-                const myPrincipalInstrumentIds = myComponent.instruments.map(instr => instr.id);
-                const hasMatch = event.instrumentsAttended.some(instr => myPrincipalInstrumentIds.includes(instr.id));
-                return hasMatch;
+                // Check if component participates in the event
+                return _checkComponentParticipation(myComponent, event);
             });
             
             // Re-sort events after filtering to ensure correct order
@@ -156,8 +150,6 @@ const findBandById = async (req, res) => {
                 return 0;
             });
         }
-        
-        console.log("Events after: ", bandData.events.length);
         res.status(200).send(bandData);
     } catch (error) {
         console.error('Error fetching band by ID:', error);

@@ -1,5 +1,5 @@
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import BandEndpoints from '../../../../api/BandEndpoints';
@@ -8,13 +8,16 @@ import Button from '../../../../components/Button';
 import Component from '../../../../components/Component';
 import LinkText from '../../../../components/LinkText';
 import UpcomingEvent from '../../../../components/UpcomingEnvent';
+import { AuthContext } from '../../../../contexts/AuthContext';
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 export default function Index({ route }) {
     const [band, setBand] = useState(null);
+    const { isBandAdministrator } = useContext(AuthContext);
     const bandId = route?.params?.bandId;
     const snapPoints = useMemo(() => ['50%'], [])
     const sheetRef = useRef(null)
+    const navigation = useNavigation();
 
     useEffect(() => {
         fetchBandData();
@@ -45,7 +48,7 @@ export default function Index({ route }) {
             <View>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Próximos eventos</Text>
-                    <LinkText>Crear evento</LinkText>
+                    {isBandAdministrator && <LinkText onPress={() => navigation.navigate('CreateEvent')}>Crear evento</LinkText>}
                 </View>
                 <FlatList
                     data={band?.events || []}
@@ -66,13 +69,13 @@ export default function Index({ route }) {
             <View style={{ marginTop: 30 }}>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Miembros ({band?.components.length})</Text>
-                    <LinkText onPress={openSheet}>Añadir miembro</LinkText>
+                    {isBandAdministrator && <LinkText onPress={openSheet}>Añadir miembro</LinkText>}
                 </View>
                 <FlatList
                     data={band?.components || []}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <Component component={item} band={band}/>
+                        <Component component={item} band={band} />
                     )}
                     scrollEnabled={false}
                     ItemSeparatorComponent={(<View style={{ height: 10 }}></View>)}
@@ -84,7 +87,7 @@ export default function Index({ route }) {
 
             </View>
             {/* ADD MEMBER MODAL */}
-            <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{paddingInline: 20}}>
+            <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ paddingInline: 20 }}>
                 <Text style={{ fontFamily: 'Oswald_500', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
                     Añade nuevos componentes a tu equipo mediante el código de invitación:
                 </Text>
@@ -94,11 +97,11 @@ export default function Index({ route }) {
                 <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.gray, fontSize: 12, marginTop: 10 }}>
                     Comparte este código con las personas que quieras invitar a tu equipo o comparte el siguiente enlace para que puedan acceder con mayor rapidez.
                 </Text>
-                <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', alignContent: 'center', marginVertical: 15, paddingInline: 15, borderRadius: 8, backgroundColor: GlobalStyle.lightBackground}}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', alignContent: 'center', marginVertical: 15, paddingInline: 15, borderRadius: 8, backgroundColor: GlobalStyle.lightBackground }}>
                     <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.blue, fontSize: 16, marginVertical: 10, textDecorationLine: 'underline' }}>
                         {`${process.env.EXPO_PUBLIC_API_URL}/join/${band?.code}`}
                     </Text>
-                    <LinkText style={{marginBottom: 4}}>Copiar</LinkText>
+                    <LinkText style={{ marginBottom: 4 }}>Copiar</LinkText>
                 </View>
                 <Button>
                     Compartir

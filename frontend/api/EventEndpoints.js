@@ -13,6 +13,17 @@ const listEvents = async (bandId, timeScope, type) => {
     }
 };
 
+// Endpoint to get event details
+const getEventDetails = async (eventId) => {
+    try {
+        const response = await axios.get(`${baseUrl}/events/${eventId}`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listEvents,
+    getEventDetails
 }

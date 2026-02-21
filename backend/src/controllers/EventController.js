@@ -169,7 +169,74 @@ const listEvents = async (req, res) => {
         console.error('Error listing events:', error);
         res.status(500).send({ error: 'Error listing events' });
     }
+}
 
+// Function to retrieve a specific event (only for event participants)
+const getEvent = async (req, res) => {
+    const eventId = req.params.eventId;
+    const musicianId = req.user.musician.id;
+    
+    try {
+        const event = await Event.findByPk(eventId, {
+            include: [{
+                model: Performance,
+                required: false
+            }, {
+                model: Rehearsal,
+                required: false
+            }, {
+                model: Band,
+                as: 'band',
+                attributes: ['id', 'name', 'profile_picture'],
+                include: {
+                    model: Component,
+                    as: 'components',
+                    where: { musicianId },
+                    include: {
+                        model: Instrument,
+                        as: 'instruments',
+                        through: {
+                            where: {
+                                principal: true
+                            }
+                        }
+                    }
+                }
+            }, {
+                model: Component,
+                as: 'attendees',
+                required: false,
+                where: { musicianId },
+                through: {
+                    attributes: ['present', 'alleged', 'reason']
+                },
+                attributes: ['id']
+            }, {
+                model: Instrument,
+                as: 'instrumentsAttended',
+                required: false,
+                through: { attributes: [] }
+            }]
+        });
+        
+        if (!event) {
+            return res.status(404).send({ error: 'Event not found' });
+        }
+
+        const eventJson = event.toJSON();
+        const component = eventJson.band.components[0];
+        
+        // Add attendance information using the auxiliary function
+        _addAttendanceInfo(eventJson, component);
+        
+        // Clean up unnecessary data
+        delete eventJson.band.components;
+        
+        res.status(200).send(eventJson);
+    } catch (error) {
+        console.error('Error retrieving event:', error);
+        res.status(500).send({ error: 'Error retrieving event' });
+    }
 }
 
 // Function to edit an event (only for event administrators)

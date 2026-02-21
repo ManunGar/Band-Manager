@@ -1,8 +1,9 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useContext, useState } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import ComponentEndpoints from '../../../api/ComponentEndpoints';
 import profileDefaultImage from '../../../assets/milestones/profile_default.png';
+import ComponentAttendance from '../../../components/ComponentAttendance';
 import FilterIcon from '../../../components/icons/FilterIcon';
 import LinkText from '../../../components/LinkText';
 import TopContainer from '../../../components/TopContainer';
@@ -100,20 +101,14 @@ const ComponentScreen = ({ route }) => {
                     <Text style={styles.sectionTitle}>Asistencia a eventos</Text>
                     <FilterIcon width={22} height={21} />
                 </View>
-                {component?.attendances && component.attendances.length > 0 ? (
-                    component.attendances.map((attendance, idx) => (
-                        <View key={idx} style={{ marginBottom: 15 }}>
-                            <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, color: GlobalStyle.darkGray }}>
-                                {attendance.event.name} - {attendance.status}
-                            </Text>
-                            <Text style={{ fontFamily: 'Oswald_300', fontSize: 14, color: GlobalStyle.gray }}>
-                                {new Date(attendance.event.date).toLocaleDateString()}
-                            </Text>
-                        </View>
-                    ))
-                ) : (
-                    <Text style={styles.noContentText}>No hay registros de asistencia</Text>
-                )}
+                <FlatList 
+                    data={component?.eventsAttended}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => <ComponentAttendance eventAttendance={item} />}
+                    scrollEnabled={false}
+                    ListEmptyComponent={<Text style={styles.noContentText}>No hay registros de asistencia</Text>}
+                    ItemSeparatorComponent={<View style={{ height: 10 }}></View>}
+                />
                 <View style={{ marginTop: 30, gap: 15 }}>
                     {isBandAdministrator && (<LinkText onPress={promoteComponent}>
                         {component?.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
@@ -127,8 +122,6 @@ const ComponentScreen = ({ route }) => {
                             Salir del equipo
                         </LinkText>)}
                 </View>
-
-
             </ScrollView>
         </View>
     )
@@ -158,7 +151,7 @@ const styles = StyleSheet.create({
     },
     container: {
         paddingInline: 25,
-        marginTop: 5
+        marginTop: 5,
     },
     sectionTitle: {
         fontFamily: 'Oswald_500',

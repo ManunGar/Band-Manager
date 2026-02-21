@@ -24,6 +24,14 @@ function parseDateTime(date, time) {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 
+// Format date to a readable format in Spanish, e.g. "Lunes, 15 de Diciembre de 2025"
+function parseDate(date) {
+  const dateTime = new Date(date);
+  const formatted = format(dateTime, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
 
-export { buildMusicianInstrumentMap, parseDateTime };
+
+export { buildMusicianInstrumentMap, parseDate, parseDateTime };
 

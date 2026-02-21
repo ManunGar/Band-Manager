@@ -17,7 +17,6 @@ const loadFileRoutes = function (app) {
     app.route('/events/:eventId')
         .get(
             isLoggedIn,
-            isEventParticipant, // Ensure the user is a participant of the event
             EventController.getEvent
         )
         .put(

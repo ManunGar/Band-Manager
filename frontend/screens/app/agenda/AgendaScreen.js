@@ -6,7 +6,7 @@ import Tag from '../../../components/Tap'
 import TopContainer from '../../../components/TopContainer'
 import * as GlobalStyle from '../../../GlobalStyle'
 
-const Agenda = () => {
+const AgendaScreen = () => {
     const [timeScope, setTimeScope] = useState('upcoming')
     const [type, setType] = useState('')
     const [events, setEvents] = useState([])
@@ -65,7 +65,7 @@ const Agenda = () => {
     )
 }
 
-export default Agenda
+export default AgendaScreen
 
 const styles = StyleSheet.create({
     title: {

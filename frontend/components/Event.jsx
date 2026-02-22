@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import bandProfilePictureDefault from '../assets/milestones/band_default.png';
 import performanceDefaultImage from '../assets/milestones/performance_default.jpg';
@@ -6,18 +7,21 @@ import * as GlobalStyle from '../GlobalStyle';
 import { parseDateTime } from '../helpers/ParseHelpers';
 
 const Event = ({ event }) => {
+    const navigation = useNavigation();
+
+
     return (
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Event', { eventId: event.id })}>
             <Image source={event.Performance?.picture ? { uri: `${event.Performance.picture}` } : event.Performance ? performanceDefaultImage : rehearsalDefaultImage} style={{ width: 385, height: 180, borderRadius: 10 }} />
             <Image source={event.band.profile_picture ? { uri: `${event.band.profile_picture}` } : bandProfilePictureDefault} style={styles.bandPicture } />
             <View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', width: 385 }}>
                     <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{event.Performance?.name || 'Ensayo'}</Text>
-                    <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, marginLeft: 10, flexShrink: 0, color: event.attendance.present === true ? GlobalStyle.darkGreen : event.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray }}>
+                    {event.attendance.participates && <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, marginLeft: 10, flexShrink: 0, color: event.attendance.present === true ? GlobalStyle.darkGreen : event.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray }}>
                         { event.attendance.present && 'Asistencia Confirmada' }
                         { event.attendance.present === false && 'Asistencia Rechazada' }
                         { event.attendance.present === null && 'Sin Confirmar' }
-                    </Text>
+                    </Text>}
                 </View>
                 <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">{parseDateTime(event.date, event.initialTime)} {event.Performance?.place ? `· ${event.Performance.place}` : ''}</Text>
             </View>

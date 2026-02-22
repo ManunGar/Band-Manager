@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import { useCallback, useState } from 'react'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import EventEndpoints from '../../../api/EventEndpoints'
 import Event from '../../../components/Event'
@@ -6,14 +7,16 @@ import Tag from '../../../components/Tap'
 import TopContainer from '../../../components/TopContainer'
 import * as GlobalStyle from '../../../GlobalStyle'
 
-const Agenda = () => {
+const AgendaScreen = () => {
     const [timeScope, setTimeScope] = useState('upcoming')
     const [type, setType] = useState('')
     const [events, setEvents] = useState([])
 
-    useEffect(() => {
-      fetchEvents();
-    }, [timeScope, type]);
+    useFocusEffect(
+        useCallback(() => {
+            fetchEvents();
+        }, [timeScope, type])
+    )
 
     const fetchEvents = async () => {
         try {
@@ -65,7 +68,7 @@ const Agenda = () => {
     )
 }
 
-export default Agenda
+export default AgendaScreen
 
 const styles = StyleSheet.create({
     title: {

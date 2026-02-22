@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import performanceDefaultImage from '../assets/milestones/performance_default.jpg';
 import rehearsalDefaultImage from '../assets/milestones/rehearsal_default.jpg';
@@ -5,8 +6,10 @@ import * as GlobalStyle from '../GlobalStyle';
 import { parseDateTime } from '../helpers/ParseHelpers';
 
 const UpcomingEvent = ({ event }) => {
+    const navigation = useNavigation();
+
     return (
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Event', { eventId: event.id })}>
             <Image source={event.Performance?.picture ? { uri: `${event.Performance.picture}` } : event.Performance ? performanceDefaultImage : rehearsalDefaultImage} style={{ width: 280, height: 140, borderRadius: 10 }} />
             <View>
                 <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{event.Performance?.name || 'Ensayo'}</Text>

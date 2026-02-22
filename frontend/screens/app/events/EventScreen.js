@@ -93,7 +93,7 @@ const EventScreen = ({ route }) => {
                         {event &&
                             <View style={styles.textContainer}>
                                 <TimeIcon width={20} height={20} fill={GlobalStyle.black} />
-                                <Text style={styles.text}>{event?.initialTime} - {event?.endTime}</Text>
+                                <Text style={styles.text}>{event?.initialTime.substring(0, 5)} - {event?.endTime.substring(0, 5)}</Text>
                             </View>
                         }
                         {event?.Performance &&
@@ -157,8 +157,8 @@ const EventScreen = ({ route }) => {
                                     <Text onPress={() => handleAttendance(event.attendance.present)} style={[styles.textInput, { color: event.attendance.reason ? GlobalStyle.black : GlobalStyle.gray }]}>{event.attendance.reason || "No has añadido ningún comentario."}</Text>
                                 </View>
                             </View> :
-                            <View style={[styles.button, { backgroundColor: event?.attendance.present === true ? GlobalStyle.lightGreen : event?.attendance.present === false ? GlobalStyle.lightRed : GlobalStyle.gray, borderColor: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray, borderWidth: 1, alignSelf: 'center' }]}>
-                                <Text style={[styles.buttonText, { color: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray }]}>
+                            <View style={[styles.button, { backgroundColor: event?.attendance.present === true ? GlobalStyle.lightGreen : event?.attendance.present === false ? GlobalStyle.lightRed : GlobalStyle.gray, borderColor: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray, borderWidth: 1, alignSelf: 'center', width: '80%' }]}>
+                                <Text style={[styles.buttonText ]}>
                                     {event?.attendance.present === true ? "Asistencia Confirmada" : event?.attendance.present === false ? "Asistencia Negada" : "Asistencia sin Confirmar"}
                                 </Text>
                             </View>

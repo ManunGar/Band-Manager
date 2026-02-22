@@ -1,8 +1,11 @@
-import { useContext, useEffect, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import EventEndpoints from '../../../api/EventEndpoints';
 import performancePictureDefault from '../../../assets/milestones/performance_default.jpg';
 import rehearsalPictureDefault from '../../../assets/milestones/rehearsal_default.jpg';
+import BottomSheet from '../../../components/BottomSheet';
 import AgendaIcon from '../../../components/icons/AgendaIcon';
 import AttendanceIcon from '../../../components/icons/AttendanceIcon';
 import LocationIcon from '../../../components/icons/LocationIcon';
@@ -19,26 +22,50 @@ const EventScreen = ({ route }) => {
     const [event, setEvent] = useState(null)
     const { setIsBandAdministrator, isBandAdministrator } = useContext(AuthContext)
     const [attendance, setAttendance] = useState(null)
-    const [comment, setComment] = useState('')
+    const [comment, setComment] = useState(null)
+    const snapPoints = useMemo(() => [])
+    const sheetRef = useRef(null)
 
     useEffect(() => {
         fetchEventDetails();
     }, [eventId])
+
+    useFocusEffect(
+        useCallback(() => {
+            return closeSheet;
+        }, [])
+    );
+
+    const openSheet = useCallback(() => {
+        sheetRef.current?.present()
+    }, [])
+
+    const closeSheet = useCallback(() => {
+        sheetRef.current?.dismiss()
+    }, [])
 
     const fetchEventDetails = async () => {
         const fetchedEvent = await EventEndpoints.getEventDetails(eventId);
         fetchedEvent ? setIsBandAdministrator(fetchedEvent.band.components[0].administrator) : setIsBandAdministrator(false);
         setEvent(fetchedEvent);
         setAttendance(fetchedEvent?.attendance.present);
-        setComment(fetchedEvent?.attendance.comment || '');
+        setComment(fetchedEvent?.attendance.reason);
     }
 
     const handleAttendance = async (confirm) => {
-        if (attendance === confirm) {
-            setAttendance(null);
-            setCComment('');
-        }
         setAttendance(confirm);
+        openSheet();
+    }
+
+    const handleSaveAttendance = async () => {
+        try {
+            await EventEndpoints.takeComponentAttendance(eventId, { present: attendance, reason: comment || '' });
+            await fetchEventDetails();
+            closeSheet();
+        } catch (error) {
+            console.log("🚀 ~ handleSaveAttendance ~ error:", error)
+            Alert.alert('Error', error.message || 'Hubo un error al guardar tu asistencia.');
+        }
     }
 
     return (
@@ -89,34 +116,47 @@ const EventScreen = ({ route }) => {
                     </View>
                     {event?.attendance.participates ? <View>
                         {event?.date > new Date().toISOString() ?
-                            <View>
+                            <View style={{ flex: 1 }}>
                                 {/* BUTTONS */}
-                                <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center' }}>
+                                <View style={{ flexDirection: 'row', gap: 20, maxWidth: 400, margin: 'auto' }}>
                                     <Pressable onPress={() => handleAttendance(true)}
-                                        style={[styles.button, { backgroundColor: attendance === true ? GlobalStyle.green : GlobalStyle.lightGreen, borderColor: GlobalStyle.darkGreen, borderWidth: 1 }]}>
-                                        <Text style={styles.buttonText}>Confirmar Asistencia</Text>
+                                        style={[styles.button, { backgroundColor: event.attendance.present === true ? GlobalStyle.green : GlobalStyle.lightGreen, borderColor: GlobalStyle.darkGreen, borderWidth: 1 }]}>
+                                        <Text style={styles.buttonText}>Confirmar</Text>
                                     </Pressable>
                                     <Pressable onPress={() => handleAttendance(false)}
-                                        style={[styles.button, { backgroundColor: attendance === false ? GlobalStyle.red : GlobalStyle.lightRed, borderColor: GlobalStyle.darkRed, borderWidth: 1 }]}>
-                                        <Text style={styles.buttonText}>Negar Asistencia</Text>
+                                        style={[styles.button, { backgroundColor: event.attendance.present === false ? GlobalStyle.red : GlobalStyle.lightRed, borderColor: GlobalStyle.darkRed, borderWidth: 1 }]}>
+                                        <Text style={styles.buttonText}>Negar</Text>
                                     </Pressable>
                                 </View>
                                 {/* COMMENT */}
-                                <View style={styles.input}>
-                                    <TextInput
-                                        style={styles.textInput}
-                                        placeholder="Escribe un comentario/justificación..."
-                                        value={comment}
-                                        onChangeText={setComment}
-                                    />
-                                </View>
-                                {/* SEND BUTTON */}
-                                {attendance !== null &&
+                                <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ paddingInline: 5 }}>
+                                    <Text style={{ fontFamily: 'Oswald_500', color: attendance === true ? GlobalStyle.green : GlobalStyle.red, fontSize: 16 }}>
+                                        Vas a {attendance === true ? "confirmar tu asistencia" : "negar tu asistencia"} a este evento.
+                                    </Text>
+                                    <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
+                                        ¿Quieres añadir algún comentario o justificación? (opcional)
+                                    </Text>
+                                    {/* INPUT */}
+                                    <View style={styles.input}>
+                                        <BottomSheetTextInput
+                                            style={styles.textInput}
+                                            placeholder="Escribe un comentario/justificación..."
+                                            value={comment}
+                                            onChangeText={setComment}
+                                            multiline
+                                        />
+                                    </View>
+                                    {/* SEND BUTTON */}
                                     <View style={{ alignItems: 'center', marginTop: 20 }}>
-                                        <Pressable style={[styles.button, { backgroundColor: GlobalStyle.yellow, borderColor: GlobalStyle.yellow, borderWidth: 1 }]}>
-                                            <Text style={[styles.buttonText, { color: GlobalStyle.blue }]}>Enviar Asistencia</Text>
+                                        <Pressable onPress={handleSaveAttendance} 
+                                            style={[styles.button, { backgroundColor: GlobalStyle.yellow, borderColor: GlobalStyle.yellow, borderWidth: 1, width: '60%' }]}>
+                                            <Text style={[styles.buttonText, { color: GlobalStyle.blue }]}>Guardar Asistencia</Text>
                                         </Pressable>
-                                    </View>}
+                                    </View>
+                                </BottomSheet>
+                                <View style={[styles.input, { marginInline: 20, marginTop: 20 }]}>
+                                    <Text onPress={() => handleAttendance(event.attendance.present)} style={[styles.textInput, { color: comment ? GlobalStyle.black : GlobalStyle.gray }]}>{comment || "No has añadido ningún comentario."}</Text>
+                                </View>
                             </View> :
                             <View style={[styles.button, { backgroundColor: event?.attendance.present === true ? GlobalStyle.lightGreen : event?.attendance.present === false ? GlobalStyle.lightRed : GlobalStyle.gray, borderColor: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray, borderWidth: 1, alignSelf: 'center' }]}>
                                 <Text style={[styles.buttonText, { color: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray }]}>
@@ -174,9 +214,10 @@ const styles = StyleSheet.create({
     },
     button: {
         padding: 10,
+        paddingVertical: 8,
         borderRadius: 40,
         alignItems: 'center',
-        minWidth: 185
+        width: '40%'
     },
     buttonText: {
         textAlign: 'center',
@@ -191,8 +232,6 @@ const styles = StyleSheet.create({
         paddingInline: 10,
         fontFamily: 'Oswald_400',
         fontSize: 16,
-        marginInline: 25,
-        marginTop: 15,
         minHeight: 80,
     },
     textInput: {

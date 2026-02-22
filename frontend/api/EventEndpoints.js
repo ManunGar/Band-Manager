@@ -23,7 +23,18 @@ const getEventDetails = async (eventId) => {
     }
 };
 
+// Endpoint to take component attendance
+const takeComponentAttendance = async (eventId, data) => {
+    try {
+        const response = await axios.put(`${baseUrl}/events/${eventId}/component-attendance`, data);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listEvents,
-    getEventDetails
+    getEventDetails,
+    takeComponentAttendance,
 }

@@ -20,6 +20,19 @@ const sequelizeConnection = new Sequelize(database, username, password, {
     host: host,
     port: port,
     dialect: 'mariadb',
+    dialectOptions: {
+        connectTimeout: 60000, // 60 segundos para establecer la conexión
+    },
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 60000, // 60 segundos para adquirir una conexión
+        idle: 10000,
+        evict: 10000
+    },
+    retry: {
+        max: 3 // Número de reintentos
+    }
 })
 
 // Models would be imported and initialized here

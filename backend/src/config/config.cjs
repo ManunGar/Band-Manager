@@ -7,7 +7,16 @@ module.exports = {
     host: process.env.DATABASE_HOST || 'localhost',
     port: process.env.DATABASE_PORT || 3306,
     appPort: process.env.APP_PORT || 3030,
-    dialect: 'mariadb'
+    dialect: 'mariadb',
+    dialectOptions: {
+      connectTimeout: 60000
+    },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 60000,
+      idle: 10000
+    }
   },
   test: {
     username: process.env.DATABASE_USERNAME,
@@ -23,6 +32,15 @@ module.exports = {
     database: process.env.DATABASE_NAME || 'pueblo_duerme',
     host: process.env.DATABASE_HOST || 'localhost',
     port: process.env.DATABASE_PORT || 3306,
-    dialect: 'mariadb'
+    dialect: 'mariadb',
+    dialectOptions: {
+      connectTimeout: 60000
+    },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 60000,
+      idle: 10000
+    }
   }
 }

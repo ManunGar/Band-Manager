@@ -49,7 +49,6 @@ const EventScreen = ({ route }) => {
         fetchedEvent ? setIsBandAdministrator(fetchedEvent.band.components[0].administrator) : setIsBandAdministrator(false);
         setEvent(fetchedEvent);
         setAttendance(fetchedEvent?.attendance.present);
-        setComment(fetchedEvent?.attendance.reason);
     }
 
     const handleAttendance = async (confirm) => {
@@ -155,7 +154,7 @@ const EventScreen = ({ route }) => {
                                     </View>
                                 </BottomSheet>
                                 <View style={[styles.input, { marginInline: 20, marginTop: 20 }]}>
-                                    <Text onPress={() => handleAttendance(event.attendance.present)} style={[styles.textInput, { color: comment ? GlobalStyle.black : GlobalStyle.gray }]}>{comment || "No has añadido ningún comentario."}</Text>
+                                    <Text onPress={() => handleAttendance(event.attendance.present)} style={[styles.textInput, { color: event.attendance.reason ? GlobalStyle.black : GlobalStyle.gray }]}>{event.attendance.reason || "No has añadido ningún comentario."}</Text>
                                 </View>
                             </View> :
                             <View style={[styles.button, { backgroundColor: event?.attendance.present === true ? GlobalStyle.lightGreen : event?.attendance.present === false ? GlobalStyle.lightRed : GlobalStyle.gray, borderColor: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray, borderWidth: 1, alignSelf: 'center' }]}>

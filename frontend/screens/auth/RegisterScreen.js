@@ -19,7 +19,7 @@ const stepSchemas = [
         email: Yup.string().email('El correo electrónico no es válido').required('El correo electrónico es requerido'),
         username: Yup.string().trim()
             .matches(/^[a-zA-Z0-9_.-]+$/, 'Introduce solo letras y números')
-            .min(3, 'El nombre de usuario debe tener al menos 6 caracteres')
+            .min(6, 'El nombre de usuario debe tener al menos 6 caracteres')
             .max(20, 'El nombre de usuario debe tener como máximo 20 caracteres')
             .required('El nombre de usuario es requerido'),
         password: Yup.string()
@@ -85,8 +85,8 @@ const RegisterScreen = () => {
                 };
                 await register(payload);
             } catch (err) {
-                console.error(err?.response?.data || err);
-                Alert.alert('Error', err?.response?.data?.message || 'No se pudo registrar el usuario');
+                console.error("Registration error:", err);
+                Alert.alert('Error', err.message || 'No se pudo registrar el usuario');
             } finally {
                 setSubmitting(false);
             }

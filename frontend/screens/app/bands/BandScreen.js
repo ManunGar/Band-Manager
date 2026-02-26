@@ -1,8 +1,7 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { useFocusEffect, useLinkBuilder, useNavigation } from '@react-navigation/native';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useLinkBuilder, useNavigation } from '@react-navigation/native';
+import { useContext, useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
-import BandEndpoints from '../../../api/BandEndpoints';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
@@ -22,22 +21,6 @@ const BandScreen = ({ route }) => {
         const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
         setIsBandAdministrator(isAdmin);
     }, [band, user?.musician?.id]);
-
-    useFocusEffect(
-        useCallback(() => {
-            fetchBandInfo();
-        }, [])
-    );
-
-    const fetchBandInfo = async () => {
-        try {
-            const data = await BandEndpoints.getBandDetails(band.id);
-            setBand(data)
-        } catch (error) {
-            console.error(error)
-            logout()
-        }
-    }
 
     return (
         < Tab.Navigator 

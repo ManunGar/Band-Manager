@@ -33,8 +33,26 @@ const takeComponentAttendance = async (eventId, data) => {
     }
 };
 
+// Endpoint to create an event
+const createEvent = async (bandId, data) => {
+    try {
+        const response = await axios.post(`${baseUrl}/bands/${bandId}/events`, data,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listEvents,
     getEventDetails,
     takeComponentAttendance,
+    createEvent
 }

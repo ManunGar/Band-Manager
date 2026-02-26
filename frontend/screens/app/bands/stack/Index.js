@@ -1,5 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import BandEndpoints from '../../../../api/BandEndpoints';
@@ -19,12 +19,9 @@ export default function Index({ route }) {
     const sheetRef = useRef(null)
     const navigation = useNavigation();
 
-    useEffect(() => {
-        fetchBandData();
-    }, [bandId]);
-
     useFocusEffect(
         useCallback(() => {
+            fetchBandData();
             return closeSheet;
         }, [])
     );
@@ -48,7 +45,7 @@ export default function Index({ route }) {
             <View>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Próximos eventos</Text>
-                    {isBandAdministrator && <LinkText onPress={() => navigation.navigate('CreateEvent')}>Crear evento</LinkText>}
+                    {isBandAdministrator && <LinkText onPress={() => navigation.navigate('CreateEvent', { band: band })}>Crear evento</LinkText>}
                 </View>
                 <FlatList
                     data={band?.events || []}

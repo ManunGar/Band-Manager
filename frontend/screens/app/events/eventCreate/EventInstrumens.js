@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import { Alert, FlatList, StyleSheet, View } from "react-native";
+import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import EventEndpoints from "../../../../api/EventEndpoints";
 import InstrumentsEndpoints from "../../../../api/InstrumentsEndpoints";
 import Button from "../../../../components/Button";
@@ -8,6 +8,7 @@ import InputSearch from "../../../../components/InputSearch";
 import Instrument from "../../../../components/Instrument";
 import TopContainer from "../../../../components/TopContainer";
 import { useEventForm } from "../../../../contexts/EventFormContext";
+import * as GlobalStyle from '../../../../GlobalStyle';
 
 const EventInstruments = ({ route }) => {
     const { band } = route.params;
@@ -105,7 +106,11 @@ const EventInstruments = ({ route }) => {
             }
 
             await EventEndpoints.createEvent(band.id, formData);
-            navigation.navigate('BandDetails', { band: band });
+            resetEventFormData();
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'BandDetails', params: { band: band } }],
+            });
         } catch (error) {
             console.error('Error al crear el evento:', error);
             Alert.alert('Error', 'Ocurrió un error al crear el evento. Por favor, inténtalo de nuevo.');
@@ -117,7 +122,7 @@ const EventInstruments = ({ route }) => {
     return (
         <>
             <TopContainer
-                title="Seleccionar Instrumentos"
+                title="Instrumentos"
                 editEnabled={false}
                 pictureEnabled={true}
                 pictureUrl={band.profile_picture}
@@ -129,6 +134,7 @@ const EventInstruments = ({ route }) => {
                         value={search}
                         onChangeText={setSearch} />
                 </View>
+                <Text style={styles.descriptionText}>Selecciona los instrumentos que deseas que  asistan al evento. Si no seleccionas ningún instrumento, toTextparticiparán en el evento</Text>
                 <FlatList
                     data={instruments}
                     keyExtractor={item => item.id.toString()}
@@ -162,15 +168,21 @@ const styles = StyleSheet.create({
     },
     searchContainer: {
         marginTop: 10,
-        width: '100%'
+        width: '100%',
     },
     listContent: {
         gap: 15,
         paddingBottom: 30,
-        paddingTop: 20
     },
     buttonContainer: {
         paddingVertical: 20,
         paddingHorizontal: 20
+    },
+    descriptionText: {
+        fontSize: 14,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        marginTop: 10,
+        marginBottom: 20
     }
 });

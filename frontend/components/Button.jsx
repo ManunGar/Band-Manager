@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 import * as GlobalStyle from '../GlobalStyle';
 
-const Button = ({ onPress, children }) => {
+const Button = ({ onPress, children, disabled }) => {
     return (
-        <Pressable style={styles.button} onPress={onPress}>
-            <Text style={styles.buttonText}>{children}</Text>
+        <Pressable style={[styles.button, disabled && styles.disabledButton]} onPress={onPress} disabled={disabled}>
+            {!disabled && <Text style={styles.buttonText}>{children}</Text>}
+            {disabled && <ActivityIndicator style={{ marginBlock: 5 }} color={GlobalStyle.blue} animating={disabled} />}
         </Pressable>
     )
 }
@@ -25,5 +26,5 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontFamily: 'Oswald_500',
         color: GlobalStyle.blue
-    }
+    },
 })

@@ -33,8 +33,9 @@ const EventScreen = ({ route }) => {
 
     useFocusEffect(
         useCallback(() => {
+            event ? setIsBandAdministrator(event.band.components[0].administrator) : setIsBandAdministrator(false);
             return closeSheet;
-        }, [])
+        }, [event])
     );
 
     const openSheet = useCallback(() => {
@@ -148,7 +149,7 @@ const EventScreen = ({ route }) => {
                                     </View>
                                     {/* SEND BUTTON */}
                                     <View style={{ alignItems: 'center', marginTop: 20 }}>
-                                        <Pressable onPress={handleSaveAttendance} 
+                                        <Pressable onPress={handleSaveAttendance}
                                             style={[styles.button, { backgroundColor: GlobalStyle.yellow, borderColor: GlobalStyle.yellow, borderWidth: 1, width: '60%' }]}>
                                             <Text style={[styles.buttonText, { color: GlobalStyle.blue }]}>Guardar Asistencia</Text>
                                         </Pressable>
@@ -159,7 +160,7 @@ const EventScreen = ({ route }) => {
                                 </View>
                             </View> :
                             <View style={[styles.button, { backgroundColor: event?.attendance.present === true ? GlobalStyle.lightGreen : event?.attendance.present === false ? GlobalStyle.lightRed : GlobalStyle.gray, borderColor: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray, borderWidth: 1, alignSelf: 'center', width: '80%' }]}>
-                                <Text style={[styles.buttonText ]}>
+                                <Text style={[styles.buttonText]}>
                                     {event?.attendance.present === true ? "Asistencia Confirmada" : event?.attendance.present === false ? "Asistencia Negada" : "Asistencia sin Confirmar"}
                                 </Text>
                             </View>

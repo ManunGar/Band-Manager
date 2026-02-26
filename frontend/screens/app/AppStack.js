@@ -24,7 +24,7 @@ const AppStack = () => {
       const focusedNestedRouteName =
         getFocusedRouteNameFromRoute(route) ?? 'AccountDetail';// default screen
 
-      const hiddenRoutes = ['Instruments', 'AccountEdit', 'CreateBand', 'JoinBand', 'EditBand', 'CreateEvent']; // screen list where tab bar is hidden
+      const hiddenRoutes = ['Instruments', 'AccountEdit', 'CreateBand', 'JoinBand', 'EditBand', 'CreateEvent', 'EventInstruments']; // screen list where tab bar is hidden
 
       if (hiddenRoutes.includes(focusedNestedRouteName)) {
         isTabBarVisible = false;

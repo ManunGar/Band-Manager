@@ -108,6 +108,10 @@ const EventScreen = ({ route }) => {
                 </View>
                 {/* BODY */}
                 <View style={{ paddingBottom: 60 }}>
+                    {event?.Performance?.comment && event?.Performance?.comment.trim() !== "" &&
+                        <View style={[ styles.input, { marginInline: 20, marginTop: 20 } ]}>
+                         <Text style={[styles.textInput, { color: GlobalStyle.black }]}>{event?.Performance?.comment}</Text>
+                    </View>}
                     <View style={{ paddingHorizontal: 25, paddingTop: 22, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <AttendanceIcon width={25} height={22} />

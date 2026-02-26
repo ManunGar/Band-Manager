@@ -45,8 +45,7 @@ const EventInstruments = ({ route }) => {
             // Mark instruments as selected based on eventFormData
             const instrumentsWithSelection = response.map(inst => ({
                 ...inst,
-                selected: eventFormData.instruments.hasOwnProperty(inst.id.toString()),
-                principal: eventFormData.instruments[inst.id.toString()] === true
+                selected: eventFormData.instruments.includes(inst.id)
             }));
             setAllInstruments(instrumentsWithSelection);
             setInstruments(instrumentsWithSelection);
@@ -54,32 +53,22 @@ const EventInstruments = ({ route }) => {
             console.error("Error fetching instruments:", error);
         }
     }
-    
+
     const selectInstrument = (instrument) => {
-        const updatedInstruments = { ...eventFormData.instruments };
+        const updatedInstruments = [...eventFormData.instruments];
         const instrumentSelected = allInstruments.find(i => i.id === instrument.id);
-        
-        if (Object.keys(updatedInstruments).includes(String(instrument.id))) {
-            // Deselect instrument
-            delete updatedInstruments[String(instrument.id)];
+
+        if (updatedInstruments.includes(instrument.id)) {
+            // Deselect instrument - remove from array
+            const index = updatedInstruments.indexOf(instrument.id);
+            updatedInstruments.splice(index, 1);
             instrumentSelected.selected = false;
-            
-            // If it was principal, assign principal to another instrument
-            if (instrumentSelected.principal) {
-                instrumentSelected.principal = false;
-                if (Object.keys(updatedInstruments).length > 0) {
-                    const firstKey = Object.keys(updatedInstruments)[0];
-                    updatedInstruments[firstKey] = true;
-                    allInstruments.find(i => i.id.toString() === firstKey).principal = true;
-                }
-            }
         } else {
-            // Select instrument
-            instrumentSelected.principal = Object.keys(updatedInstruments).length === 0;
-            updatedInstruments[instrument.id] = Object.keys(updatedInstruments).length > 0 ? false : true;
+            // Select instrument - add to array
+            updatedInstruments.push(instrument.id);
             instrumentSelected.selected = true;
         }
-        
+
         updateEventFormData({ instruments: updatedInstruments });
         setAllInstruments([...allInstruments]); // Force re-render
     }
@@ -88,25 +77,24 @@ const EventInstruments = ({ route }) => {
         setIsSubmitting(true);
         try {
             const formData = new FormData();
-            
+
             // Add all text fields
             formData.append('eventType', eventFormData.eventType);
             formData.append('date', eventFormData.date);
             formData.append('initialTime', eventFormData.initialTime);
             formData.append('endTime', eventFormData.endTime);
-            
+
             // Add optional text fields only if they have values
             if (eventFormData.name) formData.append('name', eventFormData.name);
             if (eventFormData.type) formData.append('type', eventFormData.type);
             if (eventFormData.place) formData.append('place', eventFormData.place);
             if (eventFormData.comment) formData.append('comment', eventFormData.comment);
-            
-            // Convert instruments object to array of IDs
-            const instrumentIds = Object.keys(eventFormData.instruments).map(id => parseInt(id));
-            if (instrumentIds.length > 0) {
-                formData.append('instruments', JSON.stringify(instrumentIds));
+
+            // Add instruments array if not empty
+            if (eventFormData.instruments && eventFormData.instruments.length > 0) {
+                formData.append('instruments', JSON.stringify(eventFormData.instruments));
             }
-            
+
             // Add picture if exists
             if (eventFormData.picture) {
                 formData.append('picture', {
@@ -116,18 +104,8 @@ const EventInstruments = ({ route }) => {
                 });
             }
 
-            const response = await EventEndpoints.createEvent(band.id, formData);
-            console.log("🚀 ~ EventInstruments ~ response:", response);
-            
-            Alert.alert('Éxito', 'Evento creado correctamente', [
-                {
-                    text: 'OK',
-                    onPress: () => {
-                        resetEventFormData();
-                        navigation.navigate('EventScreen', { refresh: true });
-                    }
-                }
-            ]);
+            await EventEndpoints.createEvent(band.id, formData);
+            navigation.navigate('BandDetails', { band: band });
         } catch (error) {
             console.error('Error al crear el evento:', error);
             Alert.alert('Error', 'Ocurrió un error al crear el evento. Por favor, inténtalo de nuevo.');
@@ -138,10 +116,8 @@ const EventInstruments = ({ route }) => {
 
     return (
         <>
-            <TopContainer 
-                title="Seleccionar Instrumentos" 
-                saveEnabled={true}
-                onSave={handleCreateEvent}
+            <TopContainer
+                title="Seleccionar Instrumentos"
                 editEnabled={false}
                 pictureEnabled={true}
                 pictureUrl={band.profile_picture}
@@ -165,7 +141,7 @@ const EventInstruments = ({ route }) => {
                     contentContainerStyle={styles.listContent}
                 />
                 <View style={styles.buttonContainer}>
-                    <Button 
+                    <Button
                         onPress={handleCreateEvent}
                         disabled={isSubmitting}
                     >

@@ -86,7 +86,7 @@ const CreateEventScreen = ({ route }) => {
             place: eventFormData.place || '',
             comment: eventFormData.comment || null,
             picture: eventFormData.picture || null,
-            instruments: eventFormData.instruments || {}
+            instruments: eventFormData.instruments || []
         },
         validationSchema: schema,
         validateOnChange: false,
@@ -293,7 +293,7 @@ const CreateEventScreen = ({ route }) => {
                     </View>
                     <View style={styles.buttonContainer}>
                         <Button onPress={formik.handleSubmit} disabled={formik.isSubmitting}>
-                            Crear Evento
+                            Siguiente
                         </Button>
                     </View>
                 </View>

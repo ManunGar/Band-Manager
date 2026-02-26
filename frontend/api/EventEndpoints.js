@@ -50,9 +50,25 @@ const createEvent = async (bandId, data) => {
     }
 };
 
+const editEvent = async (eventId, data) => {
+    try {
+        const response = await axios.put(`${baseUrl}/events/${eventId}`, data,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            }
+        )
+    } catch (error) {
+        handleError(error)
+    }
+}
+
 export default {
     listEvents,
     getEventDetails,
     takeComponentAttendance,
-    createEvent
+    createEvent,
+    editEvent
 }

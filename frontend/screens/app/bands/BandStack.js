@@ -4,9 +4,9 @@ import { AuthContext } from '../../../contexts/AuthContext';
 import { EventFormProvider } from '../../../contexts/EventFormContext';
 import ComponentScreen from '../component/ComponentScreen';
 import EditComponentScreen from '../component/EditComponentScreen';
-import CreateEventScreen from '../events/eventCreate/CreateEventScreen';
-import EventInstruments from '../events/eventCreate/EventInstrumens';
 import EventScreen from '../events/EventScreen';
+import EventFormScreen from '../events/form/EventFormScreen';
+import EventInstruments from '../events/form/EventInstrumens';
 import BandCreate from './BandCreate';
 import BandScreen from './BandScreen';
 import BandsScreen from './BandsScreen';
@@ -35,7 +35,7 @@ const Bands = () => {
                 <Stack.Screen name="EditComponent" component={EditComponentScreen} />
                 {/* EVENT */}
                 <Stack.Screen name="Event" component={EventScreen} />
-                <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
+                <Stack.Screen name="CreateEvent" component={EventFormScreen} />
                 <Stack.Screen name="EventInstruments" component={EventInstruments} />
             </Stack.Navigator>
         </EventFormProvider>

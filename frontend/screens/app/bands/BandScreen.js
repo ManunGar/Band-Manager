@@ -1,6 +1,6 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { useLinkBuilder, useNavigation } from '@react-navigation/native';
-import { useContext, useEffect, useState } from 'react';
+import { useFocusEffect, useLinkBuilder, useNavigation } from '@react-navigation/native';
+import { useCallback, useContext, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import TopContainer from '../../../components/TopContainer';
@@ -17,18 +17,20 @@ const BandScreen = ({ route }) => {
     const [band, setBand] = useState(route.params.band)
     const { setIsBandAdministrator, user } = useContext(AuthContext);
 
-    useEffect(() => {
-        const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
-        setIsBandAdministrator(isAdmin);
-    }, [band, user?.musician?.id]);
+    useFocusEffect(
+        useCallback(() => {
+            const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
+            setIsBandAdministrator(isAdmin);
+        }, [band, user?.musician?.id])
+    );
 
     return (
-        < Tab.Navigator 
+        < Tab.Navigator
             tabBar={(props) => <MyTabBar {...props} band={band} />}
             screenOptions={{ swipeEnabled: false }}
         >
             <Tab.Screen name="Inicio" component={Index} initialParams={{ bandId: band?.id }} />
-            <Tab.Screen name="Actuaciones" component={Performances} initialParams={{ bandId: band?.id }}/>
+            <Tab.Screen name="Actuaciones" component={Performances} initialParams={{ bandId: band?.id }} />
             <Tab.Screen name="Ensayos" component={Rehearsal} initialParams={{ bandId: band?.id }} />
             <Tab.Screen name="Repertorio" component={Repertoire} initialParams={{ bandId: band?.id }} />
         </Tab.Navigator >

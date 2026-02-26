@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment/moment';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import Button from '../../../../components/Button';
@@ -63,29 +63,37 @@ const schema = Yup.object({
     picture: Yup.mixed().nullable().optional(),
     instruments: Yup.array().of(Yup.number().positive().integer()).optional()
 })
-const CreateEventScreen = ({ route }) => {
-    const { band } = route.params;
+const EventFormScreen = ({ route }) => {
+    const { band, event } = route.params;
     const { eventFormData, updateEventFormData } = useEventForm();
-    const [eventType, setEventType] = useState(eventFormData.eventType || 'performances');
+    const [eventType, setEventType] = useState(eventFormData.eventType || (event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances');
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showInitialTimePicker, setShowInitialTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-    const [imagePreview, setImagePreview] = useState(eventFormData.picture || null);
+    const [imagePreview, setImagePreview] = useState(eventFormData.picture || event?.Performance?.picture || null);
     const navigation = useNavigation();
 
     const imageSheetRef = useRef(null);
 
+    useEffect(() => {
+        if (event && event.instrumentsAttended && event.instrumentsAttended.length > 0) {
+            const instrumentIds = event.instrumentsAttended.map(instrument => instrument.id);
+            formik.setFieldValue('instruments', instrumentIds);
+            updateEventFormData({ instruments: instrumentIds });
+        }
+    }, [event])
+
     const formik = useFormik({
         initialValues: {
-            eventType: eventFormData.eventType || 'performances',
-            date: eventFormData.date || '',
-            initialTime: eventFormData.initialTime || '',
-            endTime: eventFormData.endTime || '',
-            name: eventFormData.name || '',
-            type: eventFormData.type || '',
-            place: eventFormData.place || '',
-            comment: eventFormData.comment || null,
-            picture: eventFormData.picture || null,
+            eventType: eventFormData.eventType || (event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances',
+            date: eventFormData.date || event?.date || '',
+            initialTime: eventFormData.initialTime || event?.initialTime?.substring(0, 5) || '',
+            endTime: eventFormData.endTime || event?.endTime.substring(0, 5) || '',
+            name: eventFormData.name || event?.Performance?.name || '',
+            type: eventFormData.type || event?.Performance?.type || '',
+            place: eventFormData.place || event?.Performance?.place || '',
+            comment: eventFormData.comment || event?.Performance?.comment || null,
+            picture: eventFormData.picture || event?.Performance?.picture || null,
             instruments: eventFormData.instruments || []
         },
         validationSchema: schema,
@@ -95,9 +103,9 @@ const CreateEventScreen = ({ route }) => {
             try {
                 // Save form data to context
                 updateEventFormData(values);
-                
+
                 // Navigate to instruments selection
-                navigation.navigate('EventInstruments', { band });
+                navigation.navigate('EventInstruments', { band, event: { ...event, ...values } });
             } catch (error) {
                 console.error('Error al guardar datos del evento:', error);
                 Alert.alert('Error', 'Ocurrió un error. Por favor, inténtalo de nuevo.');
@@ -156,11 +164,11 @@ const CreateEventScreen = ({ route }) => {
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
             <ScrollView>
-                <TopContainer title="Crear Evento" editEnabled={false} pictureEnabled={true} pictureUrl={band.profile_picture} />
+                <TopContainer title={event ? "Editar Evento" : "Crear Evento"} editEnabled={false} pictureEnabled={true} pictureUrl={band.profile_picture} />
                 <View style={styles.bodyContainer}>
                     <View style={styles.tagContainer}>
-                        <Tag selected={eventType === 'performances'} onPress={() => handleTagPress('performances')}>Actuación</Tag>
-                        <Tag selected={eventType === 'rehearsals'} onPress={() => handleTagPress('rehearsals')}>Ensayo</Tag>
+                        {!event?.Rehearsal && <Tag selected={eventType === 'performances'} onPress={() => handleTagPress('performances')}>Actuación</Tag>}
+                        {!event?.Performance && <Tag selected={eventType === 'rehearsals'} onPress={() => handleTagPress('rehearsals')}>Ensayo</Tag>}
                     </View>
                     <View style={styles.formContainer}>
                         {/* PERFORMANCE NAME */}
@@ -295,6 +303,7 @@ const CreateEventScreen = ({ route }) => {
                         <Button onPress={formik.handleSubmit} disabled={formik.isSubmitting}>
                             Siguiente
                         </Button>
+                        {event && <Text style={styles.deleteText} >Eliminar evento</Text>}
                     </View>
                 </View>
 
@@ -310,7 +319,7 @@ const CreateEventScreen = ({ route }) => {
 
 }
 
-export default CreateEventScreen
+export default EventFormScreen
 
 const styles = StyleSheet.create({
     bodyContainer: {
@@ -373,6 +382,15 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         marginTop: 30,
-        alignItems: 'center'
-        }
+        alignItems: 'center',
+        gap: 15
+    },
+    deleteText: {
+        fontSize: 16,
+        paddingInline: 5,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyles.red,
+        borderBottomWidth: 2,
+        borderBottomColor: GlobalStyles.red,
+    }
 })

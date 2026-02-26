@@ -1,5 +1,5 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import EventEndpoints from '../../../api/EventEndpoints';
@@ -25,6 +25,7 @@ const EventScreen = ({ route }) => {
     const [comment, setComment] = useState(null)
     const snapPoints = useMemo(() => [])
     const sheetRef = useRef(null)
+    const navigation = useNavigation();
 
     useEffect(() => {
         fetchEventDetails();
@@ -70,7 +71,7 @@ const EventScreen = ({ route }) => {
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
             <ScrollView>
-                <TopContainer style={{ paddingBottom: 0, marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} editEnabled={isBandAdministrator} />
+                <TopContainer style={{ paddingBottom: 0, marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} editEnabled={isBandAdministrator} onEdit={() => navigation.navigate('CreateEvent', { event, band: event?.band })} />
                 {/* HEADER */}
                 <View style={styles.headerContainer}>
                     <Image source={event?.Performance ? event.Performance.picture ? { uri: event.Performance.picture } : performancePictureDefault : rehearsalPictureDefault}

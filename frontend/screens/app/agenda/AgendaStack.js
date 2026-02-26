@@ -1,7 +1,10 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { useContext } from 'react';
 import { AuthContext } from '../../../contexts/AuthContext';
+import { EventFormProvider } from '../../../contexts/EventFormContext';
 import EventScreen from '../events/EventScreen';
+import EventFormScreen from '../events/form/EventFormScreen';
+import EventInstruments from '../events/form/EventInstrumens';
 import AgendaScreen from './AgendaScreen';
 
 const Stack = createStackNavigator();
@@ -11,14 +14,18 @@ const Agenda = () => {
     const {logout} = useContext(AuthContext)
 
     return (
-        <Stack.Navigator screenOptions={{
-            headerShown: false,
-            animation: 'slide_from_right'
-        }}>
-            {/* EVENT */}
-            <Stack.Screen name="Index" component={AgendaScreen} />
-            <Stack.Screen name="Event" component={EventScreen} />
-        </Stack.Navigator>
+        <EventFormProvider>
+            <Stack.Navigator screenOptions={{
+                headerShown: false,
+                animation: 'slide_from_right'
+            }}>
+                {/* EVENT */}
+                <Stack.Screen name="Index" component={AgendaScreen} />
+                <Stack.Screen name="Event" component={EventScreen} />
+                <Stack.Screen name="CreateEvent" component={EventFormScreen} />
+                <Stack.Screen name="EventInstruments" component={EventInstruments} />
+            </Stack.Navigator>
+        </EventFormProvider>
     )
 }
 

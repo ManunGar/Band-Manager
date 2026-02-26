@@ -3,17 +3,17 @@ import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import Svg, { G, Path } from 'react-native-svg';
 import * as GlobalStyle from '../GlobalStyle';
 
-const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keyboardType, onPress }) => {
+const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keyboardType, onPress, multiline, numberOfLines, style }) => {
     const [showPassword, setShowPassword] = useState(!secureTextEntry);
 
     return (
-        <Pressable style={styles.inputContainer} onPress={onPress}>
+        <Pressable style={[styles.inputContainer, multiline && styles.multilineContainer, style]} onPress={onPress}>
             <Text style={styles.inputLabel}>
                 {label}
             </Text>
             <TextInput
                 onPress={onPress}
-                style={styles.input}
+                style={[styles.input, multiline && styles.multilineInput]}
                 value={value}
                 placeholder={placeholder}
                 onChangeText={onChangeText}
@@ -21,6 +21,9 @@ const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keybo
                 autoCapitalize="none"
                 keyboardType={keyboardType || 'default'}
                 editable={onPress ? false : true}
+                multiline={multiline}
+                numberOfLines={numberOfLines || 1}
+                textAlignVertical={multiline ? 'top' : 'center'}
             />
             {secureTextEntry && <Pressable style={styles.eyeContainer} onPress={() => setShowPassword(!showPassword)}>
                 <Svg style={styles.eyeSvg} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -76,4 +79,13 @@ const styles = StyleSheet.create({
         width: 22,
         height: 22
     },
+    multilineContainer: {
+        height: 'auto',
+        minHeight: 100,
+    },
+    multilineInput: {
+        height: 'auto',
+        minHeight: 80,
+        marginTop: 0
+    }
 })

@@ -5,15 +5,15 @@ import moment from 'moment/moment';
 import { useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
-import EventEndpoints from '../../../api/EventEndpoints';
-import Button from '../../../components/Button';
-import Error from '../../../components/Error';
-import ImagePickerSheet from '../../../components/ImagePickerSheet';
-import Input from '../../../components/Input';
-import LinkText from '../../../components/LinkText';
-import Tag from '../../../components/Tap';
-import TopContainer from '../../../components/TopContainer';
-import * as GlobalStyles from '../../../GlobalStyle';
+import Button from '../../../../components/Button';
+import Error from '../../../../components/Error';
+import ImagePickerSheet from '../../../../components/ImagePickerSheet';
+import Input from '../../../../components/Input';
+import LinkText from '../../../../components/LinkText';
+import Tag from '../../../../components/Tap';
+import TopContainer from '../../../../components/TopContainer';
+import { useEventForm } from '../../../../contexts/EventFormContext';
+import * as GlobalStyles from '../../../../GlobalStyle';
 
 const schema = Yup.object({
     eventType: Yup.string()
@@ -65,68 +65,44 @@ const schema = Yup.object({
 })
 const CreateEventScreen = ({ route }) => {
     const { band } = route.params;
-    const [eventType, setEventType] = useState('performances');
+    const { eventFormData, updateEventFormData } = useEventForm();
+    const [eventType, setEventType] = useState(eventFormData.eventType || 'performances');
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showInitialTimePicker, setShowInitialTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imagePreview, setImagePreview] = useState(eventFormData.picture || null);
     const navigation = useNavigation();
 
     const imageSheetRef = useRef(null);
 
     const formik = useFormik({
         initialValues: {
-            eventType: 'performances',
-            date: '',
-            initialTime: '',
-            endTime: '',
-            name: '',
-            type: '',
-            place: '',
-            comment: null,
-            picture: null,
-            instruments: []
+            eventType: eventFormData.eventType || 'performances',
+            date: eventFormData.date || '',
+            initialTime: eventFormData.initialTime || '',
+            endTime: eventFormData.endTime || '',
+            name: eventFormData.name || '',
+            type: eventFormData.type || '',
+            place: eventFormData.place || '',
+            comment: eventFormData.comment || null,
+            picture: eventFormData.picture || null,
+            instruments: eventFormData.instruments || {}
         },
         validationSchema: schema,
         validateOnChange: false,
         validateOnBlur: true,
         onSubmit: async (values, { setSubmitting }) => {
-            setSubmitting(true);
             try {
-                const formData = new FormData();
+                // Save form data to context
+                updateEventFormData(values);
                 
-                // Add all text fields
-                formData.append('eventType', values.eventType);
-                formData.append('date', values.date);
-                formData.append('initialTime', values.initialTime);
-                formData.append('endTime', values.endTime);
-                
-                // Add optional text fields only if they have values
-                if (values.name) formData.append('name', values.name);
-                if (values.type) formData.append('type', values.type);
-                if (values.place) formData.append('place', values.place);
-                if (values.comment) formData.append('comment', values.comment);
-                
-                // Add instruments array if not empty
-                if (values.instruments && values.instruments.length > 0) {
-                    formData.append('instruments', JSON.stringify(values.instruments));
-                }
-                
-                // Add picture if exists
-                if (values.picture) {
-                    formData.append('picture', {
-                        uri: values.picture,
-                        name: `event_${Date.now()}.jpg`,
-                        type: 'image/jpeg',
-                    });
-                }
-                await EventEndpoints.createEvent(band.id, formData);
+                // Navigate to instruments selection
+                navigation.navigate('EventInstruments', { band });
             } catch (error) {
-                console.error('Error al crear el evento:', error);
-                Alert.alert('Error', 'Ocurrió un error al crear el evento. Por favor, inténtalo de nuevo.');
+                console.error('Error al guardar datos del evento:', error);
+                Alert.alert('Error', 'Ocurrió un error. Por favor, inténtalo de nuevo.');
             } finally {
                 setSubmitting(false);
-                navigation.goBack(); // Return to previous screen after successful creation
             }
         }
     })

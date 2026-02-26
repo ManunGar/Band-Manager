@@ -11,7 +11,7 @@ import { useEventForm } from "../../../../contexts/EventFormContext";
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 const EventInstruments = ({ route }) => {
-    const { band } = route.params;
+    const { band, event } = route.params;
     const { eventFormData, updateEventFormData, resetEventFormData } = useEventForm();
     const [instruments, setInstruments] = useState([]);
     const [allInstruments, setAllInstruments] = useState([]);
@@ -105,15 +105,23 @@ const EventInstruments = ({ route }) => {
                 });
             }
 
-            await EventEndpoints.createEvent(band.id, formData);
+            !event ? await EventEndpoints.createEvent(band.id, formData) : await EventEndpoints.editEvent(event.id, formData);
             resetEventFormData();
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'BandDetails', params: { band: band } }],
-            });
+            
+            // Navigate back to the appropriate screen based on navigation state
+            if (navigation.canGoBack()) {
+                // Go back to the top of the current stack
+                navigation.popToTop();
+            } else {
+                // Fallback to MyBands if we can't go back
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'MyBands' }],
+                });
+            }
         } catch (error) {
             console.error('Error al crear el evento:', error);
-            Alert.alert('Error', 'Ocurrió un error al crear el evento. Por favor, inténtalo de nuevo.');
+            Alert.alert('Error', 'Ocurrió un error al guardar el evento. Por favor, inténtalo de nuevo.');
         } finally {
             setIsSubmitting(false);
         }
@@ -151,7 +159,7 @@ const EventInstruments = ({ route }) => {
                         onPress={handleCreateEvent}
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Creando...' : 'Crear Evento'}
+                        {isSubmitting ? 'Guardando...' : event ? 'Guardar Cambios' : 'Crear Evento'}
                     </Button>
                 </View>
             </View>

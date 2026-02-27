@@ -144,16 +144,16 @@ const join = [
 
 const update = [
     check('name')
-        .exists().withMessage('Band name is required')
+        .optional()
         .isString().withMessage('Band name must be a string')
         .notEmpty().withMessage('Band name cannot be empty')
         .custom(_bandNameUnique),
     check('location')
-        .exists().withMessage('Location is required')
+        .optional()
         .isString().withMessage('Location must be a string')
         .notEmpty().withMessage('Location cannot be empty'),
     check('phone')
-        .exists().withMessage('Phone number is required')
+        .optional()
         .isString().withMessage('Phone number must be a string')
         .notEmpty().withMessage('Phone number cannot be empty')
         .custom((value, { req }) => {
@@ -164,7 +164,7 @@ const update = [
             return true;
         }),
     check('type')
-        .exists().withMessage('Band type is required')
+        .optional()
         .isString().withMessage('Band type must be a string')
         .notEmpty().withMessage('Band type cannot be empty'),
     check('profile_picture')
@@ -175,6 +175,9 @@ const update = [
     check('profile_picture').optional().custom((value, { req }) => {
         return checkFileMaxSize(req, 'profile_picture', maxFileSize)
     }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+    check('delete_profile_picture')
+        .optional()
+        .isBoolean().withMessage('delete_profile_picture must be a boolean')
 ]
 
 const addEvent = [

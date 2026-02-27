@@ -54,7 +54,7 @@ const createBand = async (req, res) => {
         }
         // Handle profile picture upload if provided
         if (req.file) {
-            await addFilenameToBody(req, 'profile_picture', Band, 'bandId', 'bands');
+            await addFilenameToBody(req, res, 'profile_picture', Band, 'bandId', 'bands');
             await band.update({
                 profile_picture: req.body.profile_picture
             }, { transaction });
@@ -232,17 +232,21 @@ const updateBand = async (req, res) => {
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
-        // Handle profile picture upload if provided
-        if (req.file) {
-            await addFilenameToBody(req, 'profile_picture', Band, 'bandId', 'bands');
+        
+        let updatedProfilePicture = band.profile_picture;
+        
+        // Handle profile picture deletion if requested
+        if (req.body.delete_profile_picture === true) {
+            await deleteFileFromCloudinary(band.profile_picture, 'bands');
+            updatedProfilePicture = null;
         }
-        await band.update({
-            name: req.body.name,
-            location: req.body.location,
-            phone: req.body.phone,
-            type: req.body.type,
-            profile_picture: req.body.profile_picture || band.profile_picture
-        });
+        // Handle profile picture upload if provided
+        else if (req.file) {
+            await addFilenameToBody(req, res, 'profile_picture', Band, 'bandId', 'bands');
+            updatedProfilePicture = req.body.profile_picture;
+        }
+        
+        await band.update(req.body);
         res.status(200).send({ message: 'Band updated successfully', band });
     } catch (error) {
         console.error('Error updating band:', error);
@@ -263,47 +267,6 @@ const deleteBand = async (req, res) => {
     } catch (error) {
         console.error('Error deleting band:', error);
         res.status(500).send({ error: 'Error deleting band' });
-    }
-};
-
-// Function to edit profile picture of a band by its ID
-const editBandProfilePicture = async (req, res) => {
-    const bandId = req.params.bandId;
-    try {
-        const band = await Band.findByPk(bandId);
-        if (!band) {
-            return res.status(404).send({ error: 'Band not found' });
-        }
-        await addFilenameToBody(req, 'profile_picture', Band, 'bandId', 'bands');
-        await band.update({
-            profile_picture: req.body.profile_picture
-        });
-        const updatedBand = await Band.findByPk(bandId);
-        res.status(200).send({ message: 'Band profile picture updated successfully', band: updatedBand });
-    } catch (error) {
-        console.error('Error updating band profile picture:', error);
-        res.status(500).send({ error: 'Error updating band profile picture' });
-    }
-};
-
-// Function to delete profile picture of a band by its ID
-const deleteBandProfilePicture = async (req, res) => {
-    const bandId = req.params.bandId;
-    try {
-        const band = await Band.findByPk(bandId);
-        if (!band) {
-            return res.status(404).send({ error: 'Band not found' });
-        }
-        const bandProfilePictureUrl = band.profile_picture;
-        await band.update({
-            profile_picture: null
-        });
-        await deleteFileFromCloudinary(bandProfilePictureUrl, 'bands');
-        const updatedBand = await Band.findByPk(bandId);
-        res.status(200).send({ message: 'Band profile picture deleted successfully', band: updatedBand });
-    } catch (error) {
-        console.error('Error deleting band profile picture:', error);
-        res.status(500).send({ error: 'Error deleting band profile picture' });
     }
 };
 
@@ -328,7 +291,7 @@ const addEventToBand = async (req, res) => {
                 eventId: event.id
             }, { transaction });
             if (req.file) {
-                await addFilenameToBody(req, 'picture', Performance, 'eventId', 'performances');
+                await addFilenameToBody(req, res, 'picture', Performance, 'eventId', 'performances');
                 await Performance.update({
                     picture: req.body.picture
                 }, {
@@ -388,8 +351,6 @@ const BandController = {
     joinBand,
     updateBand,
     deleteBand,
-    editBandProfilePicture,
-    deleteBandProfilePicture,
     addEventToBand
 };
 

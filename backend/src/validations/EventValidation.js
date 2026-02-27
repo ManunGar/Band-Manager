@@ -188,6 +188,9 @@ const update = [
     check('picture').optional().custom((value, { req }) => {
         return checkFileMaxSize(req, 'profile_picture', maxFileSize)
     }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+    check('delete_picture')
+        .optional()
+        .isBoolean().withMessage('delete_picture must be a boolean'),
     check('instruments').optional()
         .isArray().withMessage('Instruments must be an array of instrument IDs')
         .custom(_instrumentsAttendanceExist)

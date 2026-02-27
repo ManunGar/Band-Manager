@@ -4,7 +4,7 @@ import multer from 'multer'
 import { User } from '../models/sequelize.js'
 
 // Function to add filename to request body after uploading to Cloudinary
-const addFilenameToBody = async (req, fieldName, model, idPathParamName, folder) => {
+const addFilenameToBody = async (req, res, fieldName, model, idPathParamName, folder, idModel) => {
   if (req.file?.fieldname === fieldName) {
     // Configure Cloudinary
     cloudinary.config({
@@ -14,7 +14,7 @@ const addFilenameToBody = async (req, fieldName, model, idPathParamName, folder)
     })
     //Delete old file from Cloudinary
     if (req.params[idPathParamName]) {
-      const entity = await model.findByPk(req.params[idPathParamName])
+      const entity = idModel ? await model.findByPk(idModel) : await model.findByPk(req.params[idPathParamName])
       if (!entity) { return res.status(404).send({ errors: [{ type: 'Not found', msg: `${idPathParamName} no encontrado` }] }) }
       if (entity[fieldName] && entity[fieldName].includes(`bandmanager/${folder}`)) {
         const imageId = `bandmanager/${folder}` + entity[fieldName].split(`bandmanager/${folder}`)[1].split('.')[0]
@@ -123,5 +123,23 @@ const parseJSONFields = (...fields) => (req, res, next) => {
   }
 }
 
-export { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary, handleFilesDestroy, handleFilesUpload, parseJSONFields }
+// Middleware to parse boolean fields that come as strings in multipart/form-data
+const parseBooleanFields = (...fields) => (req, res, next) => {
+  try {
+    fields.forEach(field => {
+      if (req.body[field] !== undefined && typeof req.body[field] === 'string') {
+        if (req.body[field] === 'true') {
+          req.body[field] = true
+        } else if (req.body[field] === 'false') {
+          req.body[field] = false
+        }
+      }
+    })
+    next()
+  } catch (error) {
+    res.status(400).send({ error: 'Error parsing boolean fields' })
+  }
+}
+
+export { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary, handleFilesDestroy, handleFilesUpload, parseBooleanFields, parseJSONFields }
 

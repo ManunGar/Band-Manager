@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { isBandMember } from "../middleware/BandMiddleware.js";
-import { addFilenameToBody } from "../middleware/FileHandlerMiddleware.js";
+import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
 // ==================== Controller Functions ====================
@@ -147,15 +147,26 @@ const editEvent = async (req, res) => {
         const performances = await Performance.findOne({ where: { eventId }, transaction });
         if (performances) {
             await Performance.update(req.body, { where: { eventId }, transaction });
-            if (req.file) {
-                await addFilenameToBody(req, 'picture', Performance, 'eventId', 'performances');
-                await Performance.update({
-                    picture: req.body.picture
-                }, {
-                    where: { eventId: eventId },
-                    transaction
-                });
+            
+            let updatedPicture = performances.picture;
+            
+            // Handle picture deletion if requested
+            if (req.body.delete_picture === true) {
+                await deleteFileFromCloudinary(performances.picture, 'performances');
+                updatedPicture = null;
             }
+            // Handle picture upload if provided
+            else if (req.file) {
+                await addFilenameToBody(req, res, 'picture', Performance, 'eventId', 'performances', performances.id);
+                updatedPicture = req.body.picture;
+            }
+            
+            await Performance.update({
+                picture: updatedPicture
+            }, {
+                where: { eventId: eventId },
+                transaction
+            });
         }
         // Change event's associated instruments if provided
         const updatedEvent = await Event.findByPk(eventId, { transaction });
@@ -167,7 +178,7 @@ const editEvent = async (req, res) => {
             }
         }
         await transaction.commit();
-        res.status(200).send(updatedEvent);
+        res.status(200).send({ message: 'Event updated successfully', event: updatedEvent});
     } catch (error) {
         await transaction.rollback();
         console.error('Error editing event:', error);

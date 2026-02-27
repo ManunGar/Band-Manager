@@ -13,7 +13,7 @@ import * as GlobalStyle from '../../../GlobalStyle';
 const { width: SCREENW } = Dimensions.get('window')
 const ComponentScreen = ({ route }) => {
     const [component, setComponent] = useState(null);
-    const { isBandAdministrator, user } = useContext(AuthContext);
+    const { setIsBandAdministrator, isBandAdministrator, user } = useContext(AuthContext);
     const componentId = route.params.component.id;
     const band = route.params.band;
     const navigation = useNavigation();
@@ -21,6 +21,8 @@ const ComponentScreen = ({ route }) => {
     // Refresh component details when the screen is focused
     useFocusEffect(
         useCallback(() => {
+            const isAdmin = band?.components?.some(component => component.musicianId === user?.musician?.id && component.administrator) ?? false;
+            setIsBandAdministrator(isAdmin);
             fetchComponentDetails();
         }, [componentId])
     )
@@ -101,7 +103,7 @@ const ComponentScreen = ({ route }) => {
                     <Text style={styles.sectionTitle}>Asistencia a eventos</Text>
                     <FilterIcon width={22} height={21} />
                 </View>
-                <FlatList 
+                <FlatList
                     data={component?.eventsAttended}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => <ComponentAttendance eventAttendance={item} />}
@@ -113,7 +115,7 @@ const ComponentScreen = ({ route }) => {
                     {isBandAdministrator && (<LinkText onPress={promoteComponent}>
                         {component?.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
                     </LinkText>)}
-                    {user?.musician?.id !== component?.musicianId && isBandAdministrator && (<LinkText style={{ color: GlobalStyle.red }} 
+                    {user?.musician?.id !== component?.musicianId && isBandAdministrator && (<LinkText style={{ color: GlobalStyle.red }}
                         onPress={deleteComponent}>
                         Eliminar componente
                     </LinkText>)}

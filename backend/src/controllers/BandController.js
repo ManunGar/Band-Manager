@@ -32,7 +32,6 @@ const createBand = async (req, res) => {
             location: req.body.location,
             phone: req.body.phone,
             type: req.body.type,
-            profile_picture: req.body.profile_picture || null,
             code: code
         }, { transaction });
         // Associate the logged-in musician as an administrator component of the band
@@ -52,6 +51,13 @@ const createBand = async (req, res) => {
         const instruments = _transformInstrumentsData(req.body.instruments || {});
         for (const instr of instruments) {
             await newComponent.addInstrument(instr.instrumentId, { through: { principal: instr.principal }, transaction });
+        }
+        // Handle profile picture upload if provided
+        if (req.file) {
+            await addFilenameToBody(req, 'profile_picture', Band, 'bandId', 'bands');
+            await band.update({
+                profile_picture: req.body.profile_picture
+            }, { transaction });
         }
 
         await transaction.commit();
@@ -226,11 +232,16 @@ const updateBand = async (req, res) => {
         if (!band) {
             return res.status(404).send({ error: 'Band not found' });
         }
+        // Handle profile picture upload if provided
+        if (req.file) {
+            await addFilenameToBody(req, 'profile_picture', Band, 'bandId', 'bands');
+        }
         await band.update({
             name: req.body.name,
             location: req.body.location,
             phone: req.body.phone,
-            type: req.body.type
+            type: req.body.type,
+            profile_picture: req.body.profile_picture || band.profile_picture
         });
         res.status(200).send({ message: 'Band updated successfully', band });
     } catch (error) {
@@ -331,8 +342,7 @@ const addEventToBand = async (req, res) => {
             }, { transaction });
         }
         if (req.body.instruments) {
-            const instrumentIds = typeof req.body.instruments === 'string' ? JSON.parse(req.body.instruments) : req.body.instruments;
-            for (const instrumentId of instrumentIds) {
+            for (const instrumentId of req.body.instruments) {
                 await event.addInstrumentsAttended(instrumentId, { transaction });
             }
         }

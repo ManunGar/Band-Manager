@@ -73,17 +73,16 @@ const _endTimeAfterInitialTime = async (value, { req }) => {
 }
 
 const _instrumentsAttendanceExist = async (value, { req }) => {
-    const instrumentIds = typeof value === 'string' ? JSON.parse(value) : value
-    if (!Array.isArray(instrumentIds)) {
+    if (!Array.isArray(value)) {
         return Promise.reject(new Error('Instruments must be an array of instrument IDs'));
     }
-    for (const instrumentId of instrumentIds) {
+    for (const instrumentId of value) {
         if (Number.isNaN(instrumentId) || instrumentId <= 0) {
             return Promise.reject(new Error(`Invalid instrument id: ${instrumentId}`));
         }
     }
-    const instruments = await Instrument.findAll({ where: { id: instrumentIds } });
-    if (instruments.length !== instrumentIds.length) {
+    const instruments = await Instrument.findAll({ where: { id: value } });
+    if (instruments.length !== value.length) {
         return Promise.reject(new Error('One or more instruments do not exist'));
     }
     return Promise.resolve();
@@ -167,18 +166,15 @@ const update = [
     check('type')
         .exists().withMessage('Band type is required')
         .isString().withMessage('Band type must be a string')
-        .notEmpty().withMessage('Band type cannot be empty')
-]
-
-const updateProfilePicture = [
+        .notEmpty().withMessage('Band type cannot be empty'),
     check('profile_picture')
+        .optional()
         .custom((value, { req }) => {
             return checkFileIsImage(req, 'profile_picture')
         }).withMessage('Sube una imagen con formato (jpeg, png).'),
-    check('profile_picture')
-        .custom((value, { req }) => {
-            return checkFileMaxSize(req, 'profile_picture', maxFileSize)
-        }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+    check('profile_picture').optional().custom((value, { req }) => {
+        return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+    }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
 ]
 
 const addEvent = [
@@ -227,15 +223,16 @@ const addEvent = [
     check('picture')
         .optional()
         .custom((value, { req }) => {
-            return checkFileIsImage(req, 'profile_picture')
+            return checkFileIsImage(req, 'picture')
         }).withMessage('Sube una imagen con formato (jpeg, png).'),
     check('picture').optional().custom((value, { req }) => {
-        return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+        return checkFileMaxSize(req, 'picture', maxFileSize)
     }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
     check('instruments').optional()
+        .isArray().withMessage('Instruments must be an array of instrument IDs')
         .custom(_instrumentsAttendanceExist)
 
 ]
 
-export { addEvent, create, join, update, updateProfilePicture };
+export { addEvent, create, join, update };
 

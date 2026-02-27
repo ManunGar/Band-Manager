@@ -104,5 +104,24 @@ const handleFilesDestroy = (model, idPathParamName) => async (req, res, next) =>
   next()
 }
 
-export { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary, handleFilesDestroy, handleFilesUpload }
+// Middleware to parse JSON fields that come as strings in multipart/form-data
+const parseJSONFields = (...fields) => (req, res, next) => {
+  try {
+    fields.forEach(field => {
+      if (req.body[field] && typeof req.body[field] === 'string') {
+        try {
+          req.body[field] = JSON.parse(req.body[field])
+        } catch (error) {
+          // If parsing fails, leave the original value
+          console.error(`Error parsing ${field}:`, error.message)
+        }
+      }
+    })
+    next()
+  } catch (error) {
+    res.status(400).send({ error: 'Error parsing JSON fields' })
+  }
+}
+
+export { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary, handleFilesDestroy, handleFilesUpload, parseJSONFields }
 

@@ -5,17 +5,16 @@ import { checkFileIsImage, checkFileMaxSize } from "./FileValidationHelper.js";
 const maxFileSize = 2 * 1024 * 1024 // 2MB
 
 const _instrumentsAttendanceExist = async (value, { req }) => {
-    const instrumentIds = typeof value === 'string' ? JSON.parse(value) : value
-    if (!Array.isArray(instrumentIds)) {
+    if (!Array.isArray(value)) {
         return Promise.reject(new Error('Instruments must be an array of instrument IDs'));
     }
-    for (const instrumentId of instrumentIds) {
+    for (const instrumentId of value) {
         if (Number.isNaN(instrumentId) || instrumentId <= 0) {
             return Promise.reject(new Error(`Invalid instrument id: ${instrumentId}`));
         }
     }
-    const instruments = await Instrument.findAll({ where: { id: instrumentIds } });
-    if (instruments.length !== instrumentIds.length) {
+    const instruments = await Instrument.findAll({ where: { id: value } });
+    if (instruments.length !== value.length) {
         return Promise.reject(new Error('One or more instruments do not exist'));
     }
     return Promise.resolve();
@@ -141,6 +140,7 @@ const create = [
         return checkFileMaxSize(req, 'profile_picture', maxFileSize)
     }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
     check('instruments').optional()
+        .isArray().withMessage('Instruments must be an array of instrument IDs')
         .custom(_instrumentsAttendanceExist)
 
 ]
@@ -189,6 +189,7 @@ const update = [
         return checkFileMaxSize(req, 'profile_picture', maxFileSize)
     }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
     check('instruments').optional()
+        .isArray().withMessage('Instruments must be an array of instrument IDs')
         .custom(_instrumentsAttendanceExist)
 ]
 

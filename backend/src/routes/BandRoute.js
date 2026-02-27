@@ -1,7 +1,7 @@
 import BandController from "../controllers/BandController.js"
 import { isLoggedIn } from "../middleware/AuthMiddleware.js"
 import { isBandAdmin, isBandMember, isNotBandMember } from "../middleware/BandMiddleware.js"
-import { handleFilesUpload } from "../middleware/FileHandlerMiddleware.js"
+import { handleFilesUpload, parseJSONFields } from "../middleware/FileHandlerMiddleware.js"
 import * as BandValidation from "../validations/BandValidation.js"
 import { handleValidation } from '../validations/HandleValidation.js'
 
@@ -16,6 +16,8 @@ const loadFileRoutes = function (app) {
     app.route('/bands')
         .post(
             isLoggedIn,
+            handleFilesUpload('profile_picture', process.env.BAND_PROFILE_PICTURE_FOLDER),
+            parseJSONFields('instruments'),
             BandValidation.create,
             handleValidation,
             BandController.createBand
@@ -30,6 +32,7 @@ const loadFileRoutes = function (app) {
         .put(
             isLoggedIn,
             isBandAdmin, // Ensure the user is an admin of the band
+            handleFilesUpload('profile_picture', process.env.BAND_PROFILE_PICTURE_FOLDER),
             BandValidation.update,
             handleValidation,
             BandController.updateBand
@@ -39,30 +42,13 @@ const loadFileRoutes = function (app) {
             isBandAdmin, // Ensure the user is an admin of the band
             BandController.deleteBand
         )
-    // Profile picture upload route
-    app.route('/bands/:bandId/edit/profile-picture')
-        .put(
-            isLoggedIn,
-            isBandAdmin, // Ensure the user is an admin of the band
-            handleFilesUpload('profile_picture', process.env.BAND_PROFILE_PICTURE_FOLDER),
-            BandValidation.updateProfilePicture,
-            handleValidation,
-            BandController.editBandProfilePicture
-        )
-    // Delete profile picture route
-    app.route('/bands/:bandId/delete/profile-picture')
-        .put(
-            isLoggedIn,
-            isBandAdmin, // Ensure the user is an admin of the band
-            BandController.deleteBandProfilePicture
-        )
     // Get by code route
     app.route('/bands/code/:bandCode')
         .get(
             isLoggedIn,
             BandController.findBandByCode
         )
-    
+
     // Join band route
     app.route('/bands/join/:bandId')
         .post(
@@ -79,6 +65,7 @@ const loadFileRoutes = function (app) {
             isLoggedIn,
             isBandAdmin, // Ensure the user is an admin of the band
             handleFilesUpload('picture', process.env.PERFORMANCE_PICTURE_FOLDER),
+            parseJSONFields('instruments'),
             BandValidation.addEvent,
             handleValidation,
             BandController.addEventToBand

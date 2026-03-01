@@ -12,16 +12,16 @@ export const useEventForm = () => {
 
 export const EventFormProvider = ({ children }) => {
     const [eventFormData, setEventFormData] = useState({
-        eventType: null,
-        date: null,
-        initialTime: null,
-        endTime: null,
-        name: null,
-        type: null,
-        place: null,
-        comment: null,
+        eventType: 'performances',
+        date: '',
+        initialTime: '',
+        endTime: '',
+        name: '',
+        type: '',
+        place: '',
+        comment: '',
         picture: null,
-        instruments: null,
+        instruments: [],
         delete_picture: false
     });
 
@@ -38,7 +38,7 @@ export const EventFormProvider = ({ children }) => {
             name: '',
             type: '',
             place: '',
-            comment: null,
+            comment: '',
             picture: null,
             instruments: [],
             delete_picture: false

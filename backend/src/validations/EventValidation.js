@@ -167,10 +167,12 @@ const update = [
         .custom(_endTimeAfterInitialTime),
     check('name')
         .optional()
+        .if((value) => value !== null && value !== undefined && value !== '')
         .isString().withMessage('Performance name must be a string')
         .notEmpty().withMessage('Performance name cannot be empty'),
     check('type')
         .optional()
+        .if((value) => value !== null && value !== undefined && value !== '')
         .isString().withMessage('Performance type must be a string')
         .notEmpty().withMessage('Performance type cannot be empty'),
     check('comment')
@@ -178,6 +180,7 @@ const update = [
         .isString().withMessage('Comment must be a string'),
     check('place')
         .optional()
+        .if((value) => value !== null && value !== undefined && value !== '')
         .isString().withMessage('Performance place must be a string')
         .notEmpty().withMessage('Performance place cannot be empty'),
     check('picture')

@@ -84,17 +84,20 @@ const EventInstruments = ({ route }) => {
             formData.append('date', eventFormData.date);
             formData.append('initialTime', eventFormData.initialTime);
             formData.append('endTime', eventFormData.endTime);
-            formData.append('delete_picture', eventFormData.delete_picture); // Add delete_picture field
+            formData.append('delete_picture', eventFormData.delete_picture);
 
-            // Add optional text fields only if they have values
-            if (eventFormData.name) formData.append('name', eventFormData.name);
-            if (eventFormData.type) formData.append('type', eventFormData.type);
-            if (eventFormData.place) formData.append('place', eventFormData.place);
-            if (eventFormData.comment) formData.append('comment', eventFormData.comment);
+            // Add performance fields (backend will ignore them for rehearsals)
+            formData.append('name', eventFormData.name || '');
+            formData.append('type', eventFormData.type || '');
+            formData.append('place', eventFormData.place || '');
+            formData.append('comment', eventFormData.comment || '');
 
+            console.log('Instruments being sent:', eventFormData);
             // Add instruments array if not empty
             if (eventFormData.instruments && eventFormData.instruments.length > 0) {
                 formData.append('instruments', JSON.stringify(eventFormData.instruments));
+            } else {
+                formData.append('instruments', JSON.stringify([])); // Send empty array if no instruments selected
             }
 
             // Add picture if exists

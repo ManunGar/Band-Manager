@@ -14,7 +14,7 @@ const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keybo
             <TextInput
                 onPress={onPress}
                 style={[styles.input, multiline && styles.multilineInput]}
-                value={value}
+                value={value == null ? '' : String(value)}
                 placeholder={placeholder}
                 onChangeText={onChangeText}
                 secureTextEntry={!showPassword}

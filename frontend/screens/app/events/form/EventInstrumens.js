@@ -84,17 +84,20 @@ const EventInstruments = ({ route }) => {
             formData.append('date', eventFormData.date);
             formData.append('initialTime', eventFormData.initialTime);
             formData.append('endTime', eventFormData.endTime);
-            formData.append('delete_picture', eventFormData.delete_picture); // Add delete_picture field
+            formData.append('delete_picture', eventFormData.delete_picture);
 
-            // Add optional text fields only if they have values
-            if (eventFormData.name) formData.append('name', eventFormData.name);
-            if (eventFormData.type) formData.append('type', eventFormData.type);
-            if (eventFormData.place) formData.append('place', eventFormData.place);
-            if (eventFormData.comment) formData.append('comment', eventFormData.comment);
+            // Add performance fields (backend will ignore them for rehearsals)
+            formData.append('name', eventFormData.name || '');
+            formData.append('type', eventFormData.type || '');
+            formData.append('place', eventFormData.place || '');
+            formData.append('comment', eventFormData.comment || '');
 
+            console.log('Instruments being sent:', eventFormData);
             // Add instruments array if not empty
             if (eventFormData.instruments && eventFormData.instruments.length > 0) {
                 formData.append('instruments', JSON.stringify(eventFormData.instruments));
+            } else {
+                formData.append('instruments', JSON.stringify([])); // Send empty array if no instruments selected
             }
 
             // Add picture if exists
@@ -109,16 +112,13 @@ const EventInstruments = ({ route }) => {
             !event ? await EventEndpoints.createEvent(band.id, formData) : await EventEndpoints.editEvent(event.id, formData);
             resetEventFormData();
             
-            // Navigate back to the appropriate screen based on navigation state
-            if (navigation.canGoBack()) {
-                // Go back to the top of the current stack
-                navigation.popToTop();
+            // Navigate back based on whether we're creating or editing
+            if (event?.id) {
+                // Editing: go back 2 screens (EventInstruments -> EventFormScreen -> EventScreen)
+                navigation.pop(3);
             } else {
-                // Fallback to MyBands if we can't go back
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'MyBands' }],
-                });
+                // Creating: go back to the top of the stack
+                navigation.pop(2);
             }
         } catch (error) {
             console.error('Error al crear el evento:', error);

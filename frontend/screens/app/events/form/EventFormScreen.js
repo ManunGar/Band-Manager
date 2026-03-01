@@ -1,8 +1,8 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment/moment';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import Button from '../../../../components/Button';
@@ -66,36 +66,70 @@ const schema = Yup.object({
 })
 const EventFormScreen = ({ route }) => {
     const { band, event } = route.params;
-    const { eventFormData, updateEventFormData } = useEventForm();
-    const [eventType, setEventType] = useState(eventFormData.eventType || (event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances');
+    const { eventFormData, updateEventFormData, resetEventFormData } = useEventForm();
+    const [eventType, setEventType] = useState((event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances');
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showInitialTimePicker, setShowInitialTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-    const [imagePreview, setImagePreview] = useState(eventFormData.picture || event?.Performance?.picture || null);
+    const [imagePreview, setImagePreview] = useState(null);
     const navigation = useNavigation();
 
     const imageSheetRef = useRef(null);
 
-    useEffect(() => {
-        if (event && event.instrumentsAttended && event.instrumentsAttended.length > 0) {
-            const instrumentIds = event.instrumentsAttended.map(instrument => instrument.id);
-            formik.setFieldValue('instruments', instrumentIds);
-            updateEventFormData({ instruments: instrumentIds });
-        }
-    }, [event])
+    // Reset context and initialize form when screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            const currentEventId = event?.id || null;
+            
+            // Check if context data belongs to a different event
+            if (eventFormData.eventId !== currentEventId) {
+                // Reset context completely first
+                resetEventFormData();
+                
+                // If editing an event, populate context with event data
+                if (event) {
+                    const eventInstrumentIds = event?.instrumentsAttended?.map(i => i.id) || [];
+                    updateEventFormData({ 
+                        eventId: currentEventId,
+                        date: event.date || '',
+                        initialTime: event.initialTime?.substring(0, 5) || '',
+                        endTime: event.endTime?.substring(0, 5) || '',
+                        name: event.Performance?.name || '',
+                        type: event.Performance?.type || '',
+                        place: event.Performance?.place || '',
+                        comment: event.Performance?.comment || '',
+                        picture: event.Performance?.picture || null,
+                        instruments: eventInstrumentIds
+                    });
+                }
+            }
+            
+            // Set image preview based on context (if user uploaded new image) or event picture
+            if (eventFormData.eventId === currentEventId && eventFormData.picture) {
+                setImagePreview(eventFormData.picture);
+            } else if (event?.Performance?.picture) {
+                setImagePreview(event.Performance.picture);
+            } else {
+                setImagePreview(null);
+            }
+        }, [event?.id, eventFormData.eventId, eventFormData.picture])
+    )
 
     const formik = useFormik({
+        enableReinitialize: true, // Important: reinitialize form when initialValues change
         initialValues: {
-            eventType: eventFormData.eventType || (event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances',
-            date: eventFormData.date || event?.date || '',
-            initialTime: eventFormData.initialTime || event?.initialTime?.substring(0, 5) || '',
-            endTime: eventFormData.endTime || event?.endTime.substring(0, 5) || '',
-            name: eventFormData.name || event?.Performance?.name || '',
-            type: eventFormData.type || event?.Performance?.type || '',
-            place: eventFormData.place || event?.Performance?.place || '',
-            comment: eventFormData.comment || event?.Performance?.comment || null,
-            picture: eventFormData.picture || event?.Performance?.picture || null,
-            instruments: eventFormData.instruments || [],
+            eventType: eventType,
+            // If context belongs to current event, use context data (user may have navigated to EventInstruments and back)
+            // Otherwise use event data directly
+            date: (eventFormData.eventId === (event?.id || null)) ? eventFormData.date : (event?.date || ''),
+            initialTime: (eventFormData.eventId === (event?.id || null)) ? eventFormData.initialTime : (event?.initialTime?.substring(0, 5) || ''),
+            endTime: (eventFormData.eventId === (event?.id || null)) ? eventFormData.endTime : (event?.endTime?.substring(0, 5) || ''),
+            name: (eventFormData.eventId === (event?.id || null)) ? eventFormData.name : (event?.Performance?.name || ''),
+            type: (eventFormData.eventId === (event?.id || null)) ? eventFormData.type : (event?.Performance?.type || ''),
+            place: (eventFormData.eventId === (event?.id || null)) ? eventFormData.place : (event?.Performance?.place || ''),
+            comment: (eventFormData.eventId === (event?.id || null)) ? eventFormData.comment : (event?.Performance?.comment || ''),
+            picture: (eventFormData.eventId === (event?.id || null)) ? eventFormData.picture : (event?.Performance?.picture || null),
+            instruments: (eventFormData.eventId === (event?.id || null)) ? eventFormData.instruments : (event?.instrumentsAttended?.map(i => i.id) || []),
             delete_picture: false
         },
         validationSchema: schema,
@@ -103,11 +137,14 @@ const EventFormScreen = ({ route }) => {
         validateOnBlur: true,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                // Save form data to context
-                updateEventFormData(values);
+                // Save form data to context with event ID
+                updateEventFormData({ 
+                    ...values,
+                    eventId: event?.id || null 
+                });
 
                 // Navigate to instruments selection
-                navigation.navigate('EventInstruments', { band, event: { ...event, ...values } });
+                navigation.navigate('EventInstruments', { band, event });
             } catch (error) {
                 console.error('Error al guardar datos del evento:', error);
                 Alert.alert('Error', 'Ocurrió un error. Por favor, inténtalo de nuevo.');
@@ -159,8 +196,8 @@ const EventFormScreen = ({ route }) => {
         formik.setFieldValue('delete_picture', true);
     };
 
-    // Handle tag selection for event type
-    const handleTagPress = (type) => {
+    // Handle event type change
+    const handleEventTypeChange = (type) => {
         setEventType(type);
         formik.setFieldValue('eventType', type);
     }
@@ -171,8 +208,8 @@ const EventFormScreen = ({ route }) => {
                 <TopContainer title={event ? "Editar Evento" : "Crear Evento"} editEnabled={false} pictureEnabled={true} pictureUrl={band.profile_picture} />
                 <View style={styles.bodyContainer}>
                     <View style={styles.tagContainer}>
-                        {!event?.Rehearsal && <Tag selected={eventType === 'performances'} onPress={() => handleTagPress('performances')}>Actuación</Tag>}
-                        {!event?.Performance && <Tag selected={eventType === 'rehearsals'} onPress={() => handleTagPress('rehearsals')}>Ensayo</Tag>}
+                        {!event?.Rehearsal && <Tag selected={eventType === 'performances'} onPress={() => handleEventTypeChange('performances')}>Actuación</Tag>}
+                        {!event?.Performance && <Tag selected={eventType === 'rehearsals'} onPress={() => handleEventTypeChange('rehearsals')}>Ensayo</Tag>}
                     </View>
                     <View style={styles.formContainer}>
                         {/* PERFORMANCE NAME */}
@@ -295,7 +332,7 @@ const EventFormScreen = ({ route }) => {
                                 <Input
                                     label="Comentario (opcional)"
                                     placeholder="Información adicional (opcional)"
-                                    value={formik.values.comment}
+                                    value={formik.values.comment || ''}
                                     onChangeText={formik.handleChange('comment')}
                                     multiline={true}
                                     style={{ borderRadius: 10, paddingTop: 0 }}

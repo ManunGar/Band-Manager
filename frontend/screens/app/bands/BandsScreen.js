@@ -95,7 +95,7 @@ const BandsScreen = () => {
                     disabled={uploading}
                     onPress={() => {
                         closeSheet();
-                        navigation.navigate('CreateBand')
+                        navigation.navigate('BandForm')
                     }}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: `${GlobalStyles.yellow}a9`, alignItems: 'center', opacity: uploading ? 0.6 : 1 }}
                 >

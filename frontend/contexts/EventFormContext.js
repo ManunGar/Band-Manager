@@ -12,6 +12,7 @@ export const useEventForm = () => {
 
 export const EventFormProvider = ({ children }) => {
     const [eventFormData, setEventFormData] = useState({
+        eventId: null, // Track which event this data belongs to
         eventType: 'performances',
         date: '',
         initialTime: '',
@@ -31,6 +32,7 @@ export const EventFormProvider = ({ children }) => {
 
     const resetEventFormData = () => {
         setEventFormData({
+            eventId: null,
             eventType: 'performances',
             date: '',
             initialTime: '',

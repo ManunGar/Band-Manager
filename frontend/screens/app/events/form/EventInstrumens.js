@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import EventEndpoints from "../../../../api/EventEndpoints";
 import InstrumentsEndpoints from "../../../../api/InstrumentsEndpoints";
 import Button from "../../../../components/Button";
@@ -74,6 +74,21 @@ const EventInstruments = ({ route }) => {
         setAllInstruments([...allInstruments]); // Force re-render
     }
 
+    const toggleAllInstruments = () => {
+        if (eventFormData.instruments.length === 0) {
+            // Currently all are selected, do nothing (already at desired state)
+            return;
+        } else {
+            // Some instruments are selected, clear selection (select all)
+            const updatedInstruments = allInstruments.map(inst => ({
+                ...inst,
+                selected: false
+            }));
+            setAllInstruments(updatedInstruments);
+            updateEventFormData({ instruments: [] });
+        }
+    }
+
     const handleCreateEvent = async () => {
         setIsSubmitting(true);
         try {
@@ -111,7 +126,7 @@ const EventInstruments = ({ route }) => {
 
             !event ? await EventEndpoints.createEvent(band.id, formData) : await EventEndpoints.editEvent(event.id, formData);
             resetEventFormData();
-            
+
             // Navigate back based on whether we're creating or editing
             if (event?.id) {
                 // Editing: go back 2 screens (EventInstruments -> EventFormScreen -> EventScreen)
@@ -137,13 +152,27 @@ const EventInstruments = ({ route }) => {
                 pictureUrl={band.profile_picture}
             />
             <View style={styles.container}>
+                <Text style={styles.descriptionText}>Selecciona los instrumentos que deseas que  asistan al evento. Si no seleccionas ningún instrumento, todos participarán en el evento</Text>
+                
+                {/* Checkbox for selecting all instruments */}
+                <Pressable 
+                    style={styles.checkboxContainer} 
+                    onPress={toggleAllInstruments}
+                >
+                    <View style={[
+                        styles.checkbox, 
+                        eventFormData.instruments.length === 0 && styles.checkboxChecked
+                    ]}>
+                    </View>
+                    <Text style={styles.checkboxLabel}>Todos los instrumentos participan</Text>
+                </Pressable>
+
                 <View style={styles.searchContainer}>
                     <InputSearch
                         placeholder="Busca por nombre de instrumento"
                         value={search}
                         onChangeText={setSearch} />
                 </View>
-                <Text style={styles.descriptionText}>Selecciona los instrumentos que deseas que  asistan al evento. Si no seleccionas ningún instrumento, toTextparticiparán en el evento</Text>
                 <FlatList
                     data={instruments}
                     keyExtractor={item => item.id.toString()}
@@ -176,7 +205,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20
     },
     searchContainer: {
-        marginTop: 10,
+        marginBottom: 20,
         width: '100%',
     },
     listContent: {
@@ -191,7 +220,37 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'Oswald_400',
         color: GlobalStyle.gray,
-        marginTop: 10,
-        marginBottom: 20
+        marginBottom: 10
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+        paddingVertical: 10,
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: GlobalStyle.darkGray,
+        backgroundColor: 'transparent',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+    checkboxChecked: {
+        backgroundColor: GlobalStyle.yellow,
+        borderColor: GlobalStyle.yellow,
+    },
+    checkmark: {
+        color: GlobalStyle.blue,
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    checkboxLabel: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyle.black,
     }
 });

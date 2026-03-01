@@ -9,7 +9,7 @@ const Band = ({ band }) => {
 
     return (
         <TouchableOpacity style={styles.container} onPress={() => navigation.navigate('BandDetails', { band: band })}>
-            <Image source={band.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 85, height: 80 }} />
+            <Image source={band.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 80, height: 80, borderRadius: 10 }} />
             <View style={{ marginLeft: 13, flex: 1, flexShrink: 1 }}>
                 <Text style={styles.bandType} numberOfLines={1} ellipsizeMode="tail">{band.type}</Text>
                 <Text style={styles.bandName} numberOfLines={1} ellipsizeMode="tail">{band.name}</Text>

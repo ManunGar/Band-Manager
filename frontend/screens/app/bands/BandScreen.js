@@ -48,7 +48,7 @@ function MyTabBar({ state, descriptors, navigation, band }) {
             onEdit={() => navigationScreen.navigate('BandForm', { band })}
             createEnabled={isBandAdministrator}
             style={{ paddingTop: 5, paddingBottom: 13 }}>
-            <Image source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 70, height: 70 }} />
+            <Image source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 70, height: 70, borderRadius: 6 }} />
             <Text style={{ fontSize: 26, fontFamily: 'BebasNeue', marginTop: 5 }}>
                 {band?.name}
             </Text>

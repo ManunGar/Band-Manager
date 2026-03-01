@@ -26,7 +26,14 @@ const getBandDetails = async (bandId) => {
 // Endpoint to create a new band
 const createBand = async (bandData) => {
     try {
-        const response = await axios.post(`${baseUrl}/bands`, bandData);
+        const response = await axios.post(`${baseUrl}/bands`, bandData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            }
+        );
         return response.data;
     } catch (error) {
         handleError(error);
@@ -63,33 +70,6 @@ const joinBand = async (bandId, data) => {
     }
 };
 
-// Endpoint to update band profile picture
-const editBandProfilePicture = async (bandId, formData) => {
-    try {
-        const response = await axios.put(`${baseUrl}/bands/${bandId}/edit/profile-picture`, formData, 
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-                transformRequest: (data) => data,
-            }
-        );
-        return response.data;
-    } catch (error) {
-        handleError(error);
-    }
-};
-
-// Endpoint to delete band profile picture
-const deleteBandProfilePicture = async (bandId) => {
-    try {
-        const response = await axios.put(`${baseUrl}/bands/${bandId}/delete/profile-picture`);
-        return response.data;
-    } catch (error) {
-        handleError(error);
-    }
-};
-
 export default {
     listMyBands,
     getBandDetails,
@@ -97,6 +77,4 @@ export default {
     findBandByCode,
     editBand,
     joinBand,
-    editBandProfilePicture,
-    deleteBandProfilePicture
 };

@@ -112,16 +112,13 @@ const EventInstruments = ({ route }) => {
             !event ? await EventEndpoints.createEvent(band.id, formData) : await EventEndpoints.editEvent(event.id, formData);
             resetEventFormData();
             
-            // Navigate back to the appropriate screen based on navigation state
-            if (navigation.canGoBack()) {
-                // Go back to the top of the current stack
-                navigation.popToTop();
+            // Navigate back based on whether we're creating or editing
+            if (event?.id) {
+                // Editing: go back 2 screens (EventInstruments -> EventFormScreen -> EventScreen)
+                navigation.pop(3);
             } else {
-                // Fallback to MyBands if we can't go back
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'MyBands' }],
-                });
+                // Creating: go back to the top of the stack
+                navigation.pop(2);
             }
         } catch (error) {
             console.error('Error al crear el evento:', error);

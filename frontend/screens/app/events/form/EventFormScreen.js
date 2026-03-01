@@ -61,7 +61,8 @@ const schema = Yup.object({
         }),
     comment: Yup.string().nullable().optional(),
     picture: Yup.mixed().nullable().optional(),
-    instruments: Yup.array().of(Yup.number().positive().integer()).optional()
+    instruments: Yup.array().of(Yup.number().positive().integer()).optional(),
+    delete_picture: Yup.boolean().optional()
 })
 const EventFormScreen = ({ route }) => {
     const { band, event } = route.params;
@@ -94,7 +95,8 @@ const EventFormScreen = ({ route }) => {
             place: eventFormData.place || event?.Performance?.place || '',
             comment: eventFormData.comment || event?.Performance?.comment || null,
             picture: eventFormData.picture || event?.Performance?.picture || null,
-            instruments: eventFormData.instruments || []
+            instruments: eventFormData.instruments || [],
+            delete_picture: false
         },
         validationSchema: schema,
         validateOnChange: false,
@@ -147,12 +149,14 @@ const EventFormScreen = ({ route }) => {
     const handleImageSelected = (imageUri) => {
         setImagePreview(imageUri);
         formik.setFieldValue('picture', imageUri);
+        formik.setFieldValue('delete_picture', false);
     };
 
     // Handle removing the selected image
     const handleImageRemoved = () => {
         setImagePreview(null);
         formik.setFieldValue('picture', null);
+        formik.setFieldValue('delete_picture', true);
     };
 
     // Handle tag selection for event type

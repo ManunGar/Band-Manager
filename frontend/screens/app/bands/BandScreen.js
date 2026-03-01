@@ -45,7 +45,7 @@ function MyTabBar({ state, descriptors, navigation, band }) {
     return (
         <TopContainer
             editEnabled={isBandAdministrator}
-            onEdit={() => navigationScreen.navigate('EditBand', { band })}
+            onEdit={() => navigationScreen.navigate('BandForm', { band })}
             createEnabled={isBandAdministrator}
             style={{ paddingTop: 5, paddingBottom: 13 }}>
             <Image source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage} style={{ width: 70, height: 70 }} />

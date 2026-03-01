@@ -21,7 +21,8 @@ export const EventFormProvider = ({ children }) => {
         place: null,
         comment: null,
         picture: null,
-        instruments: null
+        instruments: null,
+        delete_picture: false
     });
 
     const updateEventFormData = (data) => {
@@ -39,7 +40,8 @@ export const EventFormProvider = ({ children }) => {
             place: '',
             comment: null,
             picture: null,
-            instruments: []
+            instruments: [],
+            delete_picture: false
         });
     };
 

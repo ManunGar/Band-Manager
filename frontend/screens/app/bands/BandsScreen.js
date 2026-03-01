@@ -43,7 +43,7 @@ const BandsScreen = () => {
             if (band?.components?.some(component => component.musicianId === user.musician?.id)) {
                 navigation.navigate('BandDetails', { band });
             } else {
-                navigation.navigate('JoinBand', { band });
+                navigation.navigate('BandInstruments', { band });
             }
         } catch (error) {
             Alert.alert('Error', 'No se encontró ninguna banda con ese código.');
@@ -78,6 +78,7 @@ const BandsScreen = () => {
                 )}
                 ItemSeparatorComponent={() => <View style={{ paddingTop: 12 }}></View>}
                 ListEmptyComponent={<Text style={styles.noBandsText}>No perteneces a ninguna banda</Text>}
+                contentContainerStyle={{ paddingBottom: 150 }}
             />
             {/* BOTTOM SHEET MODAL */}
             <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ gap: 10 }} uploading={uploading}>
@@ -95,7 +96,7 @@ const BandsScreen = () => {
                     disabled={uploading}
                     onPress={() => {
                         closeSheet();
-                        navigation.navigate('CreateBand')
+                        navigation.navigate('BandForm')
                     }}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: `${GlobalStyles.yellow}a9`, alignItems: 'center', opacity: uploading ? 0.6 : 1 }}
                 >

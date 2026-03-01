@@ -84,6 +84,7 @@ const EventInstruments = ({ route }) => {
             formData.append('date', eventFormData.date);
             formData.append('initialTime', eventFormData.initialTime);
             formData.append('endTime', eventFormData.endTime);
+            formData.append('delete_picture', eventFormData.delete_picture); // Add delete_picture field
 
             // Add optional text fields only if they have values
             if (eventFormData.name) formData.append('name', eventFormData.name);

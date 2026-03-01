@@ -8,12 +8,10 @@ import EditComponentScreen from '../component/EditComponentScreen';
 import EventScreen from '../events/EventScreen';
 import EventFormScreen from '../events/form/EventFormScreen';
 import EventInstruments from '../events/form/EventInstrumens';
-import BandCreate from './BandCreate';
 import BandScreen from './BandScreen';
 import BandsScreen from './BandsScreen';
-import EditBandScreen from './EditBandScreen';
-import JoinBandScreen from './JoinBandScreen';
 import BandFormScreen from './form/BandFormScreen';
+import BandInstruments from './form/BandInstruments';
 
 const Stack = createStackNavigator();
 
@@ -30,10 +28,8 @@ const Bands = () => {
                 }}>
                     <Stack.Screen name="MyBands" component={BandsScreen} />
                     <Stack.Screen name="BandDetails" component={BandScreen} />
-                    <Stack.Screen name="CreateBand" component={BandCreate} />
                     <Stack.Screen name="BandForm" component={BandFormScreen} />
-                    <Stack.Screen name="EditBand" component={EditBandScreen} />
-                    <Stack.Screen name="JoinBand" component={JoinBandScreen} />
+                    <Stack.Screen name="BandInstruments" component={BandInstruments} />
                     {/* COMPONENT */}
                     <Stack.Screen name="Component" component={ComponentScreen} />
                     <Stack.Screen name="EditComponent" component={EditComponentScreen} />

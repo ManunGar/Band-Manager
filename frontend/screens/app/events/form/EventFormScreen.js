@@ -66,8 +66,8 @@ const schema = Yup.object({
 })
 const EventFormScreen = ({ route }) => {
     const { band, event } = route.params;
-    const { eventFormData, updateEventFormData } = useEventForm();
-    const [eventType, setEventType] = useState(eventFormData.eventType || (event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances');
+    const { eventFormData, updateEventFormData, resetEventFormData } = useEventForm();
+    const [eventType, setEventType] = useState( (event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances');
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showInitialTimePicker, setShowInitialTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
@@ -77,24 +77,28 @@ const EventFormScreen = ({ route }) => {
     const imageSheetRef = useRef(null);
 
     useEffect(() => {
+        // Always reset form data when entering the screen
+        resetEventFormData();
+        
         if (event && event.instrumentsAttended && event.instrumentsAttended.length > 0) {
             const instrumentIds = event.instrumentsAttended.map(instrument => instrument.id);
             formik.setFieldValue('instruments', instrumentIds);
             updateEventFormData({ instruments: instrumentIds });
+            setEventType(event.Performance ? 'performances' : 'rehearsals');
         }
-    }, [event])
+    }, [event?.id])
 
     const formik = useFormik({
         initialValues: {
-            eventType: eventFormData.eventType || (event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances',
-            date: eventFormData.date || event?.date || '',
-            initialTime: eventFormData.initialTime || event?.initialTime?.substring(0, 5) || '',
-            endTime: eventFormData.endTime || event?.endTime.substring(0, 5) || '',
-            name: eventFormData.name || event?.Performance?.name || '',
-            type: eventFormData.type || event?.Performance?.type || '',
-            place: eventFormData.place || event?.Performance?.place || '',
-            comment: eventFormData.comment || event?.Performance?.comment || null,
-            picture: eventFormData.picture || event?.Performance?.picture || null,
+            eventType: eventType,
+            date: event?.date || eventFormData.date || '',
+            initialTime: event?.initialTime?.substring(0, 5) || eventFormData.initialTime || '',
+            endTime: event?.endTime?.substring(0, 5) || eventFormData.endTime || '',
+            name: event?.Performance?.name || eventFormData.name || '',
+            type: event?.Performance?.type || eventFormData.type || '',
+            place: event?.Performance?.place || eventFormData.place || '',
+            comment: event?.Performance?.comment || eventFormData.comment || '',
+            picture: event?.Performance?.picture || eventFormData.picture || null,
             instruments: eventFormData.instruments || [],
             delete_picture: false
         },
@@ -159,20 +163,14 @@ const EventFormScreen = ({ route }) => {
         formik.setFieldValue('delete_picture', true);
     };
 
-    // Handle tag selection for event type
-    const handleTagPress = (type) => {
-        setEventType(type);
-        formik.setFieldValue('eventType', type);
-    }
-
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
             <ScrollView>
                 <TopContainer title={event ? "Editar Evento" : "Crear Evento"} editEnabled={false} pictureEnabled={true} pictureUrl={band.profile_picture} />
                 <View style={styles.bodyContainer}>
                     <View style={styles.tagContainer}>
-                        {!event?.Rehearsal && <Tag selected={eventType === 'performances'} onPress={() => handleTagPress('performances')}>Actuación</Tag>}
-                        {!event?.Performance && <Tag selected={eventType === 'rehearsals'} onPress={() => handleTagPress('rehearsals')}>Ensayo</Tag>}
+                        {!event?.Rehearsal && <Tag selected={eventType === 'performances'}>Actuación</Tag>}
+                        {!event?.Performance && <Tag selected={eventType === 'rehearsals'}>Ensayo</Tag>}
                     </View>
                     <View style={styles.formContainer}>
                         {/* PERFORMANCE NAME */}
@@ -295,7 +293,7 @@ const EventFormScreen = ({ route }) => {
                                 <Input
                                     label="Comentario (opcional)"
                                     placeholder="Información adicional (opcional)"
-                                    value={formik.values.comment}
+                                    value={formik.values.comment || ''}
                                     onChangeText={formik.handleChange('comment')}
                                     multiline={true}
                                     style={{ borderRadius: 10, paddingTop: 0 }}

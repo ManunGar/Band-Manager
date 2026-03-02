@@ -301,7 +301,31 @@ const getEventAttendance = async (req, res) => {
                     alleged: attendanceRecord ? attendanceRecord.EventAttendances.alleged : null
                 };
             })
-        res.status(200).send(componentsAttendance);
+        // Group component assistance by instrument along with total count of each type of assistance (true, false and null)
+        const attendanceByInstrument = {};
+        for (const componentAttendance of componentsAttendance) {
+            for (const instrument of componentAttendance.component.instruments) {
+                if (!attendanceByInstrument[instrument.id]) {
+                    attendanceByInstrument[instrument.id] = {
+                        instrument: instrument,
+                        attendees: [],
+                        presentCount: 0,
+                        absentCount: 0,
+                        notConfirmedCount: 0
+                    };
+                }
+                attendanceByInstrument[instrument.id].attendees.push(componentAttendance);
+                if (componentAttendance.present === true) {
+                    attendanceByInstrument[instrument.id].presentCount++;
+                } else if (componentAttendance.present === false ) {
+                    attendanceByInstrument[instrument.id].absentCount++;
+                } else if (componentAttendance.present === null) {
+                    attendanceByInstrument[instrument.id].notConfirmedCount++;
+                }
+            }
+        }
+
+        res.status(200).send(attendanceByInstrument);
     } catch (error) {
         console.error('Error retrieving event attendance:', error);
         res.status(500).send({ error: 'Error retrieving event attendance' });

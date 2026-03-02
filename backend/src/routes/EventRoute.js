@@ -29,6 +29,11 @@ const loadFileRoutes = function (app) {
             handleValidation,
             EventController.editEvent
         )
+        .delete(
+            isLoggedIn,
+            isEventAdmin,
+            EventController.deleteEvent
+        )
 
     // Components attendance route
     app.route('/events/:eventId/component-attendance')

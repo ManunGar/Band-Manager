@@ -70,6 +70,16 @@ const joinBand = async (bandId, data) => {
     }
 };
 
+// Endpoint to delete a band
+const deleteBand = async (bandId) => {
+    try {
+        const response = await axios.delete(`${baseUrl}/bands/${bandId}`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listMyBands,
     getBandDetails,
@@ -77,4 +87,5 @@ export default {
     findBandByCode,
     editBand,
     joinBand,
+    deleteBand
 };

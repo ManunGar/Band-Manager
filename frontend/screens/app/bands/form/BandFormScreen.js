@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import BandEndpoints from '../../../../api/BandEndpoints';
 import Button from '../../../../components/Button';
@@ -37,6 +37,7 @@ const BandFormScreen = ({ route }) => {
     const { band } = route.params || {};
     const { bandFormData, updateBandFormData } = useBandForm();
     const [imagePreview, setImagePreview] = useState(bandFormData.profile_picture || band?.profile_picture || null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const navigation = useNavigation();
 
     const imageSheetRef = useRef(null);
@@ -77,8 +78,8 @@ const BandFormScreen = ({ route }) => {
             } catch (error) {
                 console.error(error?.response?.data || error);
                 band ?
-                Alert.alert('Error', error?.response?.data?.message || 'No se pudo actualizar la banda. Inténtalo de nuevo más tarde.') :
-                Alert.alert('Error', error?.response?.data?.message || 'No se pudo crear la banda. Inténtalo de nuevo más tarde.');
+                    Alert.alert('Error', error?.response?.data?.message || 'No se pudo actualizar la banda. Inténtalo de nuevo más tarde.') :
+                    Alert.alert('Error', error?.response?.data?.message || 'No se pudo crear la banda. Inténtalo de nuevo más tarde.');
             } finally {
                 setSubmitting(false);
             }
@@ -98,6 +99,24 @@ const BandFormScreen = ({ route }) => {
         formik.setFieldValue('profile_picture', null);
         formik.setFieldValue('delete_profile_picture', true);
     };
+
+    // Show delete confirmation modal
+    const handleDeleteBand = () => {
+        setShowDeleteModal(true);
+    }
+
+    // Confirm and delete band
+    const confirmDeleteBand = async () => {
+        setShowDeleteModal(false);
+        try {
+            await BandEndpoints.deleteBand(band.id);
+            navigation.pop(2)
+
+        } catch (error) {
+            console.error('Error al eliminar la banda:', error);
+            Alert.alert('Error', 'Ocurrió un error al eliminar la banda. Por favor, inténtalo de nuevo.');
+        }
+    }
 
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
@@ -166,8 +185,9 @@ const BandFormScreen = ({ route }) => {
 
                     <View style={styles.buttonContainer}>
                         <Button onPress={formik.handleSubmit} disabled={formik.isSubmitting}>
-                            { band ? 'Guardar cambios' : 'Siguiente'}
+                            {band ? 'Guardar cambios' : 'Siguiente'}
                         </Button>
+                        {band && <Text style={styles.deleteText} onPress={handleDeleteBand}>Eliminar banda</Text>}
                     </View>
 
                     <ImagePickerSheet
@@ -177,6 +197,37 @@ const BandFormScreen = ({ route }) => {
                         onImageRemoved={handleImageRemoved}
                     />
                 </View>
+
+                {/* Delete Confirmation Modal */}
+                <Modal
+                    visible={showDeleteModal}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowDeleteModal(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.modalTitle}>¿Eliminar banda?</Text>
+                            <Text style={styles.modalMessage}>
+                                Esta acción no se puede deshacer. La banda será eliminada permanentemente.
+                            </Text>
+                            <View style={styles.modalButtonContainer}>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, styles.cancelButton]}
+                                    onPress={() => setShowDeleteModal(false)}
+                                >
+                                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, styles.deleteButton]}
+                                    onPress={confirmDeleteBand}
+                                >
+                                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </ScrollView>
         </KeyboardAvoidingView>
     )
@@ -250,4 +301,75 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         backgroundColor: GlobalStyles.white
     },
+    deleteText: {
+        fontSize: 16,
+        paddingInline: 5,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyles.red,
+        borderBottomWidth: 2,
+        borderBottomColor: GlobalStyles.red,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        borderRadius: 15,
+        padding: 25,
+        width: '100%',
+        maxWidth: 400,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontFamily: 'Oswald_600',
+        color: '#333',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    modalMessage: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: '#666',
+        marginBottom: 25,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    modalButtonContainer: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: 8,
+        borderRadius: 50,
+        alignItems: 'center',
+    },
+    cancelButton: {
+        backgroundColor: GlobalStyles.yellow,
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyles.blue,
+    },
+    deleteButton: {
+        backgroundColor: GlobalStyles.red,
+    },
+    deleteButtonText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: 'white',
+    }
 })

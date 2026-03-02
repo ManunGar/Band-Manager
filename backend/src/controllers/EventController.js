@@ -186,6 +186,31 @@ const editEvent = async (req, res) => {
     }
 }
 
+// Function to delete an event (only for event administrators)
+const deleteEvent = async (req, res) => {
+    const eventId = req.params.eventId;
+    try {
+        const event = await Event.findByPk(eventId, {
+            include: {
+                model: Performance,
+                required: false
+            }
+        });
+        if (!event) {
+            return res.status(404).send({ error: 'Event not found' });
+        }
+        // If event has a performance with a picture, delete the picture from Cloudinary
+        if (event.Performance && event.Performance.picture) {
+            await deleteFileFromCloudinary(event.Performance.picture, 'performances');
+        }
+        await event.destroy();
+        res.status(200).send({ message: 'Event deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        res.status(500).send({ error: 'Error deleting event' });
+    }
+}
+
 // Function to handle component attendance updates (only for event participants)
 const updateComponentAttendance = async (req, res) => {
     const eventId = req.params.eventId;
@@ -503,6 +528,7 @@ const EventController = {
     listEvents,
     getEvent,
     editEvent,
+    deleteEvent,
     updateComponentAttendance,
     getEventAttendance,
     updateEventAttendance

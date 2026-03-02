@@ -65,10 +65,20 @@ const editEvent = async (eventId, data) => {
     }
 }
 
+const deleteEvent = async (eventId) => {
+    try {
+        const response = await axios.delete(`${baseUrl}/events/${eventId}`);
+        return response.data;
+    } catch (error) {
+        handleError(error)
+    }
+}
+
 export default {
     listEvents,
     getEventDetails,
     takeComponentAttendance,
     createEvent,
-    editEvent
+    editEvent,
+    deleteEvent
 }

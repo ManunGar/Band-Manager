@@ -2,6 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useContext } from 'react';
 import { AuthContext } from '../../../contexts/AuthContext';
 import { EventFormProvider } from '../../../contexts/EventFormContext';
+import AttendanceScreen from '../events/attendance/AttendanceScreen';
 import EventScreen from '../events/EventScreen';
 import EventFormScreen from '../events/form/EventFormScreen';
 import EventInstruments from '../events/form/EventInstrumens';
@@ -22,8 +23,9 @@ const Agenda = () => {
                 {/* EVENT */}
                 <Stack.Screen name="Index" component={AgendaScreen} />
                 <Stack.Screen name="Event" component={EventScreen} />
-                <Stack.Screen name="CreateEvent" component={EventFormScreen} />
+                <Stack.Screen name="EventForm" component={EventFormScreen} />
                 <Stack.Screen name="EventInstruments" component={EventInstruments} />
+                <Stack.Screen name="Attendance" component={AttendanceScreen} />
             </Stack.Navigator>
         </EventFormProvider>
     )

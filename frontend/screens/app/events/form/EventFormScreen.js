@@ -3,8 +3,9 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment/moment';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
+import EventEndpoints from '../../../../api/EventEndpoints';
 import Button from '../../../../components/Button';
 import Error from '../../../../components/Error';
 import ImagePickerSheet from '../../../../components/ImagePickerSheet';
@@ -72,6 +73,7 @@ const EventFormScreen = ({ route }) => {
     const [showInitialTimePicker, setShowInitialTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
     const [imagePreview, setImagePreview] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const navigation = useNavigation();
 
     const imageSheetRef = useRef(null);
@@ -200,6 +202,24 @@ const EventFormScreen = ({ route }) => {
     const handleEventTypeChange = (type) => {
         setEventType(type);
         formik.setFieldValue('eventType', type);
+    }
+
+    // Show delete confirmation modal
+    const handleDeleteEvent = () => {
+        setShowDeleteModal(true);
+    }
+
+    // Confirm and delete event
+    const confirmDeleteEvent = async () => {
+        setShowDeleteModal(false);
+        try {
+            await EventEndpoints.deleteEvent(event.id);
+            navigation.pop(2)
+            
+        } catch (error) {
+            console.error('Error al eliminar el evento:', error);
+            Alert.alert('Error', 'Ocurrió un error al eliminar el evento. Por favor, inténtalo de nuevo.');
+        }
     }
 
     return (
@@ -344,7 +364,7 @@ const EventFormScreen = ({ route }) => {
                         <Button onPress={formik.handleSubmit} disabled={formik.isSubmitting}>
                             Siguiente
                         </Button>
-                        {event && <Text style={styles.deleteText} >Eliminar evento</Text>}
+                        {event && <Text style={styles.deleteText} onPress={handleDeleteEvent}>Eliminar evento</Text>}
                     </View>
                 </View>
 
@@ -354,6 +374,37 @@ const EventFormScreen = ({ route }) => {
                     onImageSelected={handleImageSelected}
                     onImageRemoved={handleImageRemoved}
                 />
+
+                {/* Delete Confirmation Modal */}
+                <Modal
+                    visible={showDeleteModal}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowDeleteModal(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.modalTitle}>¿Eliminar evento?</Text>
+                            <Text style={styles.modalMessage}>
+                                Esta acción no se puede deshacer. El evento será eliminado permanentemente.
+                            </Text>
+                            <View style={styles.modalButtonContainer}>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, styles.cancelButton]}
+                                    onPress={() => setShowDeleteModal(false)}
+                                >
+                                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, styles.deleteButton]}
+                                    onPress={confirmDeleteEvent}
+                                >
+                                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </ScrollView>
         </KeyboardAvoidingView>
     )
@@ -433,5 +484,68 @@ const styles = StyleSheet.create({
         color: GlobalStyles.red,
         borderBottomWidth: 2,
         borderBottomColor: GlobalStyles.red,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        borderRadius: 15,
+        padding: 25,
+        width: '100%',
+        maxWidth: 400,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontFamily: 'Oswald_600',
+        color: '#333',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    modalMessage: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: '#666',
+        marginBottom: 25,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    modalButtonContainer: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: 8,
+        borderRadius: 50,
+        alignItems: 'center',
+    },
+    cancelButton: {
+        backgroundColor: GlobalStyles.yellow,
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyles.blue,
+    },
+    deleteButton: {
+        backgroundColor: GlobalStyles.red,
+    },
+    deleteButtonText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: 'white',
     }
 })

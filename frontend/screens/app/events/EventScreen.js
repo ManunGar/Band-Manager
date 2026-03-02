@@ -72,7 +72,7 @@ const EventScreen = ({ route }) => {
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
             <ScrollView>
-                <TopContainer style={{ paddingBottom: 0, marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} editEnabled={isBandAdministrator} onEdit={() => navigation.navigate('CreateEvent', { event, band: event?.band })} />
+                <TopContainer style={{ paddingBottom: 0, marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} editEnabled={isBandAdministrator} onEdit={() => navigation.navigate('EventForm', { event, band: event?.band })} />
                 {/* HEADER */}
                 <View style={styles.headerContainer}>
                     <Image source={event?.Performance ? event.Performance.picture ? { uri: event.Performance.picture } : performancePictureDefault : rehearsalPictureDefault}
@@ -109,15 +109,21 @@ const EventScreen = ({ route }) => {
                 {/* BODY */}
                 <View style={{ paddingBottom: 60 }}>
                     {event?.Performance?.comment && event?.Performance?.comment.trim() !== "" &&
-                        <View style={[ styles.input, { marginInline: 20, marginTop: 20 } ]}>
-                         <Text style={[styles.textInput, { color: GlobalStyle.black }]}>{event?.Performance?.comment}</Text>
-                    </View>}
+                        <View style={[styles.input, { marginInline: 20, marginTop: 20 }]}>
+                            <Text style={[styles.textInput, { color: GlobalStyle.black }]}>{event?.Performance?.comment}</Text>
+                        </View>}
                     <View style={{ paddingHorizontal: 25, paddingTop: 22, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <AttendanceIcon width={25} height={22} />
                             <Text style={styles.subtitle}>Asistencia</Text>
                         </View>
-                        {isBandAdministrator && <LinkText>Pasar Lista</LinkText>}
+                        {isBandAdministrator &&
+                            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                                <LinkText onPress={() => navigation.navigate('Attendance', { event })}>Ver</LinkText>
+                                <View style={{borderWidth: 1, borderColor: GlobalStyle.lightGray, borderRadius: 10, width: 1, height: 20}}></View>
+                                <LinkText>Pasar Lista</LinkText>
+                            </View>
+                        }
                     </View>
                     {event?.attendance.participates ? <View>
                         {event?.date > new Date().toISOString() ?

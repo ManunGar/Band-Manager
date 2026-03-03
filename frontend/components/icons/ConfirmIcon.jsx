@@ -1,12 +1,12 @@
 import Svg, { Path } from "react-native-svg"
 
-function ConfirmIcon({ width, height, stroke, strokeWidth }, props) {
+function ConfirmIcon({ width, height, stroke, strokeWidth, fill }, props) {
   return (
     <Svg
       width={width || 21}
       height={height || 21}
       viewBox="0 0 21 21"
-      fill="none"
+      fill={fill || "none"}
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >

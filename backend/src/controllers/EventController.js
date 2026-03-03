@@ -341,30 +341,6 @@ const updateEventAttendance = async (req, res) => {
     const eventId = req.params.eventId;
     const transaction = await Event.sequelize.transaction();
     try {
-        const event = await Event.findByPk(eventId, {
-            include: [{
-                model: Band,
-                as: 'band',
-                include: {
-                    model: Component,
-                    as: 'components',
-                    attributes: ['id'],
-                    include: {
-                        model: Instrument,
-                        as: 'instruments',
-                        through: {
-                            where: {
-                                principal: true
-                            }
-                        }
-                    }
-
-                }
-            }, {
-                model: Instrument,
-                as: 'instrumentsAttended'
-            }]
-        });
         const EventAttendances = Event.sequelize.models.EventAttendances;
         // Update or create attendance records for components marked as present
         for (const componentAttendance of req.body.componentsPresent) {
@@ -376,7 +352,7 @@ const updateEventAttendance = async (req, res) => {
             }, { transaction });
         }
         // Update or create attendance records for components marked as absent
-        for (const componentAbsence of req.body.componentsAbsent) {
+        for (const componentAbsence of req.body.componentsAbsent || []) {
             await EventAttendances.upsert({
                 eventId: eventId,
                 componentId: componentAbsence,
@@ -385,13 +361,22 @@ const updateEventAttendance = async (req, res) => {
             }, { transaction });
         }
         // Update or create attendance records for components marked as alleged
-        for (const componentAlleged of req.body.componentsAlleged) {
+        for (const componentAlleged of req.body.componentsAlleged || []) {
             await EventAttendances.upsert({
                 eventId: eventId,
                 componentId: componentAlleged,
                 present: false,
                 alleged: true,
                 reason: componentAlleged.reason
+            }, { transaction });
+        }
+        // Update or create attendance records for components marked as not confirmed (null)
+        for (const componentNotConfirmed of req.body.componentsNotConfirmed || []) {
+            await EventAttendances.upsert({
+                eventId: eventId,
+                componentId: componentNotConfirmed,
+                present: null,
+                alleged: null
             }, { transaction });
         }
         await transaction.commit();

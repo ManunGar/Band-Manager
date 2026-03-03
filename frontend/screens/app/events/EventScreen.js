@@ -121,7 +121,7 @@ const EventScreen = ({ route }) => {
                             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
                                 <LinkText onPress={() => navigation.navigate('Attendance', { event })}>Ver</LinkText>
                                 <View style={{borderWidth: 1, borderColor: GlobalStyle.lightGray, borderRadius: 10, width: 1, height: 20}}></View>
-                                <LinkText>Pasar Lista</LinkText>
+                                <LinkText onPress={() => navigation.navigate('TakeAttendance', { event })}>Pasar Lista</LinkText>
                             </View>
                         }
                     </View>

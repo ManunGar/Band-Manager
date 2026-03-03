@@ -50,6 +50,7 @@ const createEvent = async (bandId, data) => {
     }
 };
 
+// Endpoint to edit an event
 const editEvent = async (eventId, data) => {
     try {
         const response = await axios.put(`${baseUrl}/events/${eventId}`, data,
@@ -65,6 +66,7 @@ const editEvent = async (eventId, data) => {
     }
 }
 
+// Endpoint to delete an event
 const deleteEvent = async (eventId) => {
     try {
         const response = await axios.delete(`${baseUrl}/events/${eventId}`);
@@ -74,6 +76,7 @@ const deleteEvent = async (eventId) => {
     }
 }
 
+// Endpoint to get event attendance
 const getEventAttendance = async (eventId) => {
     try {
         const response = await axios.get(`${baseUrl}/events/${eventId}/attendance`);

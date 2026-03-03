@@ -74,11 +74,21 @@ const deleteEvent = async (eventId) => {
     }
 }
 
+const getEventAttendance = async (eventId) => {
+    try {
+        const response = await axios.get(`${baseUrl}/events/${eventId}/attendance`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+}
+
 export default {
     listEvents,
     getEventDetails,
     takeComponentAttendance,
     createEvent,
     editEvent,
-    deleteEvent
+    deleteEvent,
+    getEventAttendance,
 }

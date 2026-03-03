@@ -5,6 +5,7 @@ import { BandFormProvider } from '../../../contexts/BandFormContext';
 import { EventFormProvider } from '../../../contexts/EventFormContext';
 import ComponentScreen from '../component/ComponentScreen';
 import EditComponentScreen from '../component/EditComponentScreen';
+import AttendanceScreen from '../events/attendance/AttendanceScreen';
 import EventScreen from '../events/EventScreen';
 import EventFormScreen from '../events/form/EventFormScreen';
 import EventInstruments from '../events/form/EventInstrumens';
@@ -35,8 +36,9 @@ const Bands = () => {
                     <Stack.Screen name="EditComponent" component={EditComponentScreen} />
                     {/* EVENT */}
                     <Stack.Screen name="Event" component={EventScreen} />
-                    <Stack.Screen name="CreateEvent" component={EventFormScreen} />
+                    <Stack.Screen name="EventForm" component={EventFormScreen} />
                     <Stack.Screen name="EventInstruments" component={EventInstruments} />
+                    <Stack.Screen name="Attendance" component={AttendanceScreen} />
                 </Stack.Navigator>
             </EventFormProvider>
         </BandFormProvider>

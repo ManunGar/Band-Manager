@@ -45,7 +45,7 @@ export default function Index({ route }) {
             <View>
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Próximos eventos</Text>
-                    {isBandAdministrator && <LinkText onPress={() => navigation.navigate('CreateEvent', { band: band })}>Crear evento</LinkText>}
+                    {isBandAdministrator && <LinkText onPress={() => navigation.navigate('EventForm', { band: band })}>Crear evento</LinkText>}
                 </View>
                 <FlatList
                     data={band?.events || []}

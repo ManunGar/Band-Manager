@@ -22,8 +22,7 @@ const AttendanceScreen = ({ route }) => {
     const fetchAttendance = async () => {
         try {
             const attendanceData = await EventEndpoints.getEventAttendance(event?.id);
-            console.log("🚀 ~ fetchAttendance ~ attendanceData:", attendanceData)
-            setAttendance(attendanceData);
+            setAttendance(attendanceData.attendanceByInstrument);
         } catch (error) {
             console.error("Error fetching attendance:", error);
             Alert.alert("Error", "No se pudo cargar la asistencia del evento. Por favor, inténtalo de nuevo más tarde.");

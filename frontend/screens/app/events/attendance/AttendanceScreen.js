@@ -136,7 +136,7 @@ const AttendanceComponent = ({ attendance }) => {
                     <Image source={attendance.component.musician.user.profile_picture ? { uri: attendance.component.musician.user.profile_picture } : profileDefault} style={{ width: 50, height: 50, borderRadius: 25 }} />
                     <Text style={styles.attendanceComponentName}>{attendance.component.musician.user.full_name}</Text>
                 </View>
-                {attendance.present === true ? <ConfirmIcon width={25} height={25} /> : attendance.present === false ? <DeniedIcon width={25} height={25} /> : <NoConfirmIcon width={25} height={25} />}
+                {attendance.present === true ? <ConfirmIcon width={25} height={25} /> : attendance.present === false ? <DeniedIcon width={25} height={25} stroke={attendance.alleged && GlobalStyle.yellow} fillStroke={attendance.alleged && GlobalStyle.yellow} /> : <NoConfirmIcon width={25} height={25} />}
             </View>
             {attendance.reason && attendance.reason.length > 0 &&
                 <View style={styles.reasonContainer}>
@@ -179,12 +179,12 @@ const styles = StyleSheet.create({
     confirmedLabel: {
         fontSize: 18,
         fontFamily: 'Oswald_600',
-        color: GlobalStyle.green,
+        color: GlobalStyle.darkGreen,
     },
     deniedLabel: {
         fontSize: 18,
         fontFamily: 'Oswald_600',
-        color: GlobalStyle.red,
+        color: GlobalStyle.darkRed,
     },
     progressBarBackground: {
         height: 20,
@@ -196,13 +196,13 @@ const styles = StyleSheet.create({
     },
     confirmedBar: {
         height: '100%',
-        backgroundColor: GlobalStyle.green,
+        backgroundColor: GlobalStyle.darkGreen,
         position: 'absolute',
         left: 0,
     },
     deniedBar: {
         height: '100%',
-        backgroundColor: GlobalStyle.red,
+        backgroundColor: GlobalStyle.darkRed,
         position: 'absolute',
         right: 0,
     },

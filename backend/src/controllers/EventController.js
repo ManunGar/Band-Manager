@@ -286,7 +286,11 @@ const getEventAttendance = async (req, res) => {
             }, {
                 model: Instrument,
                 as: 'instrumentsAttended'
-            }]
+            }],
+            order: [
+                [{model: Band, as: 'band'}, {model: Component, as: 'components'}, {model: Instrument, as: 'instruments'}, 'id', 'ASC'],
+                [{model: Band, as: 'band'}, {model: Component, as: 'components'}, {model: Musician, as: 'musician'}, {model: User, as: 'user'}, 'full_name', 'ASC']
+            ]
         })
         // Filter components participants and include attendance status
         const componentsAttendees = event.attendees;
@@ -325,7 +329,7 @@ const getEventAttendance = async (req, res) => {
             }
         }
 
-        res.status(200).send(attendanceByInstrument);
+        res.status(200).send({ componentsAttendance, attendanceByInstrument});
     } catch (error) {
         console.error('Error retrieving event attendance:', error);
         res.status(500).send({ error: 'Error retrieving event attendance' });

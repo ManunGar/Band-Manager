@@ -1,7 +1,8 @@
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native'
+import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import EventEndpoints from '../../../../api/EventEndpoints'
+import profileDefault from '../../../../assets/milestones/profile_default.png'
 import ConfirmIcon from '../../../../components/icons/ConfirmIcon'
 import DeniedIcon from '../../../../components/icons/DeniedIcon'
 import NoConfirmIcon from '../../../../components/icons/NoConfirmIcon'
@@ -11,6 +12,8 @@ import * as GlobalStyle from '../../../../GlobalStyle'
 const TakeAttendanceScreen = ({ route }) => {
     const { event } = route.params
     const [attendance, setAttendance] = useState([])
+    const [updatedAttendance, setUpdatedAttendance] = useState({})
+    const navigation = useNavigation();
 
     useFocusEffect(
         useCallback(() => {
@@ -26,14 +29,76 @@ const TakeAttendanceScreen = ({ route }) => {
             console.error("Error fetching attendance:", error);
             Alert.alert("Error", "No se pudo cargar la asistencia del evento. Por favor, inténtalo de nuevo más tarde.");
         }
-
     }
+
+    const handleSave = async () => {
+        try {
+            const componentsPresent = [];
+            const componentsAbsent = [];
+            const componentsAlleged = [];
+            const componentsNotConfirmed = [];
+
+            // Process changes in updatedAttendance
+            attendance.forEach(item => {
+                const componentId = item.component.id;
+                const updated = updatedAttendance[componentId];
+                
+                // If there is an update, use the updated value; If not, use the original
+                const present = updated !== undefined ? updated.present : item.present;
+                const alleged = updated !== undefined ? updated.alleged : item.alleged;
+
+                if (present === true) {
+                    componentsPresent.push(componentId);
+                } else if (present === false) {
+                    if (alleged) {
+                        componentsAlleged.push(componentId);
+                    } else {
+                        componentsAbsent.push(componentId);
+                    }
+                } else if (present === null) {
+                    componentsNotConfirmed.push(componentId);
+                }
+            });
+
+            const body = {
+                componentsPresent,
+                componentsAbsent,
+                componentsAlleged,
+                componentsNotConfirmed,
+            };
+
+            await EventEndpoints.takeAttendance(event?.id, body);
+            // Clean local changes after successful save
+            setUpdatedAttendance({});
+            navigation.goBack();
+        } catch (error) {
+            console.error("Error saving attendance:", error);
+            Alert.alert("Error", "No se pudo guardar la asistencia. Por favor, inténtalo de nuevo.");
+        }
+    }
+
+
 
     // Calcular totales
     const calculateTotals = () => {
-        const totalConfirmed = attendance.reduce((total, item) => item.present === true ? total + 1 : total, 0);
-        const totalDenied = attendance.reduce((total, item) => item.present === false ? total + 1 : total, 0);
-        const totalNotConfirmed = attendance.reduce((total, item) => item.present === null ? total + 1 : total, 0);
+        const totalConfirmed = attendance.reduce((total, item) => {
+            const componentId = item.component.id;
+            const updated = updatedAttendance[componentId];
+            const present = updated !== undefined ? updated.present : item.present;
+            return present === true ? total + 1 : total;
+        }, 0);
+        const totalDenied = attendance.reduce((total, item) => {
+            const componentId = item.component.id;
+            const updated = updatedAttendance[componentId];
+            const present = updated !== undefined ? updated.present : item.present;
+            return present === false ? total + 1 : total;
+        }, 0);
+        const totalNotConfirmed = attendance.reduce((total, item) => {
+            const componentId = item.component.id;
+            const updated = updatedAttendance[componentId];
+            const present = updated !== undefined ? updated.present : item.present;
+            return present === null ? total + 1 : total;
+        }, 0);
         const totalComponents = totalConfirmed + totalDenied + totalNotConfirmed;
 
         const confirmedPercentage = totalComponents > 0 ? (totalConfirmed / totalComponents) * 100 : 0;
@@ -41,6 +106,36 @@ const TakeAttendanceScreen = ({ route }) => {
 
         return { totalConfirmed, totalDenied, confirmedPercentage, deniedPercentage };
     }
+
+    const handleAttendanceChange = (componentId, currentPresent, currentAlleged) => {
+        return (action) => {
+            setUpdatedAttendance(prev => {
+                const existing = prev[componentId] || { present: currentPresent, alleged: currentAlleged };
+                
+                if (action === 'yes') {
+                    if (existing.present === true) {
+                        // If it is already true, unmark it
+                        return { ...prev, [componentId]: { present: null, alleged: null } };
+                    }
+                    return { ...prev, [componentId]: { present: true, alleged: null } };
+                } else if (action === 'no') {
+                    // If it is already false, mark as justified
+                    if (existing.present === false) {
+                        if (existing.alleged) {
+                            // If it is already alleged, unmark it
+                            return { ...prev, [componentId]: { present: null, alleged: null } };
+                        }
+                        if (!existing.alleged) {
+                            return { ...prev, [componentId]: { present: false, alleged: true } };
+                        }
+                    }
+                    // If not, simply mark as absent
+                    return { ...prev, [componentId]: { present: false, alleged: null } };
+                }
+                return prev;
+            });
+        };
+    };
 
     const { totalConfirmed, totalDenied, confirmedPercentage, deniedPercentage } = calculateTotals();
 
@@ -50,6 +145,7 @@ const TakeAttendanceScreen = ({ route }) => {
             <TopContainer
                 editEnabled={false}
                 saveEnabled={true}
+                onSave={handleSave}
                 title={"Pasar Lista"}
                 style={{ alignItems: 'left', marginBottom: 0 }}
             >
@@ -77,7 +173,11 @@ const TakeAttendanceScreen = ({ route }) => {
                     showsVerticalScrollIndicator={false}
                     ListEmptyComponent={() => <Text>No hay datos de asistencia disponibles.</Text>}
                     renderItem={({ item }) => (
-                        <AttendanceComponent attendance={item} />
+                        <AttendanceComponent 
+                            attendance={item} 
+                            updatedAttendance={updatedAttendance[item.component.id]}
+                            onAttendanceChange={handleAttendanceChange(item.component.id, item.present, item.alleged)}
+                        />
                     )}
                     ItemSeparatorComponent={() => <View style={{ height: 20 }}></View>}
                 />
@@ -86,7 +186,10 @@ const TakeAttendanceScreen = ({ route }) => {
     )
 }
 
-const AttendanceComponent = ({ attendance }) => {
+const AttendanceComponent = ({ attendance, updatedAttendance, onAttendanceChange }) => {
+    const currentPresent = updatedAttendance !== undefined ? updatedAttendance.present : attendance.present;
+    const currentAlleged = updatedAttendance !== undefined ? updatedAttendance.alleged : attendance.alleged;
+
     return (
         <View style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             <View style={styles.attendanceComponentContainer}>
@@ -102,8 +205,22 @@ const AttendanceComponent = ({ attendance }) => {
                 </View>
                 <View style={{ position: 'absolute', left: 30, top: 30, borderRadius: 15 }}>
                     {attendance.present === true ? <ConfirmIcon width={25} height={25} stroke={GlobalStyle.lightBackground} fill={GlobalStyle.darkGreen} /> :
-                        attendance.present === false ? <DeniedIcon width={25} height={25} fillStroke={GlobalStyle.lightBackground} stroke={GlobalStyle.lightBackground} fill={GlobalStyle.darkRed} /> :
+                        attendance.present === false ? <DeniedIcon width={25} height={25} fillStroke={GlobalStyle.lightBackground} stroke={GlobalStyle.lightBackground} fill={attendance.alleged ? GlobalStyle.yellow : GlobalStyle.darkRed} /> :
                             <NoConfirmIcon width={25} height={25} fillStroke={GlobalStyle.lightBackground} stroke={GlobalStyle.lightBackground} fill={GlobalStyle.gray} />}
+                </View>
+                <View style={styles.attendanceButtonContainer}>
+                    <Pressable 
+                        style={[styles.attendanceButton, currentPresent === true && styles.attendanceButtonActive]}
+                        onPress={() => onAttendanceChange('yes')}
+                    >
+                        <Text style={[styles.attendanceButtonText, currentPresent === true && styles.attendanceButtonTextActive]}>Sí</Text>
+                    </Pressable>
+                    <Pressable 
+                        style={[styles.attendanceButton, currentPresent === false && styles.attendanceDeniedButtonActive, currentAlleged && styles.attendanceButtonAlleged]}
+                        onPress={() => onAttendanceChange('no')}
+                    >
+                        <Text style={[styles.attendanceButtonText, currentPresent === false && styles.attendanceButtonTextActive]}>No</Text>
+                    </Pressable>
                 </View>
             </View>
             {attendance.reason && attendance.reason.length > 0 &&
@@ -236,5 +353,39 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         color: GlobalStyle.gray,
         fontSize: 14
+    },
+    attendanceButtonContainer: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    attendanceButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 8,
+        backgroundColor: GlobalStyle.lightGray,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: GlobalStyle.lightGray,
+    },
+    attendanceButtonActive: {
+        backgroundColor: GlobalStyle.darkGreen,
+        borderColor: GlobalStyle.darkGreen,
+    },
+    attendanceDeniedButtonActive: {
+        backgroundColor: GlobalStyle.darkRed,
+        borderColor: GlobalStyle.darkRed,
+    },
+    attendanceButtonAlleged: {
+        backgroundColor: GlobalStyle.yellow,
+        borderColor: GlobalStyle.yellow,
+    },
+    attendanceButtonText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 16,
+        color: GlobalStyle.gray,
+    },
+    attendanceButtonTextActive: {
+        color: GlobalStyle.white,
     }
 })

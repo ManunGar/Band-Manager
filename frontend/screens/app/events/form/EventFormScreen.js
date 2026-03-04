@@ -373,6 +373,7 @@ const EventFormScreen = ({ route }) => {
                     imagePreview={imagePreview}
                     onImageSelected={handleImageSelected}
                     onImageRemoved={handleImageRemoved}
+                    aspect={[16, 9]}
                 />
 
                 {/* Delete Confirmation Modal */}

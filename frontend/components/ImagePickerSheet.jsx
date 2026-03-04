@@ -1,21 +1,24 @@
-import { useMemo } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
 import BottomSheet from './BottomSheet';
 
-const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemoved }) => {
+const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemoved, aspect = [1, 1] }) => {
     const snapPoints = useMemo(() => ['30%'], []);
+    const [loading, setLoading] = useState(false);
 
     // Handle image selection from library
     const handlePickFromLibrary = async () => {
         try {
-            const uri = await pickFromLibrary();
+            const uri = await pickFromLibrary(aspect);
             if (!uri) return;
+            setLoading(true);
             const jpeg = await toUploadableJpeg(uri);
-            onImageSelected(jpeg);
+            await onImageSelected(jpeg);
         } catch (error) {
             Alert.alert('Error', 'No se pudo cargar la imagen');
         } finally {
+            setLoading(false);
             sheetRef.current?.dismiss();
         }
     };
@@ -23,48 +26,73 @@ const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemo
     // Handle taking a photo
     const handleTakePhoto = async () => {
         try {
-            const uri = await takePhoto();
+            const uri = await takePhoto(aspect);
             if (!uri) return;
+            setLoading(true);
             const jpeg = await toUploadableJpeg(uri);
-            onImageSelected(jpeg);
+            await onImageSelected(jpeg);
         } catch (error) {
             Alert.alert('Error', 'No se pudo tomar la foto');
         } finally {
+            setLoading(false);
             sheetRef.current?.dismiss();
         }
     };
 
     // Handle removing the selected image
-    const handleRemoveImage = () => {
-        onImageRemoved();
-        sheetRef.current?.dismiss();
+    const handleRemoveImage = async () => {
+        try {
+            setLoading(true);
+            await onImageRemoved();
+        } catch (error) {
+            Alert.alert('Error', 'No se pudo eliminar la imagen');
+        } finally {
+            setLoading(false);
+            sheetRef.current?.dismiss();
+        }
     };
 
     return (
         <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ gap: 10 }}>
             <TouchableOpacity
                 onPress={handlePickFromLibrary}
-                style={styles.bottomSheetOption}
+                disabled={loading}
+                style={[styles.bottomSheetOption, loading && styles.disabledOption]}
             >
-                <Text style={styles.bottomSheetOptionText}>Elegir de la galería</Text>
+                {loading ? (
+                    <ActivityIndicator color="#111827" />
+                ) : (
+                    <Text style={styles.bottomSheetOptionText}>Elegir de la galería</Text>
+                )}
             </TouchableOpacity>
             <TouchableOpacity
                 onPress={handleTakePhoto}
-                style={styles.bottomSheetOption}
+                disabled={loading}
+                style={[styles.bottomSheetOption, loading && styles.disabledOption]}
             >
-                <Text style={styles.bottomSheetOptionText}>Tomar una foto</Text>
+                {loading ? (
+                    <ActivityIndicator color="#111827" />
+                ) : (
+                    <Text style={styles.bottomSheetOptionText}>Tomar una foto</Text>
+                )}
             </TouchableOpacity>
             {imagePreview && (
                 <TouchableOpacity
                     onPress={handleRemoveImage}
-                    style={[styles.bottomSheetOption, styles.deleteOption]}
+                    disabled={loading}
+                    style={[styles.bottomSheetOption, styles.deleteOption, loading && styles.disabledOption]}
                 >
-                    <Text style={styles.deleteOptionText}>Eliminar imagen</Text>
+                    {loading ? (
+                        <ActivityIndicator color="#dc2626" />
+                    ) : (
+                        <Text style={styles.deleteOptionText}>Eliminar imagen</Text>
+                    )}
                 </TouchableOpacity>
             )}
             <TouchableOpacity
                 onPress={() => sheetRef.current?.dismiss()}
-                style={[styles.bottomSheetOption, styles.cancelOption]}
+                disabled={loading}
+                style={[styles.bottomSheetOption, styles.cancelOption, loading && styles.disabledOption]}
             >
                 <Text style={styles.bottomSheetOptionText}>Cancelar</Text>
             </TouchableOpacity>
@@ -94,5 +122,8 @@ const styles = StyleSheet.create({
     },
     cancelOption: {
         backgroundColor: '#e5e7eb'
+    },
+    disabledOption: {
+        opacity: 0.5
     }
 });

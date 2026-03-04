@@ -18,7 +18,7 @@ const TopContainer = ({ children, style,
             configEnabled = false, 
             saveEnabled = false,
             pictureEnabled = false,
-            onEdit, onSave, onCreate, pictureUrl }) => {
+            onEdit, onSave, onCreate, onConfiguration, pictureUrl }) => {
     const navigation = useNavigation();
     
     return (
@@ -29,7 +29,7 @@ const TopContainer = ({ children, style,
                 </TouchableOpacity>
                 {title && <Text style={styles.title}>{title}</Text>}
                 <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center', alignContent: 'center' }}>
-                    {configEnabled && <ConfigurationIcon />}
+                    {configEnabled && <ConfigurationIcon onPress={onConfiguration}/>}
                     {editEnabled && <EditIcon onPress={onEdit}/>}
                     {createEnabled && <CreateIcon onCreate={onCreate}/>}
                     {saveEnabled && <SaveIcon onSave={onSave} />}

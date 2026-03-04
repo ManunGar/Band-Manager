@@ -42,14 +42,14 @@ const askCameraPerm = async () => {
 };
 
 // Function to pick an image from the library
-const pickFromLibrary = async () => {
+const pickFromLibrary = async (aspect = [1, 1]) => {
     const { ok } = await askLibraryPerm();
     if (!ok) return null;
 
     const res = await ExpoImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
-        aspect: [1, 1],
+        aspect: aspect,
         quality: 0.9,
         exif: false,
     });
@@ -58,14 +58,14 @@ const pickFromLibrary = async () => {
 };
 
 // Function to take a photo using the camera
-const takePhoto = async () => {
+const takePhoto = async (aspect = [1, 1]) => {
     const ok = await askCameraPerm();
     if (!ok) return null;
 
     const res = await ExpoImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
-        aspect: [1, 1],
+        aspect: aspect,
         quality: 0.9,
     });
     if (res.canceled) return null;

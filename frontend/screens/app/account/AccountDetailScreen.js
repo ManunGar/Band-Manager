@@ -7,9 +7,9 @@ import profileDefault from '../../../assets/milestones/profile_default.png'
 import LocationIcon from '../../../components/icons/LocationIcon'
 import PhoneIcon from '../../../components/icons/PhoneIcon'
 import StarIcon from '../../../components/icons/StarIcon'
+import ImagePickerSheet from '../../../components/ImagePickerSheet'
 import InstrumentLevel from '../../../components/InstrumentLevel'
 import LinkText from '../../../components/LinkText'
-import ProfilePhotoSheet from '../../../components/ProfilePhotoSheet'
 import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyle from '../../../GlobalStyle'
@@ -52,15 +52,29 @@ const AccountDetailScreen = () => {
         sheetRef.current?.present()
     }, [])
 
-    const uploadingProfilePicture = async (uri) => {
-        await assertSizeLT3MB(uri);
-        const form = new FormData();
-        form.append('profile_picture', {
-            uri: uri,
-            name: `avatar_${Date.now()}.jpg`,
-            type: 'image/jpeg',
-        });
-        await editProfilePicture(form);
+    const handleImageSelected = async (uri) => {
+        try {
+            await assertSizeLT3MB(uri);
+            const form = new FormData();
+            form.append('profile_picture', {
+                uri: uri,
+                name: `avatar_${Date.now()}.jpg`,
+                type: 'image/jpeg',
+            });
+            await editProfilePicture(form);
+            await fetchAccountDetails();
+        } catch (error) {
+            console.error('Error uploading image:', error);
+        }
+    }
+
+    const handleImageRemoved = async () => {
+        try {
+            await deleteProfilePicture();
+            await fetchAccountDetails();
+        } catch (error) {
+            console.error('Error deleting image:', error);
+        }
     }
 
     const goToInstruments = () => {
@@ -74,6 +88,7 @@ const AccountDetailScreen = () => {
             {/* Profile picture section */}
             <TopContainer
                 configEnabled
+                onConfiguration={() => navigation.navigate('Configuration', { musician })}
                 onEdit={() => navigation.navigate('AccountEdit')}>
                 <Image
                     source={musician?.profile_picture ? { uri: musician.profile_picture } : profileDefault}
@@ -139,12 +154,11 @@ const AccountDetailScreen = () => {
                 </View>
             </View>
             {/* Image Picker component */}
-            <ProfilePhotoSheet
+            <ImagePickerSheet
                 sheetRef={sheetRef}
-                editProfilePicture={editProfilePicture}
-                deleteProfilePicture={deleteProfilePicture}
-                uploadingFunction={uploadingProfilePicture}
-                onUploaded={fetchAccountDetails}
+                imagePreview={musician?.profile_picture}
+                onImageSelected={handleImageSelected}
+                onImageRemoved={handleImageRemoved}
             />
         </ScrollView>
     )

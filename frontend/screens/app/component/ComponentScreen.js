@@ -68,7 +68,7 @@ const ComponentScreen = ({ route }) => {
 
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <TopContainer
                 title={'Componente'}
                 editEnabled={false}
@@ -111,7 +111,7 @@ const ComponentScreen = ({ route }) => {
                     ListEmptyComponent={<Text style={styles.noContentText}>No hay registros de asistencia</Text>}
                     ItemSeparatorComponent={<View style={{ height: 10 }}></View>}
                 />
-                <View style={{ marginTop: 30, gap: 15 }}>
+                <View style={{ marginTop: 30, gap: 15, paddingBottom: 60 }}>
                     {isBandAdministrator && (<LinkText onPress={promoteComponent}>
                         {component?.administrator ? 'Designar como no administrador/a' : 'Asignar como administrador/a'}
                     </LinkText>)}

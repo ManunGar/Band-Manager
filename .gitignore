@@ -32,6 +32,7 @@ ios/
 .env.*
 .DS_Store
 Thumbs.db
+bandmanagerapk
 
 # VSCode
 .vscode/

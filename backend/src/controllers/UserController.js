@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { Op } from "sequelize";
-import { addFilenameToBody, addProfilePictureToBody } from "../middleware/FileHandlerMiddleware.js";
+import { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Instrument, Musician, User } from "../models/sequelize.js";
 
 // Function to find a user by token
@@ -130,6 +130,7 @@ const loginMusician = async (req, res) => {
 const editUserDetails = async (req, res) => {
     const user = req.user;
     const updatedData = req.body;
+    console.log("🚀 ~ editUserDetails ~ updatedData:", updatedData)
     try {
         const updatedUser = await User.findByPk(user.id, {
             attributes: { exclude: ['password'] },

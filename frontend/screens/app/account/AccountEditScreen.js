@@ -17,7 +17,7 @@ const AccountEditScreen = () => {
     return (
         <ScrollView>
             <TopContainer
-                title="Editar Cuenta"
+                title="Editar Perfil"
                 editEnabled={false}
                 style={{ marginBottom: 10 }} />
             <View style={styles.form}>
@@ -25,6 +25,7 @@ const AccountEditScreen = () => {
                 <FormRow label="correo electrónico" value={user.email} keyboardType="email-address" schema="email" />
                 <FormRow label="teléfono" value={user.phone} keyboardType="numeric" schema="phone" />
                 <FormRow label="fecha de nacimiento" value={formatDate(user.birthday)} keyboardType="datetime" schema="birthday"/>
+                <FormRow label="ubicación" value={user.location} schema="location" />
                 <FormRow label="nombre de usuario" value={user.username} schema="username" />
             </View>
         </ScrollView>

@@ -76,6 +76,13 @@ const RegisterScreen = () => {
         validateOnBlur: true,
         onSubmit: async (values, { setSubmitting }) => {
             try {
+                // Validar que si hay ubicación, también haya coordenadas
+                if (values.location && (!values.latitude || !values.longitude)) {
+                    Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
+                    setSubmitting(false);
+                    return;
+                }
+                
                 const formData = new FormData();
                 formData.append('full_name', values.full_name);
                 formData.append('username', values.username);
@@ -129,6 +136,10 @@ const RegisterScreen = () => {
     const handleSearch = (text) => {
         setQuery(text);
         
+        // Limpiar coordenadas si el usuario modifica el texto
+        formik.setFieldValue('latitude', '');
+        formik.setFieldValue('longitude', '');
+        
         // Cancel previous timeout if it exists
         if (searchTimeoutRef.current) {
             clearTimeout(searchTimeoutRef.current);
@@ -175,6 +186,12 @@ const RegisterScreen = () => {
 
     // Step navigation with validation of the current step
     const next = async () => {
+        // Si estamos en el paso 1 (Additional Info) y hay texto en location pero no coordenadas, mostrar error
+        if (step === 1 && query && (!formik.values.latitude || !formik.values.longitude)) {
+            Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
+            return;
+        }
+        
         const errors = await formik.validateForm();
         // We only move forward if there are no errors in the current scheme
         if (Object.keys(errors).length === 0) {
@@ -376,6 +393,7 @@ const StepAdditionalInfo = ({ formik, showDatePicker, setShowDatePicker, setBirt
                 placeholder={"Ciudad, Localidad, Pueblo..."}
                 onChangeText={handleSearch}
             />
+            <Text style={styles.helperText}>Selecciona una ubicación de las sugerencias</Text>
             {query && suggestions.length > 0 && (
                 <View style={styles.suggestionsContainer}>
                     {suggestions.map((item, index) => (
@@ -471,6 +489,12 @@ const styles = StyleSheet.create({
         color: GlobalStyle.red,
         fontFamily: 'Oswald_500',
         fontSize: 14,
+    },
+    helperText: {
+        color: GlobalStyle.darkGray,
+        fontFamily: 'Oswald_400',
+        fontSize: 12,
+        marginTop: 4,
     },
     suggestionsContainer: {
         backgroundColor: GlobalStyle.white,

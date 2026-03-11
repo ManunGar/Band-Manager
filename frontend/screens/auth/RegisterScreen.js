@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment/moment';
-import { useContext, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Yup from 'yup';
 import * as GlobalStyle from '../../GlobalStyle';
@@ -57,6 +57,9 @@ const RegisterScreen = () => {
     const { register, isLoading } = useContext(AuthContext);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [step, setStep] = useState(0);
+    const [query, setQuery] = useState('')
+    const [suggestions, setSuggestions] = useState([]);
+    const searchTimeoutRef = useRef(null);
 
     // Formik setup
     const formik = useFormik({
@@ -66,7 +69,7 @@ const RegisterScreen = () => {
             // Step 1
             full_name: '', birthday: '', location: '',
             // Step 2
-            phone: '', 
+            phone: '',
         },
         validationSchema: stepSchemas[step],
         validateOnChange: false,
@@ -92,6 +95,48 @@ const RegisterScreen = () => {
             }
         },
     });
+
+    const fetchLocationSuggestions = async (query) => {
+        if (!query) {
+            setSuggestions([]);
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
+            const data = await response.json();
+            
+            const cityResults = data.features.filter(item => item.properties.type === 'city');
+            
+            setSuggestions(cityResults);
+        } catch (error) {
+            console.error('Error fetching location suggestions:', error);
+            setSuggestions([]);
+        }
+    };
+
+    // Call API with debounce when user types in location input
+    const handleSearch = (text) => {
+        setQuery(text);
+        
+        // Cancel previous timeout if it exists
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+        
+        // New timeout to fetch suggestions after user stops typing for 500ms
+        searchTimeoutRef.current = setTimeout(() => {
+            fetchLocationSuggestions(text);
+        }, 500);
+    };
+
+    // Handle selection of a location suggestion
+    const handleSelectLocation = (item) => {
+        const locationName = `${item.properties.name}, ${item.properties.county}, ${item.properties.state}`;
+        formik.setFieldValue('location', locationName);
+        setQuery(locationName);
+        setSuggestions([]); // Clear suggestions after selection
+    };
 
     // Transform date to ISO format yyyy-mm-dd without offset
     const setBirthday = (date) => {
@@ -148,7 +193,17 @@ const RegisterScreen = () => {
 
                 <View style={styles.container}>
                     {step === 0 && <StepAccount formik={formik} />}
-                    {step === 1 && <StepPersonal formik={formik} showDatePicker={showDatePicker} setShowDatePicker={setShowDatePicker} setBirthday={setBirthday} formatDate={formatDate} />}
+                    {step === 1 && <StepPersonal 
+                        formik={formik} 
+                        showDatePicker={showDatePicker} 
+                        setShowDatePicker={setShowDatePicker} 
+                        setBirthday={setBirthday} 
+                        formatDate={formatDate}
+                        query={query}
+                        handleSearch={handleSearch}
+                        suggestions={suggestions}
+                        handleSelectLocation={handleSelectLocation}
+                    />}
                     {step === 2 && <StepContact formik={formik} />}
                 </View>
 
@@ -223,7 +278,7 @@ const StepAccount = ({ formik }) => (
     </>
 )
 
-const StepPersonal = ({ formik, showDatePicker, setShowDatePicker, setBirthday, formatDate }) => (
+const StepPersonal = ({ formik, showDatePicker, setShowDatePicker, setBirthday, formatDate, query, handleSearch, suggestions, handleSelectLocation }) => (
     <>
         <Text style={styles.stepText}>
             {"¡Casi terminamos!\n Ahora, cuéntanos un poco sobre ti. Esto ayudará también a otros músicos a poder identificarte."}
@@ -263,10 +318,26 @@ const StepPersonal = ({ formik, showDatePicker, setShowDatePicker, setBirthday, 
         <Field>
             <Input
                 label="Ubicación"
-                value={formik.values.location}
+                value={query}
                 placeholder={"Ciudad, Localidad, Pueblo..."}
-                onChangeText={formik.handleChange('location')}
+                onChangeText={handleSearch}
             />
+            {query && suggestions.length > 0 && (
+                <View style={styles.suggestionsContainer}>
+                    {suggestions.map((item, index) => (
+                        <Pressable
+                            key={index}
+                            style={styles.suggestionItem}
+                            onPress={() => handleSelectLocation(item)}
+                        >
+                            <Text style={styles.suggestionText}>{item.properties.name}</Text>
+                            {item.properties.state && (
+                                <Text style={styles.suggestionSubtext}>{item.properties.county}, {item.properties.state}, {item.properties.country}</Text>
+                            )}
+                        </Pressable>
+                    ))}
+                </View>
+            )}
             <Error name="location" formik={formik} />
         </Field>
     </>
@@ -353,5 +424,29 @@ const styles = StyleSheet.create({
         color: GlobalStyle.red,
         fontFamily: 'Oswald_500',
         fontSize: 14,
-    }
+    },
+    suggestionsContainer: {
+        backgroundColor: GlobalStyle.white,
+        borderLeftWidth: 1,
+        borderRightWidth: 1,
+        borderColor: GlobalStyle.gray,
+        marginTop: 8,
+        paddingInline: 5,
+    },
+    suggestionItem: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    suggestionText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyle.black,
+    },
+    suggestionSubtext: {
+        fontSize: 12,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        marginTop: 2,
+    },
 });

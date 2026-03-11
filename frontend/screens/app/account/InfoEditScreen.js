@@ -2,9 +2,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment';
-import { useContext, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import Input from '../../../components/Input';
+import LocationAutocomplete from '../../../components/LocationAutocomplete';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
 import * as GlobalStyle from '../../../GlobalStyle';
@@ -14,10 +15,7 @@ const InfoEditScreen = ({ route }) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const { editMusician } = useContext(AuthContext);
     const [error, setError] = useState(null);
-    const [query, setQuery] = useState(value || '');
-    const [suggestions, setSuggestions] = useState([]);
-    const [selectedCoordinates, setSelectedCoordinates] = useState(null);
-    const searchTimeoutRef = useRef(null);
+    const [locationData, setLocationData] = useState({ location: value || '', latitude: null, longitude: null });
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -42,9 +40,9 @@ const InfoEditScreen = ({ route }) => {
                 formData.append(schema, values[schema]);
                 
                 // Add coordinates if location is being edited and coordinates are selected
-                if (schema === 'location' && selectedCoordinates) {
-                    formData.append('latitude', selectedCoordinates.latitude.toString());
-                    formData.append('longitude', selectedCoordinates.longitude.toString());
+                if (schema === 'location' && locationData.latitude && locationData.longitude) {
+                    formData.append('latitude', locationData.latitude.toString());
+                    formData.append('longitude', locationData.longitude.toString());
                 }
                 
                 handleEditSubmit(formData);
@@ -65,51 +63,9 @@ const InfoEditScreen = ({ route }) => {
         }
     }
 
-    const fetchLocationSuggestions = async (query) => {
-        if (!query) {
-            setSuggestions([]);
-            return;
-        }
-
-        try {
-            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
-            const data = await response.json();
-            
-            const cityResults = data.features.filter(item => item.properties.type === 'city');
-            
-            setSuggestions(cityResults);
-        } catch (error) {
-            console.error('Error fetching location suggestions:', error);
-            setSuggestions([]);
-        }
-    };
-
-    const handleSearch = (text) => {
-        setQuery(text);
-        formik.setFieldValue('location', text);
-        
-        // Limpiar coordenadas si el usuario modifica el texto
-        setSelectedCoordinates(null);
-        
-        if (searchTimeoutRef.current) {
-            clearTimeout(searchTimeoutRef.current);
-        }
-        
-        searchTimeoutRef.current = setTimeout(() => {
-            fetchLocationSuggestions(text);
-        }, 500);
-    };
-
-    const handleSelectLocation = (item) => {
-        const locationName = `${item.properties.name}, ${item.properties.county}, ${item.properties.state}`;
-        formik.setFieldValue('location', locationName);
-        setQuery(locationName);
-        
-        // Guardar las coordenadas
-        const [longitude, latitude] = item.geometry.coordinates;
-        setSelectedCoordinates({ latitude, longitude });
-        
-        setSuggestions([]);
+    const handleLocationChange = (data) => {
+        setLocationData(data);
+        formik.setFieldValue('location', data.location);
     };
 
     // Transform date to ISO format yyyy-mm-dd without offset
@@ -127,7 +83,7 @@ const InfoEditScreen = ({ route }) => {
         console.log('submit invoked, values:', formik.values, 'schema:', schema);
         
         // Validar que se hayan seleccionado coordenadas si se está editando ubicación
-        if (schema === 'location' && !selectedCoordinates) {
+        if (schema === 'location' && locationData.location && (!locationData.latitude || !locationData.longitude)) {
             Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
             return;
         }
@@ -152,11 +108,6 @@ const InfoEditScreen = ({ route }) => {
                 saveEnabled={true}
                 editEnabled={false}
                 onSave={submit}>
-                <View style={{ width: '100%', marginTop: -10 }}>
-                    <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, textAlign: 'left', color: GlobalStyle.darkGray }}>
-                        Escribe aquí tu {label}
-                    </Text>
-                </View>
             </TopContainer>
             <View style={{ flex: 1, padding: 20, marginTop: -50 }}>
                 {schema != 'birthday' && schema != 'location' && <Input
@@ -174,30 +125,10 @@ const InfoEditScreen = ({ route }) => {
                     }}
                 />}
                 {schema == 'location' && (
-                    <>
-                        <Input
-                            value={query}
-                            placeholder={"Ciudad, Localidad, Pueblo..."}
-                            onChangeText={handleSearch}
-                        />
-                        <Text style={styles.helperText}>Selecciona una ubicación de las sugerencias</Text>
-                        {query && suggestions.length > 0 && (
-                            <View style={styles.suggestionsContainer}>
-                                {suggestions.map((item, index) => (
-                                    <Pressable
-                                        key={index}
-                                        style={styles.suggestionItem}
-                                        onPress={() => handleSelectLocation(item)}
-                                    >
-                                        <Text style={styles.suggestionText}>{item.properties.name}</Text>
-                                        {item.properties.state && (
-                                            <Text style={styles.suggestionSubtext}>{item.properties.county}, {item.properties.state}, {item.properties.country}</Text>
-                                        )}
-                                    </Pressable>
-                                ))}
-                            </View>
-                        )}
-                    </>
+                    <LocationAutocomplete
+                        initialValue={value || ''}
+                        onLocationSelect={handleLocationChange}
+                    />
                 )}
                 {showDatePicker && (
                     <DateTimePicker
@@ -224,35 +155,5 @@ const styles = StyleSheet.create({
         color: GlobalStyle.red,
         fontFamily: 'Oswald_500',
         fontSize: 14,
-    },
-    helperText: {
-        color: GlobalStyle.darkGray,
-        fontFamily: 'Oswald_400',
-        fontSize: 12,
-        marginTop: 4,
-    },
-    suggestionsContainer: {
-        backgroundColor: GlobalStyle.white,
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
-        borderColor: GlobalStyle.gray,
-        marginTop: 8,
-        paddingInline: 5,
-    },
-    suggestionItem: {
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    suggestionText: {
-        fontSize: 16,
-        fontFamily: 'Oswald_500',
-        color: GlobalStyle.black,
-    },
-    suggestionSubtext: {
-        fontSize: 12,
-        fontFamily: 'Oswald_400',
-        color: GlobalStyle.gray,
-        marginTop: 2,
     },
 })

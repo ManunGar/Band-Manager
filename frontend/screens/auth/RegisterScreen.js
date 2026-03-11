@@ -10,6 +10,7 @@ import Button from '../../components/Button';
 import ImagePickerSheet from '../../components/ImagePickerSheet';
 import Input from '../../components/Input';
 import LinkText from '../../components/LinkText';
+import LocationAutocomplete from '../../components/LocationAutocomplete';
 import BandManagerIcon from '../../components/icons/BandManager';
 import { AuthContext } from '../../contexts/AuthContext';
 import LoadingScreen from './LoadingScreen';
@@ -56,10 +57,7 @@ const RegisterScreen = () => {
     const { register, isLoading } = useContext(AuthContext);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [step, setStep] = useState(0);
-    const [query, setQuery] = useState('')
-    const [suggestions, setSuggestions] = useState([]);
     const [imagePreview, setImagePreview] = useState(null);
-    const searchTimeoutRef = useRef(null);
     const imageSheetRef = useRef(null);
 
     // Formik setup
@@ -113,52 +111,11 @@ const RegisterScreen = () => {
         },
     });
 
-    const fetchLocationSuggestions = async (query) => {
-        if (!query) {
-            setSuggestions([]);
-            return;
-        }
-
-        try {
-            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
-            const data = await response.json();
-            
-            const cityResults = data.features.filter(item => item.properties.type === 'city');
-            
-            setSuggestions(cityResults);
-        } catch (error) {
-            console.error('Error fetching location suggestions:', error);
-            setSuggestions([]);
-        }
-    };
-
-    // Call API with debounce when user types in location input
-    const handleSearch = (text) => {
-        setQuery(text);
-        
-        // Limpiar coordenadas si el usuario modifica el texto
-        formik.setFieldValue('latitude', '');
-        formik.setFieldValue('longitude', '');
-        
-        // Cancel previous timeout if it exists
-        if (searchTimeoutRef.current) {
-            clearTimeout(searchTimeoutRef.current);
-        }
-        
-        // New timeout to fetch suggestions after user stops typing for 500ms
-        searchTimeoutRef.current = setTimeout(() => {
-            fetchLocationSuggestions(text);
-        }, 500);
-    };
-
-    // Handle selection of a location suggestion
-    const handleSelectLocation = (item) => {
-        const locationName = `${item.properties.name}, ${item.properties.county}, ${item.properties.state}`;
-        formik.setFieldValue('location', locationName);
-        formik.setFieldValue('latitude', item.geometry.coordinates[1]);
-        formik.setFieldValue('longitude', item.geometry.coordinates[0]);
-        setQuery(locationName);
-        setSuggestions([]); // Clear suggestions after selection
+    // Handle location selection from LocationAutocomplete component
+    const handleLocationChange = (data) => {
+        formik.setFieldValue('location', data.location);
+        formik.setFieldValue('latitude', data.latitude || '');
+        formik.setFieldValue('longitude', data.longitude || '');
     };
 
     // Handle image selection
@@ -186,8 +143,8 @@ const RegisterScreen = () => {
 
     // Step navigation with validation of the current step
     const next = async () => {
-        // Si estamos en el paso 1 (Additional Info) y hay texto en location pero no coordenadas, mostrar error
-        if (step === 1 && query && (!formik.values.latitude || !formik.values.longitude)) {
+        // Si estamos en el paso 1 (Additional Info) y hay ubicación pero no coordenadas, mostrar error
+        if (step === 1 && formik.values.location && (!formik.values.latitude || !formik.values.longitude)) {
             Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
             return;
         }
@@ -240,10 +197,7 @@ const RegisterScreen = () => {
                         setShowDatePicker={setShowDatePicker} 
                         setBirthday={setBirthday} 
                         formatDate={formatDate}
-                        query={query}
-                        handleSearch={handleSearch}
-                        suggestions={suggestions}
-                        handleSelectLocation={handleSelectLocation}
+                        handleLocationChange={handleLocationChange}
                         imagePreview={imagePreview}
                         imageSheetRef={imageSheetRef}
                     />}
@@ -338,7 +292,7 @@ const StepBasicInfo = ({ formik }) => (
     </>
 )
 
-const StepAdditionalInfo = ({ formik, showDatePicker, setShowDatePicker, setBirthday, formatDate, query, handleSearch, suggestions, handleSelectLocation, imagePreview, imageSheetRef }) => (
+const StepAdditionalInfo = ({ formik, showDatePicker, setShowDatePicker, setBirthday, formatDate, handleLocationChange, imagePreview, imageSheetRef }) => (
     <>
         <Text style={styles.stepText}>
             {"Casi terminamos"}
@@ -387,29 +341,10 @@ const StepAdditionalInfo = ({ formik, showDatePicker, setShowDatePicker, setBirt
         </Field>
         
         <Field>
-            <Input
-                label="Ubicación"
-                value={query}
-                placeholder={"Ciudad, Localidad, Pueblo..."}
-                onChangeText={handleSearch}
+            <LocationAutocomplete
+                initialValue={formik.values.location}
+                onLocationSelect={handleLocationChange}
             />
-            <Text style={styles.helperText}>Selecciona una ubicación de las sugerencias</Text>
-            {query && suggestions.length > 0 && (
-                <View style={styles.suggestionsContainer}>
-                    {suggestions.map((item, index) => (
-                        <Pressable
-                            key={index}
-                            style={styles.suggestionItem}
-                            onPress={() => handleSelectLocation(item)}
-                        >
-                            <Text style={styles.suggestionText}>{item.properties.name}</Text>
-                            {item.properties.state && (
-                                <Text style={styles.suggestionSubtext}>{item.properties.county}, {item.properties.state}, {item.properties.country}</Text>
-                            )}
-                        </Pressable>
-                    ))}
-                </View>
-            )}
             <Error name="location" formik={formik} />
         </Field>
 
@@ -489,36 +424,6 @@ const styles = StyleSheet.create({
         color: GlobalStyle.red,
         fontFamily: 'Oswald_500',
         fontSize: 14,
-    },
-    helperText: {
-        color: GlobalStyle.darkGray,
-        fontFamily: 'Oswald_400',
-        fontSize: 12,
-        marginTop: 4,
-    },
-    suggestionsContainer: {
-        backgroundColor: GlobalStyle.white,
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
-        borderColor: GlobalStyle.gray,
-        marginTop: 8,
-        paddingInline: 5,
-    },
-    suggestionItem: {
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    suggestionText: {
-        fontSize: 16,
-        fontFamily: 'Oswald_500',
-        color: GlobalStyle.black,
-    },
-    suggestionSubtext: {
-        fontSize: 12,
-        fontFamily: 'Oswald_400',
-        color: GlobalStyle.gray,
-        marginTop: 2,
     },
     label: {
         fontSize: 16,

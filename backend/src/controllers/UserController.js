@@ -132,7 +132,6 @@ const loginMusician = async (req, res) => {
 const editUserDetails = async (req, res) => {
     const user = req.user;
     const updatedData = req.body;
-    console.log("🚀 ~ editUserDetails ~ updatedData:", updatedData)
     try {
         const updatedUser = await User.findByPk(user.id, {
             attributes: { exclude: ['password'] },
@@ -153,7 +152,7 @@ const editUserDetails = async (req, res) => {
         }
 
         await updatedUser.update(req.body);
-
+        await updatedUser.update({ profile_picture: updatedProfilePicture });
         res.status(200).send({ message: 'User details updated successfully', user: updatedUser });
 
     } catch (error) {

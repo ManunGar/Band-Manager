@@ -16,7 +16,13 @@ const loginMusician = async credential => {
 // Endpoint for musician registration
 const registerMusician = async (preparedData) => {
     try {
-        const response = await axios.post(`${baseUrl}/register/musician`, preparedData);
+        const response = await axios.post(`${baseUrl}/register/musician`, preparedData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            });
         return response.data
     } catch (error) {
         handleError(error)
@@ -26,7 +32,13 @@ const registerMusician = async (preparedData) => {
 // Endpoint to edit musician details
 const editMusician = async (preparedData) => {
     try {
-        const response = await axios.put(`${baseUrl}/user/edit`, preparedData);
+        const response = await axios.put(`${baseUrl}/user/edit`, preparedData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            });
         return response.data
     } catch (error) {
         handleError(error)

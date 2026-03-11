@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import Svg, { G, Path } from 'react-native-svg';
 import * as GlobalStyle from '../GlobalStyle';
 
-const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keyboardType, onPress, multiline, numberOfLines, style }) => {
+const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keyboardType, onPress, multiline, numberOfLines, style, autoCapitalize }) => {
     const [showPassword, setShowPassword] = useState(!secureTextEntry);
 
     return (
@@ -18,7 +18,7 @@ const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keybo
                 placeholder={placeholder}
                 onChangeText={onChangeText}
                 secureTextEntry={!showPassword}
-                autoCapitalize="none"
+                autoCapitalize={autoCapitalize || "none"}
                 keyboardType={keyboardType || 'default'}
                 editable={onPress ? false : true}
                 multiline={multiline}

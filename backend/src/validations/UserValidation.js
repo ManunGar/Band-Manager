@@ -108,6 +108,12 @@ const register = [
         .exists().withMessage('La ubicación es requerida')
         .trim()
         .isString().withMessage('La ubicación debe ser texto'),
+    check('latitude')
+        .exists().withMessage('La latitud es requerida')
+        .isFloat({ min: -90, max: 90 }).withMessage('La latitud debe ser un número entre -90 y 90'),
+    check('longitude')
+        .exists().withMessage('La longitud es requerida')
+        .isFloat({ min: -180, max: 180 }).withMessage('La longitud debe ser un número entre -180 y 180'),
     check('birthday')
         .exists().withMessage('La fecha de nacimiento es requerida')
         .isDate().withMessage('La fecha de nacimiento no es válida')
@@ -157,6 +163,12 @@ const update = [
         .optional()
         .trim()
         .isString().withMessage('La ubicación debe ser texto'),
+    check('latitude')
+        .optional()
+        .isFloat({ min: -90, max: 90 }).withMessage('La latitud debe ser un número entre -90 y 90'),
+    check('longitude')
+        .optional()
+        .isFloat({ min: -180, max: 180 }).withMessage('La longitud debe ser un número entre -180 y 180'),
     check('birthday')
         .optional()
         .isDate().withMessage('La fecha de nacimiento no es válida')

@@ -22,6 +22,14 @@ const loadModel = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: false
+    },
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: false
+    },
     phone: {
       type: DataTypes.STRING,
       allowNull: false

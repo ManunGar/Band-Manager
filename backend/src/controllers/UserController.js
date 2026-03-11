@@ -69,6 +69,8 @@ const registerMusician = async (req, res) => {
             birthday: req.body.birthday,
             phone: req.body.phone,
             password: req.body.password,
+            logitude: req.body.longitude,
+            latitude: req.body.latitude,
             token: _createUserToken()
         }, { transaction });
         // Create a new musician associated with the user

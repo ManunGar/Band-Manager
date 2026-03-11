@@ -126,7 +126,15 @@ const register = [
         .trim()
         .isLength({ min: 8 }).withMessage('La confirmación de contraseña debe tener al menos 8 caracteres')
         .isString().withMessage('La confirmación de contraseña debe ser texto')
-        .custom(_isSamePasswords)
+        .custom(_isSamePasswords),
+    check('profile_picture')
+        .optional()
+        .custom((value, { req }) => {
+            return checkFileIsImage(req, 'profile_picture')
+        }).withMessage('Sube una imagen con formato (jpeg, png).'),
+    check('profile_picture').optional().custom((value, { req }) => {
+        return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+    }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
 ];
 
 const update = [
@@ -157,18 +165,18 @@ const update = [
         .optional()
         .isMobilePhone('any').withMessage('El número de teléfono no es válido'),
     check('password').not().exists().withMessage('La contraseña no se puede actualizar aquí'),
-    check('profile_picture').not().exists().withMessage('La foto de perfil no se puede actualizar aquí')
-]
-
-const updateProfilePicture = [
     check('profile_picture')
-    .custom((value, { req }) => {
-    return checkFileIsImage(req, 'profile_picture')
-  }).withMessage('Sube una imagen con formato (jpeg, png).'),
-  check('profile_picture').custom((value, { req }) => {
-    return checkFileMaxSize(req, 'profile_picture', maxFileSize)
-  }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB')
+        .optional()
+        .custom((value, { req }) => {
+            return checkFileIsImage(req, 'profile_picture')
+        }).withMessage('Sube una imagen con formato (jpeg, png).'),
+    check('profile_picture').optional().custom((value, { req }) => {
+        return checkFileMaxSize(req, 'profile_picture', maxFileSize)
+    }).withMessage('El tamaño del archivo supera ' + maxFileSize / 1000000 + 'MB'),
+    check('delete_profile_picture')
+        .optional()
+        .isBoolean().withMessage('delete_profile_picture must be a boolean')
 ]
 
-export { login, register, update, updateProfilePicture, validateProviderToken };
+export { login, register, update, validateProviderToken };
 

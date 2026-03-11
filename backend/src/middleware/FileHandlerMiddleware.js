@@ -141,5 +141,22 @@ const parseBooleanFields = (...fields) => (req, res, next) => {
   }
 }
 
-export { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary, handleFilesDestroy, handleFilesUpload, parseBooleanFields, parseJSONFields }
+// Middleware to parse float fields that come as strings in multipart/form-data
+const parseFloatFields = (...fields) => (req, res, next) => {
+  try {
+    fields.forEach(field => {
+      if (req.body[field] !== undefined && typeof req.body[field] === 'string') {
+        const parsed = parseFloat(req.body[field])
+        if (!isNaN(parsed)) {
+          req.body[field] = parsed
+        }
+      }
+    })
+    next()
+  } catch (error) {
+    res.status(400).send({ error: 'Error parsing float fields' })
+  }
+}
+
+export { addFilenameToBody, addProfilePictureToBody, deleteFileFromCloudinary, handleFilesDestroy, handleFilesUpload, parseBooleanFields, parseFloatFields, parseJSONFields }
 

@@ -4,7 +4,7 @@ import { AuthContext } from '../../../contexts/AuthContext';
 import AccountDetailScreen from './AccountDetailScreen';
 import AccountEditScreen from './AccountEditScreen';
 import ConfigurationScreen from './ConfigurationScreen';
-import InfoEditScreen from './InfoEditScreen';
+import AccountFormScreen from './form/AccountFormScreen';
 import InstrumentsScreen from './InstrumentsScreen';
 
 const Stack = createStackNavigator();
@@ -21,7 +21,7 @@ const Account = () => {
             <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
             <Stack.Screen name="Instruments" component={InstrumentsScreen} />
             <Stack.Screen name="AccountEdit" component={AccountEditScreen} />
-            <Stack.Screen name="InfoEdit" component={InfoEditScreen} />
+            <Stack.Screen name="AccountForm" component={AccountFormScreen} />
             <Stack.Screen name='Configuration' component={ConfigurationScreen} />
         </Stack.Navigator>
     )

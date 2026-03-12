@@ -4,13 +4,13 @@ import { useFormik } from 'formik';
 import moment from 'moment';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import Input from '../../../components/Input';
-import LocationAutocomplete from '../../../components/LocationAutocomplete';
-import TopContainer from '../../../components/TopContainer';
-import { AuthContext } from '../../../contexts/AuthContext';
-import * as GlobalStyle from '../../../GlobalStyle';
+import Input from '../../../../components/Input';
+import LocationAutocomplete from '../../../../components/LocationAutocomplete';
+import TopContainer from '../../../../components/TopContainer';
+import { AuthContext } from '../../../../contexts/AuthContext';
+import * as GlobalStyle from '../../../../GlobalStyle';
 
-const InfoEditScreen = ({ route }) => {
+const AccountFormScreen = ({ route }) => {
     const { label, value, keyboardType, schema } = route.params;
     const [showDatePicker, setShowDatePicker] = useState(false);
     const { editMusician } = useContext(AuthContext);
@@ -19,7 +19,7 @@ const InfoEditScreen = ({ route }) => {
     const navigation = useNavigation();
 
     useEffect(() => {
-        console.log('Mounted InfoEditScreen with params:', route.params);
+        console.log('Mounted AccountFormScreen with params:', route.params);
     }, [route.params])
 
     // Formik setup
@@ -111,11 +111,13 @@ const InfoEditScreen = ({ route }) => {
             </TopContainer>
             <View style={{ flex: 1, padding: 20, marginTop: -50 }}>
                 {schema != 'birthday' && schema != 'location' && <Input
+                    label={label}
                     value={formik.values[schema]}
                     keyboardType={keyboardType}
                     onChangeText={(text) => formik.setFieldValue(schema, text)}
                 />}
                 {schema == 'birthday' && <Input
+                    label={label}
                     value={formatDate(formik.values[schema])}
                     keyboardType={keyboardType}
                     onChangeText={(text) => formik.setFieldValue(schema, text)}
@@ -148,7 +150,7 @@ const InfoEditScreen = ({ route }) => {
     )
 }
 
-export default InfoEditScreen
+export default AccountFormScreen
 
 const styles = StyleSheet.create({
     errorText: {

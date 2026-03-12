@@ -69,7 +69,7 @@ const registerMusician = async (req, res) => {
             birthday: req.body.birthday,
             phone: req.body.phone,
             password: req.body.password,
-            logitude: req.body.longitude,
+            longitude: req.body.longitude,
             latitude: req.body.latitude,
             token: _createUserToken()
         }, { transaction });
@@ -132,7 +132,6 @@ const loginMusician = async (req, res) => {
 const editUserDetails = async (req, res) => {
     const user = req.user;
     const updatedData = req.body;
-    console.log("🚀 ~ editUserDetails ~ updatedData:", updatedData)
     try {
         const updatedUser = await User.findByPk(user.id, {
             attributes: { exclude: ['password'] },
@@ -153,12 +152,32 @@ const editUserDetails = async (req, res) => {
         }
 
         await updatedUser.update(req.body);
-
+        await updatedUser.update({ profile_picture: updatedProfilePicture });
         res.status(200).send({ message: 'User details updated successfully', user: updatedUser });
 
     } catch (error) {
         console.error('Error in editUserDetails:', error);
         res.status(500).send({ error: 'Error editing user details' });
+    }
+}
+
+// Function to change user password
+const changePassword = async (req, res) => {
+    const currentUser = req.user;
+    const { currentPassword, password } = req.body;
+    try {
+        const user = await User.findByPk(currentUser.id);
+        // Check if current password is correct
+        const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatch) {
+            return res.status(401).send({ error: 'Current password is incorrect' });
+        }
+        // Update password
+        await user.update({ password: password });
+        res.status(200).send({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Error in changePassword:', error);
+        res.status(500).send({ error: 'Error changing password' });
     }
 }
 
@@ -175,6 +194,7 @@ const UserController = {
     loginMusician,
     editUserDetails,
     isValidProviderToken,
+    changePassword
 };
 
 export default UserController;

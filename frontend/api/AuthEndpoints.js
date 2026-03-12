@@ -16,7 +16,13 @@ const loginMusician = async credential => {
 // Endpoint for musician registration
 const registerMusician = async (preparedData) => {
     try {
-        const response = await axios.post(`${baseUrl}/register/musician`, preparedData);
+        const response = await axios.post(`${baseUrl}/register/musician`, preparedData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            });
         return response.data
     } catch (error) {
         handleError(error)
@@ -26,34 +32,23 @@ const registerMusician = async (preparedData) => {
 // Endpoint to edit musician details
 const editMusician = async (preparedData) => {
     try {
-        const response = await axios.put(`${baseUrl}/user/edit`, preparedData);
-        return response.data
-    } catch (error) {
-        handleError(error)
-    }
-}
-
-// Endpoint to edit profile picture
-const editProfilePicture = async (preparedData) => {
-    try {
-        const response = await axios.put(`${baseUrl}/user/edit/profile-picture`, preparedData,
+        const response = await axios.put(`${baseUrl}/user/edit`, preparedData,
             {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
                 transformRequest: (data) => data,
-            }
-        );
+            });
         return response.data
     } catch (error) {
         handleError(error)
     }
 }
 
-// Endpoint to delete profile picture
-const deleteProfilePicture = async () => {
+// Endpoint to change password
+const changePassword = async (passwordData) => {
     try {
-        const response = await axios.put(`${baseUrl}/user/delete/profile-picture`);
+        const response = await axios.put(`${baseUrl}/user/change-password`, passwordData);
         return response.data
     } catch (error) {
         handleError(error)
@@ -75,6 +70,5 @@ export default {
     registerMusician,
     isTokenValid,
     editMusician,
-    editProfilePicture,
-    deleteProfilePicture
+    changePassword
 };

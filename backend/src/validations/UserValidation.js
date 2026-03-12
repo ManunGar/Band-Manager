@@ -190,5 +190,25 @@ const update = [
         .isBoolean().withMessage('delete_profile_picture must be a boolean')
 ]
 
-export { login, register, update, validateProviderToken };
+const changePassword = [
+    check('currentPassword')
+        .exists().withMessage('La contraseña actual es requerida')
+        .trim()
+        .isLength({ min: 8 }).withMessage('La contraseña actual no es correcta')
+        .isString().withMessage('La contraseña actual debe ser texto'),
+    check('password')
+        .exists().withMessage('La nueva contraseña es requerida')
+        .trim()
+        .isLength({ min: 8 }).withMessage('La nueva contraseña debe tener al menos 8 caracteres')
+        .isString().withMessage('La nueva contraseña debe ser texto')
+        .custom(_isPasswordSafe),
+    check('repeatPassword')
+        .exists().withMessage('Debe repetir la nueva contraseña')
+        .trim()
+        .isLength({ min: 8 }).withMessage('La confirmación de la nueva contraseña debe tener al menos 8 caracteres')
+        .isString().withMessage('La confirmación de la nueva contraseña debe ser texto')
+        .custom(_isSamePasswords),
+]
+
+export { changePassword, login, register, update, validateProviderToken };
 

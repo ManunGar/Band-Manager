@@ -247,6 +247,7 @@ const updateBand = async (req, res) => {
         }
         
         await band.update(req.body);
+        await band.update({ profile_picture: updatedProfilePicture });
         res.status(200).send({ message: 'Band updated successfully', band });
     } catch (error) {
         console.error('Error updating band:', error);

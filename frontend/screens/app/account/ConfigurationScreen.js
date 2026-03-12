@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { useContext } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import profileDefault from '../../../assets/milestones/profile_default.png';
@@ -11,6 +12,7 @@ import * as GlobalStyle from '../../../GlobalStyle';
 const ConfigurationScreen = ({ route }) => {
     const { logout } = useContext(AuthContext)
     const { musician } = route.params;
+    const navigation = useNavigation();
 
     return (
         <View style={{ flex: 1 }}>
@@ -24,14 +26,14 @@ const ConfigurationScreen = ({ route }) => {
                     <View style={styles.musicianInfoContainer}>
                         <Text style={styles.nameText}>{musician?.full_name}</Text>
                         <Text style={styles.usernameText}>@{musician?.username}</Text>
-                        <LinkText>Editar Perfil</LinkText>
+                        <LinkText onPress={() => navigation.navigate('AccountEdit')}>Editar Perfil</LinkText>
                     </View>
                 </View>
             </TopContainer>
             <ScrollView style={styles.bodyContainer}>
                 <Text style={styles.sectionTitle}>Cuenta</Text>
                 <View style={styles.sectionContainer}>
-                    <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('PasswordForm')} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                         <Text style={styles.subSectionTitle}>Cambiar contraseña</Text>
                         <RightArrowIcon fill={GlobalStyle.gray} />
                     </TouchableOpacity>

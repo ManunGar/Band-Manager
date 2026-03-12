@@ -38,6 +38,14 @@ const loadFileRoutes = function (app) {
             handleValidation,
             UserController.editUserDetails
         )
+    // Change Password route
+    app.route('/user/change-password')
+        .put(
+            isLoggedIn,
+            UserValidation.changePassword,
+            handleValidation,
+            UserController.changePassword
+        )
 }
 
 export default loadFileRoutes

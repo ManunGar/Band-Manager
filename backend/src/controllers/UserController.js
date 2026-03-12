@@ -161,6 +161,26 @@ const editUserDetails = async (req, res) => {
     }
 }
 
+// Function to change user password
+const changePassword = async (req, res) => {
+    const currentUser = req.user;
+    const { currentPassword, password } = req.body;
+    try {
+        const user = await User.findByPk(currentUser.id);
+        // Check if current password is correct
+        const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatch) {
+            return res.status(401).send({ error: 'Current password is incorrect' });
+        }
+        // Update password
+        await user.update({ password: password });
+        res.status(200).send({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Error in changePassword:', error);
+        res.status(500).send({ error: 'Error changing password' });
+    }
+}
+
 // This function creates a new player token
 const _createUserToken = () => {
     // Logic to create a player token
@@ -174,6 +194,7 @@ const UserController = {
     loginMusician,
     editUserDetails,
     isValidProviderToken,
+    changePassword
 };
 
 export default UserController;

@@ -16,14 +16,14 @@ const Event = ({ event }) => {
             <Image source={event.band.profile_picture ? { uri: `${event.band.profile_picture}` } : bandProfilePictureDefault} style={styles.bandPicture } />
             <View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', width: 385 }}>
-                    <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{event.Performance?.name || 'Ensayo'}</Text>
+                    <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{event.name}</Text>
                     {event.attendance.participates && <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, marginLeft: 10, flexShrink: 0, color: event.attendance.present === true ? GlobalStyle.darkGreen : event.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray }}>
                         { event.attendance.present && 'Asistencia Confirmada' }
                         { event.attendance.present === false && 'Asistencia Rechazada' }
                         { event.attendance.present === null && 'Sin Confirmar' }
                     </Text>}
                 </View>
-                <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">{parseDateTime(event.date, event.initialTime)} {event.Performance?.place ? `· ${event.Performance.place}` : ''}</Text>
+                <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">{parseDateTime(event.date, event.initialTime)} {event.location ? `· ${event.location}` : ''}</Text>
             </View>
         </TouchableOpacity>
     )

@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { useContext } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import profileDefault from '../../../assets/milestones/profile_default.png';
@@ -11,6 +12,7 @@ import * as GlobalStyle from '../../../GlobalStyle';
 const ConfigurationScreen = ({ route }) => {
     const { logout } = useContext(AuthContext)
     const { musician } = route.params;
+    const navigation = useNavigation();
 
     return (
         <View style={{ flex: 1 }}>
@@ -24,7 +26,7 @@ const ConfigurationScreen = ({ route }) => {
                     <View style={styles.musicianInfoContainer}>
                         <Text style={styles.nameText}>{musician?.full_name}</Text>
                         <Text style={styles.usernameText}>@{musician?.username}</Text>
-                        <LinkText>Editar Perfil</LinkText>
+                        <LinkText onPress={() => navigation.navigate('AccountEdit')}>Editar Perfil</LinkText>
                     </View>
                 </View>
             </TopContainer>

@@ -45,27 +45,10 @@ const editMusician = async (preparedData) => {
     }
 }
 
-// Endpoint to edit profile picture
-const editProfilePicture = async (preparedData) => {
+// Endpoint to change password
+const changePassword = async (passwordData) => {
     try {
-        const response = await axios.put(`${baseUrl}/user/edit/profile-picture`, preparedData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-                transformRequest: (data) => data,
-            }
-        );
-        return response.data
-    } catch (error) {
-        handleError(error)
-    }
-}
-
-// Endpoint to delete profile picture
-const deleteProfilePicture = async () => {
-    try {
-        const response = await axios.put(`${baseUrl}/user/delete/profile-picture`);
+        const response = await axios.put(`${baseUrl}/user/change-password`, passwordData);
         return response.data
     } catch (error) {
         handleError(error)
@@ -87,6 +70,5 @@ export default {
     registerMusician,
     isTokenValid,
     editMusician,
-    editProfilePicture,
-    deleteProfilePicture
+    changePassword
 };

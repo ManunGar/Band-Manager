@@ -5,6 +5,7 @@ import AccountDetailScreen from './AccountDetailScreen';
 import AccountEditScreen from './AccountEditScreen';
 import ConfigurationScreen from './ConfigurationScreen';
 import AccountFormScreen from './form/AccountFormScreen';
+import PasswordFormScreen from './form/PasswordFormScreen';
 import InstrumentsScreen from './InstrumentsScreen';
 
 const Stack = createStackNavigator();
@@ -23,6 +24,7 @@ const Account = () => {
             <Stack.Screen name="AccountEdit" component={AccountEditScreen} />
             <Stack.Screen name="AccountForm" component={AccountFormScreen} />
             <Stack.Screen name='Configuration' component={ConfigurationScreen} />
+            <Stack.Screen name='PasswordForm' component={PasswordFormScreen} />
         </Stack.Navigator>
     )
 }

@@ -33,7 +33,7 @@ const ConfigurationScreen = ({ route }) => {
             <ScrollView style={styles.bodyContainer}>
                 <Text style={styles.sectionTitle}>Cuenta</Text>
                 <View style={styles.sectionContainer}>
-                    <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('PasswordForm')} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                         <Text style={styles.subSectionTitle}>Cambiar contraseña</Text>
                         <RightArrowIcon fill={GlobalStyle.gray} />
                     </TouchableOpacity>

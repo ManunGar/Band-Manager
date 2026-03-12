@@ -206,10 +206,19 @@ const addEvent = [
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('End time must be in HH:MM format')
         .custom(_endTimeAfterInitialTime),
     check('name')
-        .if(check('eventType').equals('performances'))
-        .exists().withMessage('Performance name is required')
-        .isString().withMessage('Performance name must be a string')
-        .notEmpty().withMessage('Performance name cannot be empty'),
+        .exists().withMessage('Event name is required')
+        .isString().withMessage('Event name must be a string')
+        .notEmpty().withMessage('Event name cannot be empty'),
+    check('location')
+        .exists().withMessage('Event location is required')
+        .isString().withMessage('Event location must be a string')
+        .notEmpty().withMessage('Event location cannot be empty'),
+    check('latitude')
+        .exists().withMessage('Latitude is required')
+        .isFloat({ min: -90, max: 90 }).withMessage('Latitude must be between -90 and 90'),
+    check('longitude')
+        .exists().withMessage('Longitude is required')
+        .isFloat({ min: -180, max: 180 }).withMessage('Longitude must be between -180 and 180'),
     check('type')
         .if(check('eventType').equals('performances'))
         .exists().withMessage('Performance type is required')
@@ -218,11 +227,6 @@ const addEvent = [
     check('comment')
         .optional()
         .isString().withMessage('Comment must be a string'),
-    check('place')
-        .if(check('eventType').equals('performances'))
-        .exists().withMessage('Performance place is required')
-        .isString().withMessage('Performance place must be a string')
-        .notEmpty().withMessage('Performance place cannot be empty'),
     check('picture')
         .optional()
         .custom((value, { req }) => {

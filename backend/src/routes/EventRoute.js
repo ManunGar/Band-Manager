@@ -1,7 +1,7 @@
 import EventController from "../controllers/EventController.js"
 import { isLoggedIn } from "../middleware/AuthMiddleware.js"
 import { isEventAdmin, isEventParticipant } from "../middleware/EventMiddleware.js"
-import { handleFilesUpload, parseBooleanFields, parseJSONFields } from "../middleware/FileHandlerMiddleware.js"
+import { handleFilesUpload, parseBooleanFields, parseFloatFields, parseJSONFields } from "../middleware/FileHandlerMiddleware.js"
 import * as EventValidation from "../validations/EventValidation.js"
 import { handleValidation } from "../validations/HandleValidation.js"
 
@@ -24,6 +24,7 @@ const loadFileRoutes = function (app) {
             isEventAdmin, // Ensure the user is an admin of the event
             handleFilesUpload('picture', process.env.PERFORMANCE_PICTURE_FOLDER),
             parseBooleanFields('delete_picture'),
+            parseFloatFields('latitude', 'longitude'),
             parseJSONFields('instruments'),
             EventValidation.update,
             handleValidation,

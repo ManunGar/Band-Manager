@@ -6,6 +6,7 @@ import EventEndpoints from '../../../api/EventEndpoints';
 import performancePictureDefault from '../../../assets/milestones/performance_default.jpg';
 import rehearsalPictureDefault from '../../../assets/milestones/rehearsal_default.jpg';
 import BottomSheet from '../../../components/BottomSheet';
+import EventMapView from '../../../components/EventMapView';
 import AgendaIcon from '../../../components/icons/AgendaIcon';
 import AttendanceIcon from '../../../components/icons/AttendanceIcon';
 import LocationIcon from '../../../components/icons/LocationIcon';
@@ -48,6 +49,12 @@ const EventScreen = ({ route }) => {
 
     const fetchEventDetails = async () => {
         const fetchedEvent = await EventEndpoints.getEventDetails(eventId);
+        console.log('📍 Event details:', {
+            name: fetchedEvent?.name,
+            location: fetchedEvent?.location,
+            latitude: fetchedEvent?.latitude,
+            longitude: fetchedEvent?.longitude
+        });
         fetchedEvent ? setIsBandAdministrator(fetchedEvent.band.components[0].administrator) : setIsBandAdministrator(false);
         setEvent(fetchedEvent);
         setAttendance(fetchedEvent?.attendance.present);
@@ -68,6 +75,10 @@ const EventScreen = ({ route }) => {
             Alert.alert('Error', error.message || 'Hubo un error al guardar tu asistencia.');
         }
     }
+
+    const eventLat = Number.parseFloat(event?.latitude);
+    const eventLng = Number.parseFloat(event?.longitude);
+    const hasValidCoordinates = Number.isFinite(eventLat) && Number.isFinite(eventLng);
 
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
@@ -98,12 +109,27 @@ const EventScreen = ({ route }) => {
                                 <Text style={styles.text}>{event?.initialTime.substring(0, 5)} - {event?.endTime.substring(0, 5)}</Text>
                             </View>
                         }
-                        {event?.Performance &&
+                        {event?.location &&
                             <View style={styles.textContainer}>
                                 <LocationIcon width={20} height={22} fill={GlobalStyle.black} />
-                                <Text style={styles.text}>{event.Performance.place}</Text>
+                                <Text style={styles.text}>{event.location}</Text>
                             </View>
                         }
+                    </View>
+                    {/* MAP */}
+                    <View style={{ paddingHorizontal: 12, paddingBottom: 20 }}>
+                        {hasValidCoordinates ? (
+                            <EventMapView
+                                latitude={eventLat}
+                                longitude={eventLng}
+                                location={event.location || 'Ubicacion del evento'}
+                                zoomDelta={0.001}
+                            />
+                        ) : (
+                            <View style={styles.mapFallback}>
+                                <Text style={styles.mapFallbackText}>Este evento no tiene coordenadas validas para mostrar el mapa.</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
                 {/* BODY */}
@@ -187,7 +213,7 @@ const styles = StyleSheet.create({
     headerContainer: {
         paddingHorizontal: 12,
         backgroundColor: GlobalStyle.white,
-        alignItems: 'center',
+        // alignItems: 'center',
         borderBottomLeftRadius: 25,
         borderBottomRightRadius: 25,
     },
@@ -249,5 +275,21 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         fontSize: 16,
         color: GlobalStyle.black
+    },
+    mapFallback: {
+        height: 120,
+        borderWidth: 1,
+        borderColor: GlobalStyle.lightGray,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        backgroundColor: GlobalStyle.white,
+    },
+    mapFallbackText: {
+        fontFamily: 'Oswald_400',
+        fontSize: 15,
+        color: GlobalStyle.gray,
+        textAlign: 'center',
     }
 })

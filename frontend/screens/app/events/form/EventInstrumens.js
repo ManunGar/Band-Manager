@@ -101,10 +101,14 @@ const EventInstruments = ({ route }) => {
             formData.append('endTime', eventFormData.endTime);
             formData.append('delete_picture', eventFormData.delete_picture);
 
-            // Add performance fields (backend will ignore them for rehearsals)
+            // Add event fields (required for all events)
             formData.append('name', eventFormData.name || '');
+            formData.append('location', eventFormData.location || '');
+            formData.append('latitude', eventFormData.latitude?.toString() || '0');
+            formData.append('longitude', eventFormData.longitude?.toString() || '0');
+
+            // Add performance-specific fields (backend will ignore them for rehearsals)
             formData.append('type', eventFormData.type || '');
-            formData.append('place', eventFormData.place || '');
             formData.append('comment', eventFormData.comment || '');
 
             console.log('Instruments being sent:', eventFormData);

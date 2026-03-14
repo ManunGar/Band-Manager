@@ -123,7 +123,7 @@ const EventScreen = ({ route }) => {
                                 latitude={eventLat}
                                 longitude={eventLng}
                                 location={event.location || 'Ubicacion del evento'}
-                                zoomDelta={0.001}
+                                zoomDelta={0.004}
                             />
                         ) : (
                             <View style={styles.mapFallback}>

@@ -233,16 +233,22 @@ const EventFormScreen = ({ route }) => {
     const mapLongitude = parseCoordinate(formik.values.longitude) ?? SEVILLE_CENTER.longitude;
 
     const buildAddressFromPhoton = (properties = {}) => {
-        const parts = [
-            properties.name,
-            properties.street,
-            properties.housenumber,
-            properties.postcode,
-            properties.city || properties.county,
-            properties.state,
-            properties.country,
-        ].filter(Boolean);
+        const city = properties.city || properties.town || properties.village || properties.county || '';
+        const street = [properties.street, properties.housenumber].filter(Boolean).join(' ').trim();
 
+        const normalizedCity = city.toLowerCase();
+        const normalizedStreet = street.toLowerCase();
+        const normalizedName = (properties.name || '').toLowerCase();
+
+        // Keep landmark/place names when they add value (e.g. plaza, auditorium),
+        // but avoid duplicating city or street text.
+        const placeName = properties.name &&
+            normalizedName !== normalizedCity &&
+            normalizedName !== normalizedStreet
+            ? properties.name
+            : '';
+
+        const parts = [placeName, street, city].filter(Boolean);
         return parts.join(', ');
     };
 

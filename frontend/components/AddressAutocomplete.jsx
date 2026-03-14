@@ -16,7 +16,7 @@ const AddressAutocomplete = ({
     initialValue = '', 
     onAddressSelect, 
     label = 'Dirección', 
-    placeholder = 'Calle, Plaza, Avenida...' 
+    placeholder = 'Calle, Plaza, Avenida...'
 }) => {
     const [query, setQuery] = useState(initialValue);
     const [suggestions, setSuggestions] = useState([]);
@@ -36,7 +36,7 @@ const AddressAutocomplete = ({
 
         try {
             const response = await fetch(
-                `https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=10`
+                `https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=5`
             );
             const data = await response.json();
             
@@ -68,21 +68,29 @@ const AddressAutocomplete = ({
         }, 500);
     };
 
+    const buildShortAddress = (props = {}) => {
+        const city = props.city || props.town || props.village || props.county || '';
+        const street = [props.street, props.housenumber].filter(Boolean).join(' ').trim();
+
+        const normalizedCity = city.toLowerCase();
+        const normalizedStreet = street.toLowerCase();
+        const normalizedName = (props.name || '').toLowerCase();
+
+        const placeName = props.name &&
+            normalizedName !== normalizedCity &&
+            normalizedName !== normalizedStreet
+            ? props.name
+            : '';
+
+        const parts = [placeName, street, city].filter(Boolean);
+        return parts.join(', ');
+    };
+
     // Handle selection of an address suggestion
     const handleSelectAddress = (item) => {
-        // Build address string from available properties
+        // Build concise address: landmark/place, street and city/town.
         const props = item.properties;
-        const parts = [
-            props.name,
-            props.street,
-            props.housenumber,
-            props.postcode,
-            props.city || props.county,
-            props.state,
-            props.country
-        ].filter(Boolean);
-        
-        const addressName = parts.join(', ');
+        const addressName = buildShortAddress(props);
         setQuery(addressName);
         
         // Extract coordinates
@@ -100,6 +108,7 @@ const AddressAutocomplete = ({
     // Format suggestion text to display
     const formatSuggestion = (item) => {
         const props = item.properties;
+        console.log("🚀 ~ formatSuggestion ~ props:", props)
         
         // Primary text: name or street with house number
         const primaryParts = [
@@ -107,7 +116,8 @@ const AddressAutocomplete = ({
             props.street,
             props.housenumber
         ].filter(Boolean);
-        const primary = primaryParts.join(' ');
+        const primary = primaryParts.join(', ');
+        console.log("🚀 ~ formatSuggestion ~ primary:", primary)
 
         // Secondary text: city, state, country
         const secondaryParts = [

@@ -52,6 +52,10 @@ const loadModel = (sequelize, DataTypes) => {
     }
   }
   Event.init({
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     date: {
       type: DataTypes.DATE,
       allowNull: false
@@ -73,6 +77,18 @@ const loadModel = (sequelize, DataTypes) => {
     },
     endTime: {
       type: DataTypes.TIME
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: false
+    },
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: false
     }
   }, {
     sequelize,

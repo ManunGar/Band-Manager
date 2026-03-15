@@ -19,10 +19,6 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-      name: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
       picture: {
         type: Sequelize.STRING,
         allowNull: true
@@ -34,10 +30,6 @@ module.exports = {
       comment: {
         type: Sequelize.STRING,
         allowNull: true
-      },
-      place: {
-        type: Sequelize.STRING,
-        allowNull: false
       },
       createdAt: {
         allowNull: false,

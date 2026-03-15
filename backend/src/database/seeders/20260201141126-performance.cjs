@@ -68,9 +68,7 @@ module.exports = {
 
       {
         eventId: 1,
-        name: 'Concierto de Navidad 2025',
         type: 'Concierto',
-        place: 'Teatro Municipal de Lora del Río',
         comment: 'Programa navideño con villancicos tradicionales y obras sinfónicas',
         picture: performancePic1,
         createdAt: new Date(),
@@ -78,9 +76,7 @@ module.exports = {
       },
       {
         eventId: 2,
-        name: 'Cabalgata de Reyes Magos',
         type: 'Procesión',
-        place: 'Lora del Río',
         comment: 'Acompañamiento musical durante el recorrido de la Cabalgata',
         picture: performancePic2,
         createdAt: new Date(),
@@ -88,9 +84,7 @@ module.exports = {
       },
       {
         eventId: 3,
-        name: 'Concierto de San Valentín',
         type: 'Concierto',
-        place: 'Auditorio Municipal',
         comment: 'Concierto temático con música romántica y bandas sonoras de cine',
         picture: null,
         createdAt: new Date(),
@@ -98,9 +92,7 @@ module.exports = {
       },
       {
         eventId: 4,
-        name: 'Concierto de Semana Santa',
         type: 'Concierto',
-        place: 'Iglesia Parroquial de Lora del Río',
         comment: 'Marchas procesionales y música sacra',
         picture: performancePic3,
         createdAt: new Date(),
@@ -111,9 +103,7 @@ module.exports = {
 
       {
         eventId: 8,
-        name: 'Concierto de Santa Cecilia',
         type: 'Concierto',
-        place: 'Casa de la Cultura de Salteras',
         comment: 'Celebración del día de Santa Cecilia, patrona de los músicos',
         picture: performancePic4,
         createdAt: new Date(),
@@ -121,9 +111,7 @@ module.exports = {
       },
       {
         eventId: 9,
-        name: 'Pasacalles por el Casco Antiguo',
         type: 'Pasacalles',
-        place: 'Plaza de España, Salteras',
         comment: 'Pasacalles festivo por las calles del pueblo',
         picture: null,
         createdAt: new Date(),
@@ -131,9 +119,7 @@ module.exports = {
       },
       {
         eventId: 10,
-        name: 'Carnaval 2026',
         type: 'Pasacalles',
-        place: 'Salteras',
         comment: 'Acompañamiento del desfile de Carnaval',
         picture: performancePic5,
         createdAt: new Date(),
@@ -141,9 +127,7 @@ module.exports = {
       },
       {
         eventId: 11,
-        name: 'Concierto de Primavera',
         type: 'Concierto',
-        place: 'Parque Municipal de Salteras',
         comment: 'Concierto al aire libre con repertorio variado',
         picture: performancePic6,
         createdAt: new Date(),
@@ -151,9 +135,7 @@ module.exports = {
       },
       {
         eventId: 12,
-        name: 'Feria de Mayo',
         type: 'Pasacalles',
-        place: 'Recinto Ferial de Salteras',
         comment: 'Actuación durante las fiestas patronales',
         picture: performancePic7,
         createdAt: new Date(),
@@ -164,9 +146,7 @@ module.exports = {
 
       {
         eventId: 17,
-        name: 'Misa del Gallo',
         type: 'Concierto',
-        place: 'Parroquia de Nuestra Señora de la Consolación',
         comment: 'Acompañamiento musical de la Misa del Gallo',
         picture: performancePic8,
         createdAt: new Date(),
@@ -174,9 +154,7 @@ module.exports = {
       },
       {
         eventId: 18,
-        name: 'Concierto de Año Nuevo',
         type: 'Concierto',
-        place: 'Teatro Municipal de Cazalla',
         comment: 'Concierto extraordinario con obras clásicas y populares',
         picture: performancePic9,
         createdAt: new Date(),
@@ -184,9 +162,7 @@ module.exports = {
       },
       {
         eventId: 19,
-        name: 'Día de Andalucía',
         type: 'Pasacalles',
-        place: 'Plaza del Llano, Cazalla de la Sierra',
         comment: 'Celebración del Día de Andalucía con himno y pasodobles',
         picture: null,
         createdAt: new Date(),
@@ -194,9 +170,7 @@ module.exports = {
       },
       {
         eventId: 20,
-        name: 'Procesión de Semana Santa',
         type: 'Procesión',
-        place: 'Recorrido procesional, Cazalla de la Sierra',
         comment: 'Acompañamiento de la Hermandad del Santo Entierro',
         picture: performancePic10,
         createdAt: new Date(),
@@ -204,9 +178,7 @@ module.exports = {
       },
       {
         eventId: 21,
-        name: 'Concierto de Verano',
         type: 'Concierto',
-        place: 'Plaza de Toros de Cazalla',
         comment: 'Gran concierto de verano con pasodobles y música festiva',
         picture: null,
         createdAt: new Date(),

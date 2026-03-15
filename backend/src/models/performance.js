@@ -12,10 +12,6 @@ const loadModel = (sequelize, DataTypes) => {
     }
   }
   Performance.init({
-    name: {
-      type: DataTypes.STRING, 
-      allowNull: false
-    },
     eventId: {
       type: DataTypes.INTEGER,
       references: {
@@ -36,10 +32,6 @@ const loadModel = (sequelize, DataTypes) => {
     comment: {
       type: DataTypes.STRING, 
       allowNull: true
-    },
-    place: {
-      type: DataTypes.STRING, 
-      allowNull: false
     }
   }, {
     sequelize,

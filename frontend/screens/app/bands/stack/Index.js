@@ -4,7 +4,6 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import BandEndpoints from '../../../../api/BandEndpoints';
 import BottomSheet from '../../../../components/BottomSheet';
-import Button from '../../../../components/Button';
 import Component from '../../../../components/Component';
 import LinkText from '../../../../components/LinkText';
 import UpcomingEvent from '../../../../components/UpcomingEnvent';
@@ -84,25 +83,25 @@ export default function Index({ route }) {
 
             </View>
             {/* ADD MEMBER MODAL */}
-            <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ paddingInline: 20 }}>
+            <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ paddingInline: 10 }}>
                 <Text style={{ fontFamily: 'Oswald_500', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
                     Añade nuevos componentes a tu equipo mediante el código de invitación:
                 </Text>
                 <Text style={{ fontFamily: 'BebasNeue', color: GlobalStyle.black, fontSize: 24, color: GlobalStyle.black, margin: 'auto' }}>
                     {band?.code || 'Cargando...'}
                 </Text>
-                <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.gray, fontSize: 12, marginTop: 10 }}>
+                <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.gray, fontSize: 12, marginVertical: 10 }}>
                     Comparte este código con las personas que quieras invitar a tu equipo o comparte el siguiente enlace para que puedan acceder con mayor rapidez.
                 </Text>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', alignContent: 'center', marginVertical: 15, paddingInline: 15, borderRadius: 8, backgroundColor: GlobalStyle.lightBackground }}>
+                {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', alignContent: 'center', marginVertical: 15, paddingInline: 15, borderRadius: 8, backgroundColor: GlobalStyle.lightBackground }}>
                     <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.blue, fontSize: 16, marginVertical: 10, textDecorationLine: 'underline' }}>
                         {`${process.env.EXPO_PUBLIC_API_URL}/join/${band?.code}`}
                     </Text>
                     <LinkText style={{ marginBottom: 4 }}>Copiar</LinkText>
-                </View>
-                <Button>
+                </View> */}
+                {/* <Button>
                     Compartir
-                </Button>
+                </Button> */}
             </BottomSheet>
         </ScrollView>
     );

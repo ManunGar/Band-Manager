@@ -31,8 +31,7 @@ const AgendaScreen = () => {
     return (
         <View>
             <TopContainer backEnabled={false} editEnabled={false} 
-                style={{ paddingBottom: 24, paddingTop: 18, alignItems: 'flex-start' }}
-                createEnabled={true}>
+                style={{ paddingBottom: 24, paddingTop: 18, alignItems: 'flex-start' }}>
                 <Text style={styles.title}>Agenda Musical</Text>
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 5}}>
                     <Text onPress={() => setTimeScope('upcoming')}

@@ -6,8 +6,10 @@ import { useCallback, useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import EventEndpoints from '../../../../api/EventEndpoints';
+import AddressAutocomplete from '../../../../components/AddressAutocomplete';
 import Button from '../../../../components/Button';
 import Error from '../../../../components/Error';
+import EventMapView from '../../../../components/EventMapView';
 import ImagePickerSheet from '../../../../components/ImagePickerSheet';
 import Input from '../../../../components/Input';
 import LinkText from '../../../../components/LinkText';
@@ -15,6 +17,11 @@ import Tag from '../../../../components/Tap';
 import TopContainer from '../../../../components/TopContainer';
 import { useEventForm } from '../../../../contexts/EventFormContext';
 import * as GlobalStyles from '../../../../GlobalStyle';
+
+const SEVILLE_CENTER = {
+    latitude: 37.3891,
+    longitude: -5.9845,
+};
 
 const schema = Yup.object({
     eventType: Yup.string()
@@ -43,23 +50,27 @@ const schema = Yup.object({
             return endMinutes > initMinutes;
         }),
     name: Yup.string()
-        .when('eventType', {
-            is: 'performances',
-            then: (schema) => schema.required('El nombre de la actuación es requerido').min(1, 'El nombre no puede estar vacío'),
-            otherwise: (schema) => schema.notRequired()
-        }),
+        .required('El nombre del evento es requerido')
+        .min(1, 'El nombre no puede estar vacío'),
     type: Yup.string()
         .when('eventType', {
             is: 'performances',
             then: (schema) => schema.required('El tipo de actuación es requerido').min(1, 'El tipo no puede estar vacío'),
             otherwise: (schema) => schema.notRequired()
         }),
-    place: Yup.string()
-        .when('eventType', {
-            is: 'performances',
-            then: (schema) => schema.required('El lugar de la actuación es requerido').min(1, 'El lugar no puede estar vacío'),
-            otherwise: (schema) => schema.notRequired()
-        }),
+    location: Yup.string()
+        .required('La ubicación del evento es requerida')
+        .min(1, 'La ubicación no puede estar vacía'),
+    latitude: Yup.number()
+        .required('Selecciona una ubicación del mapa')
+        .min(-90, 'Latitud inválida')
+        .max(90, 'Latitud inválida')
+        .typeError('Selecciona una ubicación válida'),
+    longitude: Yup.number()
+        .required('Selecciona una ubicación del mapa')
+        .min(-180, 'Longitud inválida')
+        .max(180, 'Longitud inválida')
+        .typeError('Selecciona una ubicación válida'),
     comment: Yup.string().nullable().optional(),
     picture: Yup.mixed().nullable().optional(),
     instruments: Yup.array().of(Yup.number().positive().integer()).optional(),
@@ -77,6 +88,7 @@ const EventFormScreen = ({ route }) => {
     const navigation = useNavigation();
 
     const imageSheetRef = useRef(null);
+    const reverseGeocodeRequestRef = useRef(0);
 
     // Reset context and initialize form when screen is focused
     useFocusEffect(
@@ -96,9 +108,11 @@ const EventFormScreen = ({ route }) => {
                         date: event.date || '',
                         initialTime: event.initialTime?.substring(0, 5) || '',
                         endTime: event.endTime?.substring(0, 5) || '',
-                        name: event.Performance?.name || '',
+                        name: event.name || event.Performance?.name || '',
                         type: event.Performance?.type || '',
-                        place: event.Performance?.place || '',
+                        location: event.location || '',
+                        latitude: event.latitude || null,
+                        longitude: event.longitude || null,
                         comment: event.Performance?.comment || '',
                         picture: event.Performance?.picture || null,
                         instruments: eventInstrumentIds
@@ -126,9 +140,15 @@ const EventFormScreen = ({ route }) => {
             date: (eventFormData.eventId === (event?.id || null)) ? eventFormData.date : (event?.date || ''),
             initialTime: (eventFormData.eventId === (event?.id || null)) ? eventFormData.initialTime : (event?.initialTime?.substring(0, 5) || ''),
             endTime: (eventFormData.eventId === (event?.id || null)) ? eventFormData.endTime : (event?.endTime?.substring(0, 5) || ''),
-            name: (eventFormData.eventId === (event?.id || null)) ? eventFormData.name : (event?.Performance?.name || ''),
+            name: (eventFormData.eventId === (event?.id || null)) ? eventFormData.name : (event?.name || event?.Performance?.name || ''),
             type: (eventFormData.eventId === (event?.id || null)) ? eventFormData.type : (event?.Performance?.type || ''),
-            place: (eventFormData.eventId === (event?.id || null)) ? eventFormData.place : (event?.Performance?.place || ''),
+            location: (eventFormData.eventId === (event?.id || null)) ? eventFormData.location : (event?.location || ''),
+            latitude: (eventFormData.eventId === (event?.id || null))
+                ? (eventFormData.latitude ?? SEVILLE_CENTER.latitude)
+                : (event?.latitude ?? SEVILLE_CENTER.latitude),
+            longitude: (eventFormData.eventId === (event?.id || null))
+                ? (eventFormData.longitude ?? SEVILLE_CENTER.longitude)
+                : (event?.longitude ?? SEVILLE_CENTER.longitude),
             comment: (eventFormData.eventId === (event?.id || null)) ? eventFormData.comment : (event?.Performance?.comment || ''),
             picture: (eventFormData.eventId === (event?.id || null)) ? eventFormData.picture : (event?.Performance?.picture || null),
             instruments: (eventFormData.eventId === (event?.id || null)) ? eventFormData.instruments : (event?.instrumentsAttended?.map(i => i.id) || []),
@@ -204,6 +224,68 @@ const EventFormScreen = ({ route }) => {
         formik.setFieldValue('eventType', type);
     }
 
+    const parseCoordinate = (value) => {
+        const parsed = Number.parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const mapLatitude = parseCoordinate(formik.values.latitude) ?? SEVILLE_CENTER.latitude;
+    const mapLongitude = parseCoordinate(formik.values.longitude) ?? SEVILLE_CENTER.longitude;
+
+    const buildAddressFromPhoton = (properties = {}) => {
+        const city = properties.city || properties.town || properties.village || properties.county || '';
+        const street = [properties.street, properties.housenumber].filter(Boolean).join(' ').trim();
+
+        const normalizedCity = city.toLowerCase();
+        const normalizedStreet = street.toLowerCase();
+        const normalizedName = (properties.name || '').toLowerCase();
+
+        // Keep landmark/place names when they add value (e.g. plaza, auditorium),
+        // but avoid duplicating city or street text.
+        const placeName = properties.name &&
+            normalizedName !== normalizedCity &&
+            normalizedName !== normalizedStreet
+            ? properties.name
+            : '';
+
+        const parts = [placeName, street, city].filter(Boolean);
+        return parts.join(', ');
+    };
+
+    const handleMapCoordinateChange = async ({ latitude, longitude }) => {
+        formik.setFieldValue('latitude', latitude);
+        formik.setFieldValue('longitude', longitude);
+
+        const requestId = Date.now();
+        reverseGeocodeRequestRef.current = requestId;
+
+        try {
+            const response = await fetch(
+                `https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}`,
+            );
+            const data = await response.json();
+
+            if (reverseGeocodeRequestRef.current !== requestId) {
+                return;
+            }
+
+            const firstMatch = data?.features?.[0];
+            const resolvedAddress = buildAddressFromPhoton(firstMatch?.properties);
+
+            if (resolvedAddress) {
+                formik.setFieldValue('location', resolvedAddress);
+            } else {
+                formik.setFieldValue('location', `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+            }
+        } catch (error) {
+            if (reverseGeocodeRequestRef.current !== requestId) {
+                return;
+            }
+
+            formik.setFieldValue('location', `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        }
+    };
+
     // Show delete confirmation modal
     const handleDeleteEvent = () => {
         setShowDeleteModal(true);
@@ -232,36 +314,51 @@ const EventFormScreen = ({ route }) => {
                         {!event?.Performance && <Tag selected={eventType === 'rehearsals'} onPress={() => handleEventTypeChange('rehearsals')}>Ensayo</Tag>}
                     </View>
                     <View style={styles.formContainer}>
-                        {/* PERFORMANCE NAME */}
-                        {eventType === 'performances' &&
-                            <View style={styles.inputContainer}>
-                                <Input
-                                    label="Nombre de la actuación"
-                                    placeholder="Ej. Concierto de Primavera"
-                                    value={formik.values.name}
-                                    onChangeText={formik.handleChange('name')} />
-                                <Error name="name" formik={formik} />
-                            </View>}
+                        {/* EVENT NAME */}
+                        <View style={styles.inputContainer}>
+                            <Input
+                                label={eventType === 'performances' ? "Nombre de la actuación" : "Nombre del evento"}
+                                placeholder={eventType === 'performances' ? "Ej. Concierto de Primavera" : "Ej. Ensayo General"}
+                                value={formik.values.name}
+                                onChangeText={formik.handleChange('name')} />
+                            <Error name="name" formik={formik} />
+                        </View>
                         {/* PERFORMANCE TYPE */}
                         {eventType === 'performances' &&
                             <View style={styles.inputContainer}>
                                 <Input
                                     label="Tipo de actuación"
-                                    placeholder="Ej. Concierto de Primavera"
+                                    placeholder="Ej. Concierto, Festival, etc."
                                     value={formik.values.type}
                                     onChangeText={formik.handleChange('type')} />
                                 <Error name="type" formik={formik} />
                             </View>}
-                        {/* PERFORMANCE PLACE */}
-                        {eventType === 'performances' &&
-                            <View style={styles.inputContainer}>
-                                <Input
-                                    label="Lugar"
-                                    placeholder="Calle, ciudad o local"
-                                    value={formik.values.place}
-                                    onChangeText={formik.handleChange('place')} />
-                                <Error name="place" formik={formik} />
-                            </View>}
+                        {/* EVENT LOCATION */}
+                        <View style={styles.inputContainer}>
+                            <AddressAutocomplete
+                                label="Ubicación"
+                                placeholder="Buscar dirección, calle o plaza"
+                                initialValue={formik.values.location}
+                                onAddressSelect={({ location, latitude, longitude }) => {
+                                    formik.setFieldValue('location', location);
+                                    formik.setFieldValue('latitude', latitude);
+                                    formik.setFieldValue('longitude', longitude);
+                                }}
+                            />
+                            <Error name="location" formik={formik} />
+                            <Error name="latitude" formik={formik} />
+                            <Error name="longitude" formik={formik} />
+                            <Text style={styles.mapHelperText}>Pulsa o arrastra el marcador para fijar la ubicacion exacta.</Text>
+                            <EventMapView
+                                latitude={mapLatitude}
+                                longitude={mapLongitude}
+                                location={formik.values.location || 'Ubicacion del evento'}
+                                interactive={true}
+                                mapHeight={220}
+                                zoomDelta={0.003}
+                                onCoordinateChange={handleMapCoordinateChange}
+                            />
+                        </View>
                         {/* EVENT DATE */}
                         <View style={styles.inputContainer}>
                             <Input
@@ -442,6 +539,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'Oswald_500',
         marginBottom: 2
+    },
+    mapHelperText: {
+        fontSize: 12,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyles.darkGray,
+        marginTop: 4,
+        marginBottom: 8,
     },
     selectImageButton: {
         paddingVertical: 16,

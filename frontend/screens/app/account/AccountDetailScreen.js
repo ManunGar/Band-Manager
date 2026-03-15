@@ -6,7 +6,6 @@ import bandDefaultImage from '../../../assets/milestones/band_default.png'
 import profileDefault from '../../../assets/milestones/profile_default.png'
 import LocationIcon from '../../../components/icons/LocationIcon'
 import PhoneIcon from '../../../components/icons/PhoneIcon'
-import StarIcon from '../../../components/icons/StarIcon'
 import ImagePickerSheet from '../../../components/ImagePickerSheet'
 import InstrumentLevel from '../../../components/InstrumentLevel'
 import LinkText from '../../../components/LinkText'
@@ -19,7 +18,7 @@ const { width: SCREENW } = Dimensions.get('window')
 
 const AccountDetailScreen = () => {
     const [musician, setMusician] = useState(null)
-    const { logout, editProfilePicture, deleteProfilePicture  } = useContext(AuthContext)
+    const { logout, editMusician  } = useContext(AuthContext)
     const sheetRef = useRef(null)
     const navigation = useNavigation()
 
@@ -61,7 +60,7 @@ const AccountDetailScreen = () => {
                 name: `avatar_${Date.now()}.jpg`,
                 type: 'image/jpeg',
             });
-            await editProfilePicture(form);
+            await editMusician(form);
             await fetchAccountDetails();
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -70,7 +69,9 @@ const AccountDetailScreen = () => {
 
     const handleImageRemoved = async () => {
         try {
-            await deleteProfilePicture();
+            const form = new FormData();
+            form.append('delete_profile_picture', true);
+            await editMusician(form);
             await fetchAccountDetails();
         } catch (error) {
             console.error('Error deleting image:', error);
@@ -98,17 +99,17 @@ const AccountDetailScreen = () => {
                 <View style={{ width: SCREENW - 60, marginTop: 15 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={styles.profileName}>{musician?.full_name}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        {/* <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                             <StarIcon />
                             <Text style={styles.infoText}>{musician?.rating || "__.___"}</Text>
-                        </View>
+                        </View> */}
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 5 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '60%' }}>
                             <LocationIcon />
-                            <Text style={styles.infoText}>{musician?.location || "Desconocida"}</Text>
+                            <Text style={styles.infoText} numberOfLines={1} ellipsizeMode="tail">{musician?.location || "Desconocida"}</Text>
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                             <PhoneIcon />
                             <Text style={styles.infoText}>{musician?.phone || "Desconocida"}</Text>
                         </View>
@@ -126,13 +127,18 @@ const AccountDetailScreen = () => {
                         keyExtractor={(item) => item.id.toString()}
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        renderItem={({ item }) => (
-                            <Image
+                        ListEmptyComponent={() => (
+                            <View style={{ width: SCREENW - 60, paddingInline: 20 }}>
+                                <Text style={{ textAlign: 'center', fontFamily: 'Oswald_300', fontSize: 16, color: GlobalStyle.gray }}>No formas parte de ninguna banda. Sé el primer en crearla o unirte a una.</Text>
+                            </View>
+                        )}
+                        renderItem={({ item }) => {
+                            return <Image
                                 key={item.id}
                                 source={item?.band.profile_picture ? { uri: item.band.profile_picture } : bandDefaultImage}
                                 style={styles.bandPicture}
-                            />
-                        )}
+                            />;
+                        }}
                     />
                 </View>
                 <View>
@@ -140,17 +146,21 @@ const AccountDetailScreen = () => {
                         <Text style={styles.subTitle}>Instrumentos:</Text>
                         <LinkText onPress={goToInstruments}>Editar Instrumento</LinkText>
                     </View>
-                    {(musician?.musician.instruments || []).map((instrument, i) => (
-                        <View key={i}>
-                            <InstrumentLevel
-                                instrument={instrument}
-                            />
-                            <View style={{
-                                marginVertical: 10
-                            }}>
+                    <FlatList
+                        data={musician?.musician.instruments || []}
+                        keyExtractor={(item, index) => index.toString()}
+                        scrollEnabled={false}
+                        ListEmptyComponent={() => (
+                            <View>
+                                <Text style={{ textAlign: 'center', fontFamily: 'Oswald_300', fontSize: 16, color: GlobalStyle.gray }}>No tienes ningún instrumento asignado.</Text>
                             </View>
-                        </View>
-                    ))}
+                        )}
+                        renderItem={({ item }) => (
+                            <View style={{ marginBottom: 10 }}>
+                                <InstrumentLevel instrument={item} />
+                            </View>
+                        )}
+                    />
                 </View>
             </View>
             {/* Image Picker component */}

@@ -2,20 +2,26 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment/moment';
-import { useContext, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useContext, useRef, useState } from 'react';
+import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import * as GlobalStyle from '../../GlobalStyle';
 import Button from '../../components/Button';
+import ImagePickerSheet from '../../components/ImagePickerSheet';
 import Input from '../../components/Input';
+import LinkText from '../../components/LinkText';
+import LocationAutocomplete from '../../components/LocationAutocomplete';
 import BandManagerIcon from '../../components/icons/BandManager';
 import { AuthContext } from '../../contexts/AuthContext';
 import LoadingScreen from './LoadingScreen';
 
 // ====== Schemas by steps ======
 const stepSchemas = [
-    // 0 - User credentials
+    // 0 - Información básica
     Yup.object({
+        full_name: Yup.string()
+            .min(3, 'El nombre completo debe tener al menos 3 caracteres')
+            .required('El nombre completo es requerido'),
         email: Yup.string().email('El correo electrónico no es válido').required('El correo electrónico es requerido'),
         username: Yup.string().trim()
             .matches(/^[a-zA-Z0-9_.-]+$/, 'Introduce solo letras y números')
@@ -32,18 +38,12 @@ const stepSchemas = [
             .oneOf([Yup.ref('password'), null], 'Las contraseñas no coinciden')
             .required('La confirmación de la contraseña es requerida'),
     }),
-    // 1 - Personal info
+    // 1 - Información adicional
     Yup.object({
-        full_name: Yup.string()
-            .min(3, 'El nombre completo debe tener al menos 3 caracteres')
-            .required('El nombre completo es requerido'),
         birthday: Yup.date("Fecha no válida")
             .max(new Date(), 'La fecha de nacimiento no puede ser en el futuro')
             .required('La fecha de nacimiento es requerida'),
         location: Yup.string().required('La ubicación es requerida'),
-    }),
-    // 2 - Contact info
-    Yup.object({
         phone: Yup.string()
             .matches(/^\+?\d{6,15}$/, 'Teléfono no válido')
             .required('El teléfono es requerido'),
@@ -57,33 +57,51 @@ const RegisterScreen = () => {
     const { register, isLoading } = useContext(AuthContext);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [step, setStep] = useState(0);
+    const [imagePreview, setImagePreview] = useState(null);
+    const imageSheetRef = useRef(null);
 
     // Formik setup
     const formik = useFormik({
         initialValues: {
             // Step 0
-            email: '', username: '', password: '', confirmPassword: '',
+            full_name: '', email: '', username: '', password: '', confirmPassword: '',
             // Step 1
-            full_name: '', birthday: '', location: '',
-            // Step 2
-            phone: '', 
+            birthday: '', location: '', longitude: '', latitude: '', phone: '',
+            profile_picture: null,
         },
         validationSchema: stepSchemas[step],
         validateOnChange: false,
         validateOnBlur: true,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                const payload = {
-                    full_name: values.full_name,
-                    username: values.username,
-                    email: values.email,
-                    password: values.password,
-                    repeatPassword: values.confirmPassword,
-                    phone: values.phone,
-                    location: values.location,
-                    birthday: values.birthday,
-                };
-                await register(payload);
+                // Validar que si hay ubicación, también haya coordenadas
+                if (values.location && (!values.latitude || !values.longitude)) {
+                    Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
+                    setSubmitting(false);
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('full_name', values.full_name);
+                formData.append('username', values.username);
+                formData.append('email', values.email);
+                formData.append('password', values.password);
+                formData.append('repeatPassword', values.confirmPassword);
+                formData.append('phone', values.phone);
+                formData.append('location', values.location);
+                formData.append('birthday', values.birthday);
+                formData.append('longitude', values.longitude || 0);
+                formData.append('latitude', values.latitude || 0);
+                
+                if (imagePreview) {
+                    formData.append('profile_picture', {
+                        uri: imagePreview,
+                        name: `profile_${Date.now()}.jpg`,
+                        type: 'image/jpeg',
+                    });
+                }
+                
+                await register(formData);
             } catch (err) {
                 console.error("Registration error:", err);
                 Alert.alert('Error', err.message || 'No se pudo registrar el usuario');
@@ -92,6 +110,25 @@ const RegisterScreen = () => {
             }
         },
     });
+
+    // Handle location selection from LocationAutocomplete component
+    const handleLocationChange = (data) => {
+        formik.setFieldValue('location', data.location);
+        formik.setFieldValue('latitude', data.latitude || '');
+        formik.setFieldValue('longitude', data.longitude || '');
+    };
+
+    // Handle image selection
+    const handleImageSelected = (imageUri) => {
+        setImagePreview(imageUri);
+        formik.setFieldValue('profile_picture', imageUri);
+    };
+
+    // Handle removing the selected image
+    const handleImageRemoved = () => {
+        setImagePreview(null);
+        formik.setFieldValue('profile_picture', null);
+    };
 
     // Transform date to ISO format yyyy-mm-dd without offset
     const setBirthday = (date) => {
@@ -106,6 +143,12 @@ const RegisterScreen = () => {
 
     // Step navigation with validation of the current step
     const next = async () => {
+        // Si estamos en el paso 1 (Additional Info) y hay ubicación pero no coordenadas, mostrar error
+        if (step === 1 && formik.values.location && (!formik.values.latitude || !formik.values.longitude)) {
+            Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
+            return;
+        }
+        
         const errors = await formik.validateForm();
         // We only move forward if there are no errors in the current scheme
         if (Object.keys(errors).length === 0) {
@@ -147,9 +190,17 @@ const RegisterScreen = () => {
 
 
                 <View style={styles.container}>
-                    {step === 0 && <StepAccount formik={formik} />}
-                    {step === 1 && <StepPersonal formik={formik} showDatePicker={showDatePicker} setShowDatePicker={setShowDatePicker} setBirthday={setBirthday} formatDate={formatDate} />}
-                    {step === 2 && <StepContact formik={formik} />}
+                    {step === 0 && <StepBasicInfo formik={formik} />}
+                    {step === 1 && <StepAdditionalInfo 
+                        formik={formik} 
+                        showDatePicker={showDatePicker} 
+                        setShowDatePicker={setShowDatePicker} 
+                        setBirthday={setBirthday} 
+                        formatDate={formatDate}
+                        handleLocationChange={handleLocationChange}
+                        imagePreview={imagePreview}
+                        imageSheetRef={imageSheetRef}
+                    />}
                 </View>
 
 
@@ -166,17 +217,35 @@ const RegisterScreen = () => {
                 </View>
 
             </ScrollView>
+            
+            {/* Image Picker component */}
+            <ImagePickerSheet
+                sheetRef={imageSheetRef}
+                imagePreview={imagePreview}
+                onImageSelected={handleImageSelected}
+                onImageRemoved={handleImageRemoved}
+            />
         </KeyboardAvoidingView>
     )
 }
 
 // ===== Step components ======
 
-const StepAccount = ({ formik }) => (
+const StepBasicInfo = ({ formik }) => (
     <>
         <Text style={styles.stepText}>
-            {"¡Bienvenido!\n Por favor, ingresa sus datos para crear una cuenta de inicio de sesión."}
+            {"¡Bienvenido!\nPor favor, ingresa tus datos para crear una cuenta."}
         </Text>
+        <Field>
+            <Input
+                label="Nombre completo"
+                value={formik.values.full_name}
+                placeholder={"Introduce nombres y apellidos"}
+                onChangeText={formik.handleChange('full_name')}
+                autoCapitalize="words"
+            />
+            <Error name="full_name" formik={formik} />
+        </Field>
         <Field>
             <Input
                 label="Correo electrónico"
@@ -217,31 +286,41 @@ const StepAccount = ({ formik }) => (
             <Error name="confirmPassword" formik={formik} />
         </Field>
         <Text style={{ color: GlobalStyle.gray, fontSize: 12, fontFamily: 'Oswald_400' }}>
-            {"¡La seguridad es importante para nosotros!. \n" +
+            {"¡La seguridad es importante para nosotros!\n" +
                 "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número."}
         </Text>
     </>
 )
 
-const StepPersonal = ({ formik, showDatePicker, setShowDatePicker, setBirthday, formatDate }) => (
+const StepAdditionalInfo = ({ formik, showDatePicker, setShowDatePicker, setBirthday, formatDate, handleLocationChange, imagePreview, imageSheetRef }) => (
     <>
         <Text style={styles.stepText}>
-            {"¡Casi terminamos!\n Ahora, cuéntanos un poco sobre ti. Esto ayudará también a otros músicos a poder identificarte."}
+            {"Casi terminamos"}
         </Text>
-        <Field>
-            <Input
-                label="Nombre completo"
-                value={formik.values.full_name}
-                placeholder={"Introduce nombres y apellidos"}
-                onChangeText={formik.handleChange('full_name')}
-            />
-            <Error name="full_name" formik={formik} />
-        </Field>
+        
+        {/* Profile Picture Selector */}
+        <View style={{ marginBottom: 40, alignItems: 'center' }}>
+            <Text style={styles.label}>Foto de perfil (opcional)</Text>
+            {imagePreview ? (
+                <View style={styles.imagePreviewContainer}>
+                    <Image source={{ uri: imagePreview }} style={styles.imagePreview} />
+                    <LinkText onPress={() => imageSheetRef.current?.present()}>Cambiar Imagen</LinkText>
+                </View>
+            ) : (
+                <TouchableOpacity
+                    style={styles.selectImageButton}
+                    onPress={() => imageSheetRef.current?.present()}
+                >
+                    <Text style={styles.selectImageText}>Seleccionar imagen</Text>
+                </TouchableOpacity>
+            )}
+        </View>
+
         <Field>
             <Input
                 label="Fecha de nacimiento"
                 value={formatDate(formik.values.birthday)}
-                placeholder={"Introduce su fecha de nacimiento"}
+                placeholder={"Introduce tu fecha de nacimiento"}
                 onChangeText={formik.handleChange('birthday')}
                 onPress={() => setShowDatePicker(true)}
                 textContentType={'datetime'}
@@ -260,29 +339,21 @@ const StepPersonal = ({ formik, showDatePicker, setShowDatePicker, setBirthday, 
                 />
             )}
         </Field>
+        
         <Field>
-            <Input
-                label="Ubicación"
-                value={formik.values.location}
-                placeholder={"Ciudad, Localidad, Pueblo..."}
-                onChangeText={formik.handleChange('location')}
+            <LocationAutocomplete
+                initialValue={formik.values.location}
+                onLocationSelect={handleLocationChange}
             />
             <Error name="location" formik={formik} />
         </Field>
-    </>
-)
 
-const StepContact = ({ formik }) => (
-    <>
-        <Text style={styles.stepText}>
-            {"¡Último paso!\n Necesitamos algunos datos de contacto para que otros músicos puedan encontrarte y ponerse en contacto contigo fácilmente."}
-        </Text>
         <Field>
             <Input
                 label="Teléfono"
                 value={formik.values.phone}
                 placeholder={"Introduce tu número de teléfono"}
-                onChangeText={formik.handleChange('phone')}
+                onChangeText={(text) => formik.setFieldValue('phone', text.replace(/\s/g, ''))}
                 keyboardType={'numeric'}
             />
             <Error name="phone" formik={formik} />
@@ -353,5 +424,41 @@ const styles = StyleSheet.create({
         color: GlobalStyle.red,
         fontFamily: 'Oswald_500',
         fontSize: 14,
-    }
+    },
+    label: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyle.black,
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    imagePreviewContainer: {
+        alignItems: 'center',
+        gap: 10,
+    },
+    imagePreview: {
+        width: 128,
+        height: 128,
+        borderRadius: 10,
+        backgroundColor: GlobalStyle.white,
+    },
+    selectImageButton: {
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        backgroundColor: '#f1eade',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 128,
+        height: 128,
+        borderWidth: 2,
+        borderColor: GlobalStyle.yellow,
+        borderStyle: 'dashed',
+    },
+    selectImageText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.yellow,
+        textAlign: 'center',
+    },
 });

@@ -247,6 +247,7 @@ const updateBand = async (req, res) => {
         }
         
         await band.update(req.body);
+        await band.update({ profile_picture: updatedProfilePicture });
         res.status(200).send({ message: 'Band updated successfully', band });
     } catch (error) {
         console.error('Error updating band:', error);
@@ -277,15 +278,18 @@ const addEventToBand = async (req, res) => {
     const transaction = await Band.sequelize.transaction();
     try {
         const event = await Event.create({
+            name: req.body.name,
             date: req.body.date,
             initialTime: req.body.initialTime,
             endTime: req.body.endTime,
+            location: req.body.location,
+            latitude: req.body.latitude,
+            longitude: req.body.longitude,
             bandId: bandId
         }, { transaction });
         if (eventType === 'performances') {
             await Performance.create({
                 name: req.body.name,
-                place: req.body.place,
                 comment: req.body.comment,
                 type: req.body.type,
                 eventId: event.id

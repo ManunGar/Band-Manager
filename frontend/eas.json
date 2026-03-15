@@ -5,12 +5,13 @@
   },
   "build": {
     "development": {
+      "developmentClient": true,
       "distribution": "internal",
       "android": {
         "buildType": "apk"
       },
       "ios": {
-        "buildType": "simulator"
+        "simulator": true
       }
     },
     "preview": {
@@ -19,7 +20,7 @@
         "buildType": "apk"
       },
       "ios": {
-        "buildType": "release"
+        "simulator": false
       }
     },
     "production": {
@@ -28,7 +29,7 @@
         "buildType": "apk"
       },
       "ios": {
-        "buildType": "release"
+        "simulator": false
       }
     }
   },

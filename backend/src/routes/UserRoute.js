@@ -1,6 +1,6 @@
 import UserController from '../controllers/UserController.js'
 import { isLoggedIn } from '../middleware/AuthMiddleware.js'
-import { handleFilesUpload } from '../middleware/FileHandlerMiddleware.js'
+import { handleFilesUpload, parseBooleanFields, parseFloatFields } from '../middleware/FileHandlerMiddleware.js'
 import { handleValidation } from '../validations/HandleValidation.js'
 import * as UserValidation from '../validations/UserValidation.js'
 
@@ -14,6 +14,8 @@ const loadFileRoutes = function (app) {
     // Musician registration route
     app.route('/register/musician')
         .post(
+            handleFilesUpload('profile_picture', process.env.PROFILE_PICTURE_FOLDER),
+            parseFloatFields('latitude', 'longitude'),
             UserValidation.register,
             handleValidation,
             UserController.registerMusician
@@ -29,24 +31,20 @@ const loadFileRoutes = function (app) {
     app.route('/user/edit')
         .put(
             isLoggedIn,
+            handleFilesUpload('profile_picture', process.env.PROFILE_PICTURE_FOLDER),
+            parseBooleanFields('delete_profile_picture'),
+            parseFloatFields('latitude', 'longitude'),
             UserValidation.update,
             handleValidation,
             UserController.editUserDetails
         )
-    // Edit profile picture route
-    app.route('/user/edit/profile-picture')
+    // Change Password route
+    app.route('/user/change-password')
         .put(
             isLoggedIn,
-            handleFilesUpload('profile_picture', process.env.PROFILE_PICTURE_FOLDER),
-            UserValidation.updateProfilePicture,
+            UserValidation.changePassword,
             handleValidation,
-            UserController.editProfilePicture
-        )
-    // Delete profile picture route
-    app.route('/user/delete/profile-picture')
-        .put(
-            isLoggedIn,
-            UserController.deleteProfilePicture
+            UserController.changePassword
         )
 }
 

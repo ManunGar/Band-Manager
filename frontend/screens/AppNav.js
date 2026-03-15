@@ -26,7 +26,6 @@ const AppNav = () => {
         setTimeout(() => {
             setIsReady(true);
         }, 2000);
-        console.log('AppNav user:', user);
     }
 
     useEffect(() => {

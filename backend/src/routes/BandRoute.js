@@ -1,7 +1,7 @@
 import BandController from "../controllers/BandController.js"
 import { isLoggedIn } from "../middleware/AuthMiddleware.js"
 import { isBandAdmin, isBandMember, isNotBandMember } from "../middleware/BandMiddleware.js"
-import { handleFilesUpload, parseBooleanFields, parseJSONFields } from "../middleware/FileHandlerMiddleware.js"
+import { handleFilesUpload, parseBooleanFields, parseFloatFields, parseJSONFields } from "../middleware/FileHandlerMiddleware.js"
 import * as BandValidation from "../validations/BandValidation.js"
 import { handleValidation } from '../validations/HandleValidation.js'
 
@@ -66,6 +66,7 @@ const loadFileRoutes = function (app) {
             isLoggedIn,
             isBandAdmin, // Ensure the user is an admin of the band
             handleFilesUpload('picture', process.env.PERFORMANCE_PICTURE_FOLDER),
+            parseFloatFields('latitude', 'longitude'),
             parseJSONFields('instruments'),
             BandValidation.addEvent,
             handleValidation,

@@ -17,15 +17,16 @@ const AccountEditScreen = () => {
     return (
         <ScrollView>
             <TopContainer
-                title="Editar Cuenta"
+                title="Editar Perfil"
                 editEnabled={false}
                 style={{ marginBottom: 10 }} />
             <View style={styles.form}>
-                <FormRow label="nombre completo" value={user.full_name} schema="full_name" />
-                <FormRow label="correo electrónico" value={user.email} keyboardType="email-address" schema="email" />
-                <FormRow label="teléfono" value={user.phone} keyboardType="numeric" schema="phone" />
-                <FormRow label="fecha de nacimiento" value={formatDate(user.birthday)} keyboardType="datetime" schema="birthday"/>
-                <FormRow label="nombre de usuario" value={user.username} schema="username" />
+                <FormRow label="Nombre completo" value={user.full_name} schema="full_name" />
+                <FormRow label="Correo electrónico" value={user.email} keyboardType="email-address" schema="email" />
+                <FormRow label="Teléfono" value={user.phone} keyboardType="numeric" schema="phone" />
+                <FormRow label="Fecha de nacimiento" value={formatDate(user.birthday)} keyboardType="datetime" schema="birthday"/>
+                <FormRow label="Ubicación" value={user.location} schema="location" />
+                <FormRow label="Nombre de usuario" value={user.username} schema="username" />
             </View>
         </ScrollView>
     )
@@ -35,13 +36,13 @@ const FormRow = ({label, value, alt, keyboardType, schema}) => {
     const navigation = useNavigation();
 
     return (
-        <TouchableOpacity style={styles.formRow} onPress={() => navigation.navigate('InfoEdit', {label, value, keyboardType, schema})}>
-            <Text style={{ fontFamily: 'Oswald_500', fontSize: 16, textTransform: 'capitalize', flex: 1 }}>
+        <TouchableOpacity style={styles.formRow} onPress={() => navigation.navigate('AccountForm', {label, value, keyboardType, schema})}>
+            <Text style={{ fontFamily: 'Oswald_500', fontSize: 16, flex: 1, maxWidth: '45%' }}>
                 {label}
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, alignContent: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, alignContent: 'center', maxWidth: '55%' }}>
                 <Text style={{ fontFamily: 'Oswald_400', fontSize: 14, 
-                        color: value ? GlobalStyle.black : GlobalStyle.darkGray }}>
+                        color: value ? GlobalStyle.black : GlobalStyle.darkGray, maxWidth: '85%' }} numberOfLines={1} ellipsizeMode="tail">
                     {value || alt || 'No especificado'}
                 </Text>
                 <BackIcon

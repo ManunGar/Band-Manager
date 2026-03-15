@@ -1,10 +1,11 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import BandEndpoints from '../../../api/BandEndpoints'
 import Band from '../../../components/Band'
 import BottomSheet from '../../../components/BottomSheet'
 import Input from '../../../components/Input'
+import LinkText from '../../../components/LinkText'
 import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyles from '../../../GlobalStyle'
@@ -13,11 +14,12 @@ const BandsScreen = () => {
     const [bands, setBands] = useState([])
     const [uploading, setUploading] = useState(false);
     const [code, setCode] = useState('')
-    const [visible, setVisible] = useState(false)
     const navigation = useNavigation()
     const sheetRef = useRef(null)
+    const codeSheetRef = useRef(null)
     const {user} = useContext(AuthContext);
     const snapPoints = useMemo(() => ['70%'], [])
+    const codeSnapPoints = useMemo(() => ['35%'], [])
 
     useFocusEffect(
         useCallback(() => {
@@ -38,7 +40,7 @@ const BandsScreen = () => {
     const findBandByCode = async () => {
         try {
             const band = await BandEndpoints.findBandByCode(code);
-            setVisible(false);
+            closeCodeSheet();
             setCode('');
             if (band?.components?.some(component => component.musicianId === user.musician?.id)) {
                 navigation.navigate('BandDetails', { band });
@@ -46,7 +48,8 @@ const BandsScreen = () => {
                 navigation.navigate('BandInstruments', { band });
             }
         } catch (error) {
-            Alert.alert('Error', 'No se encontró ninguna banda con ese código.');
+            const errorMessage = error?.message || 'No se encontró ninguna banda con ese código.';
+            Alert.alert('Error', errorMessage);
             return null;
         }
     }
@@ -57,6 +60,14 @@ const BandsScreen = () => {
 
     const closeSheet = () => {
         sheetRef.current?.dismiss();
+    }
+
+    const openCodeSheet = () => {
+        codeSheetRef.current?.present();
+    }
+
+    const closeCodeSheet = () => {
+        codeSheetRef.current?.dismiss();
     }
 
     return (
@@ -77,7 +88,9 @@ const BandsScreen = () => {
                     <Band band={item} />
                 )}
                 ItemSeparatorComponent={() => <View style={{ paddingTop: 12 }}></View>}
-                ListEmptyComponent={<Text style={styles.noBandsText}>No perteneces a ninguna banda</Text>}
+                ListEmptyComponent={
+                    <Text style={styles.noBandsText}> {`No perteneces a ninguna banda.\n`} <LinkText onPress={openSheet}>Crea una nueva <Text style={{color: GlobalStyles.gray }}>o</Text> Únete a una</LinkText></Text>
+                }
                 contentContainerStyle={{ paddingBottom: 150 }}
             />
             {/* BOTTOM SHEET MODAL */}
@@ -86,7 +99,7 @@ const BandsScreen = () => {
                     disabled={uploading}
                     onPress={() => {
                         closeSheet();
-                        setVisible(true);
+                        openCodeSheet();
                     }}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center', marginTop: 6, opacity: uploading ? 0.6 : 1 }}
                 >
@@ -110,37 +123,30 @@ const BandsScreen = () => {
                     <Text style={{ fontWeight: '600', color: '#111827' }}>Cancelar</Text>
                 </TouchableOpacity>
             </BottomSheet>
-            {/* MODAL */}
-            <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={() => { setVisible(false), setCode('') }}>
-                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-                    <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ backgroundColor: GlobalStyles.white, padding: 25, paddingInline: 40, borderRadius: 10, width: '85%' }}>
-                        <Input
-                            placeholder="Introduce el código de la banda"
-                            value={code}
-                            onChangeText={setCode}
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginTop: 20, gap: 10 }}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    findBandByCode();
-                                }}
-                                style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: GlobalStyles.yellow, borderRadius: 5 }}
-                            >
-                                <Text style={{ fontWeight: '600', color: '#111827' }}>Unirse</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setVisible(false);
-                                    setCode('');
-                                }}
-                                style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: '#e5e7eb', borderRadius: 5 }}
-                            >
-                                <Text style={{ fontWeight: '600', color: '#111827' }}>Cancelar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </KeyboardAvoidingView>
-                </View>
-            </Modal>
+            {/* BOTTOM SHEET MODAL TO JOIN BAND */}
+            <BottomSheet sheetRef={codeSheetRef} snapPoints={codeSnapPoints} style={{ gap: 10 }}>
+                <Input
+                    placeholder="Introduce el código de la banda"
+                    value={code}
+                    onChangeText={setCode}
+                    label={'Utiliza el código proporcionado por tu banda'}
+                />
+                <TouchableOpacity
+                    onPress={findBandByCode}
+                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: `${GlobalStyles.yellow}a9`, alignItems: 'center', marginTop: 6 }}
+                >
+                    <Text style={{ fontWeight: '600', color: '#111827' }}>Unirse</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => {
+                        closeCodeSheet();
+                        setCode('');
+                    }}
+                    style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#e5e7eb', alignItems: 'center' }}
+                >
+                    <Text style={{ fontWeight: '600', color: '#111827' }}>Cancelar</Text>
+                </TouchableOpacity>
+            </BottomSheet>
         </View>
     )
 }

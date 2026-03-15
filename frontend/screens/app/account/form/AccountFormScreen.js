@@ -19,7 +19,6 @@ const AccountFormScreen = ({ route }) => {
     const navigation = useNavigation();
 
     useEffect(() => {
-        console.log('Mounted AccountFormScreen with params:', route.params);
     }, [route.params])
 
     // Formik setup
@@ -79,9 +78,7 @@ const AccountFormScreen = ({ route }) => {
         return date ? moment(date, 'YYYY-MM-DD').format('DD/MM/YYYY') : '';
     }
 
-    const submit = async () => {
-        console.log('submit invoked, values:', formik.values, 'schema:', schema);
-        
+    const submit = async () => {        
         // Validar que se hayan seleccionado coordenadas si se está editando ubicación
         if (schema === 'location' && locationData.location && (!locationData.latitude || !locationData.longitude)) {
             Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
@@ -90,7 +87,6 @@ const AccountFormScreen = ({ route }) => {
         
         try {
             const errors = await formik.validateForm();
-            console.log('validation errors:', errors);
             if (Object.keys(errors).length === 0) {
                 formik.handleSubmit();
             } else {

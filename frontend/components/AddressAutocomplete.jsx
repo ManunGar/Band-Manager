@@ -108,7 +108,6 @@ const AddressAutocomplete = ({
     // Format suggestion text to display
     const formatSuggestion = (item) => {
         const props = item.properties;
-        console.log("🚀 ~ formatSuggestion ~ props:", props)
         
         // Primary text: name or street with house number
         const primaryParts = [
@@ -117,7 +116,6 @@ const AddressAutocomplete = ({
             props.housenumber
         ].filter(Boolean);
         const primary = primaryParts.join(', ');
-        console.log("🚀 ~ formatSuggestion ~ primary:", primary)
 
         // Secondary text: city, state, country
         const secondaryParts = [

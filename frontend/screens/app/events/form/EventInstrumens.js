@@ -111,7 +111,6 @@ const EventInstruments = ({ route }) => {
             formData.append('type', eventFormData.type || '');
             formData.append('comment', eventFormData.comment || '');
 
-            console.log('Instruments being sent:', eventFormData);
             // Add instruments array if not empty
             if (eventFormData.instruments && eventFormData.instruments.length > 0) {
                 formData.append('instruments', JSON.stringify(eventFormData.instruments));

@@ -60,11 +60,9 @@ const AccountDetailScreen = () => {
                 name: `avatar_${Date.now()}.jpg`,
                 type: 'image/jpeg',
             });
-            console.log("🚀 ~ handleImageSelected ~ form:", form)
             await editMusician(form);
             await fetchAccountDetails();
         } catch (error) {
-            console.log("🚀 ~ handleImageSelected ~ error:", error)
             console.error('Error uploading image:', error);
         }
     }

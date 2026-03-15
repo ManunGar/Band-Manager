@@ -49,12 +49,6 @@ const EventScreen = ({ route }) => {
 
     const fetchEventDetails = async () => {
         const fetchedEvent = await EventEndpoints.getEventDetails(eventId);
-        console.log('📍 Event details:', {
-            name: fetchedEvent?.name,
-            location: fetchedEvent?.location,
-            latitude: fetchedEvent?.latitude,
-            longitude: fetchedEvent?.longitude
-        });
         fetchedEvent ? setIsBandAdministrator(fetchedEvent.band.components[0].administrator) : setIsBandAdministrator(false);
         setEvent(fetchedEvent);
         setAttendance(fetchedEvent?.attendance.present);
@@ -71,7 +65,6 @@ const EventScreen = ({ route }) => {
             await fetchEventDetails();
             closeSheet();
         } catch (error) {
-            console.log("🚀 ~ handleSaveAttendance ~ error:", error)
             Alert.alert('Error', error.message || 'Hubo un error al guardar tu asistencia.');
         }
     }

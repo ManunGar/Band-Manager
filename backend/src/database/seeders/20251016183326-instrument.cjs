@@ -11,6 +11,12 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        name: 'Piano',
+        image: '/public/instruments/piano.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
         name: 'Flauta',
         image: '/public/instruments/flauta.png',
         createdAt: new Date(),
@@ -35,6 +41,12 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        name: 'Corno Inglés',
+        image: '/public/instruments/clarinete.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
         name: 'Requinto',
         image: '/public/instruments/clarinete.png',
         createdAt: new Date(),
@@ -43,6 +55,24 @@ module.exports = {
       {
         name: 'Clarinete bajo',
         image: '/public/instruments/clarinete-bajo.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Violín',
+        image: '/public/instruments/violin.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Viola',
+        image: '/public/instruments/violin.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Violonchelo',
+        image: '/public/instruments/violonchelo.png',
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -72,6 +102,12 @@ module.exports = {
       },
       {
         name: 'Fagot',
+        image: '/public/instruments/fagot.png',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Contrafagot',
         image: '/public/instruments/fagot.png',
         createdAt: new Date(),
         updatedAt: new Date()

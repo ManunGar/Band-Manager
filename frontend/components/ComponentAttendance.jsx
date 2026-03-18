@@ -16,10 +16,10 @@ const ComponentAttendance = ({ eventAttendance }) => {
                 </Text>
             </View>
             <Text style={styles.title} numberOfLines={1} ellipsizeMode='tail'>
-                {eventAttendance.Performance ? eventAttendance.Performance.name : 'Ensayo'}
+                {eventAttendance?.name || 'Ensayo'}
             </Text>
             <Text style={styles.placeText} numberOfLines={1} ellipsizeMode='tail'>
-                {eventAttendance.Performance && eventAttendance.Performance.place }
+                {eventAttendance?.location }
             </Text>
         </View>
     )

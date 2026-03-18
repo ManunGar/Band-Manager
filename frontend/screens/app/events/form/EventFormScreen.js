@@ -86,6 +86,7 @@ const EventFormScreen = ({ route }) => {
     const [imagePreview, setImagePreview] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const navigation = useNavigation();
+    const [scrollEnabled, setScrollEnabled] = useState(true);
 
     const imageSheetRef = useRef(null);
     const reverseGeocodeRequestRef = useRef(0);
@@ -306,7 +307,7 @@ const EventFormScreen = ({ route }) => {
 
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
-            <ScrollView>
+            <ScrollView scrollEnabled={scrollEnabled}>
                 <TopContainer title={event ? "Editar Evento" : "Crear Evento"} editEnabled={false} pictureEnabled={true} pictureUrl={band.profile_picture} />
                 <View style={styles.bodyContainer}>
                     <View style={styles.tagContainer}>
@@ -353,10 +354,13 @@ const EventFormScreen = ({ route }) => {
                                 latitude={mapLatitude}
                                 longitude={mapLongitude}
                                 location={formik.values.location || 'Ubicacion del evento'}
-                                interactive={true}
+                                explorable={true}
+                                selectable={true}
                                 mapHeight={220}
                                 zoomDelta={0.003}
                                 onCoordinateChange={handleMapCoordinateChange}
+                                onMapTouchStart={() => setScrollEnabled(false)}
+                                onMapTouchEnd={() => setScrollEnabled(true)}
                             />
                         </View>
                         {/* EVENT DATE */}

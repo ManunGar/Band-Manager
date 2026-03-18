@@ -4,7 +4,6 @@ import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 
 import ComponentEndpoints from '../../../api/ComponentEndpoints';
 import profileDefaultImage from '../../../assets/milestones/profile_default.png';
 import ComponentAttendance from '../../../components/ComponentAttendance';
-import FilterIcon from '../../../components/icons/FilterIcon';
 import LinkText from '../../../components/LinkText';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
@@ -101,7 +100,7 @@ const ComponentScreen = ({ route }) => {
             <ScrollView style={styles.container}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                     <Text style={styles.sectionTitle}>Asistencia a eventos</Text>
-                    <FilterIcon width={22} height={21} />
+                    {/* <FilterIcon width={22} height={21} /> */}
                 </View>
                 <FlatList
                     data={component?.eventsAttended}

@@ -27,6 +27,7 @@ const EventScreen = ({ route }) => {
     const snapPoints = useMemo(() => [])
     const sheetRef = useRef(null)
     const navigation = useNavigation();
+    const [scrollEnabled, setScrollEnabled] = useState(true)
 
     useEffect(() => {
         fetchEventDetails();
@@ -75,7 +76,7 @@ const EventScreen = ({ route }) => {
 
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
-            <ScrollView>
+            <ScrollView scrollEnabled={scrollEnabled} showsVerticalScrollIndicator={false}>
                 <TopContainer style={{ paddingBottom: 0, marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} editEnabled={isBandAdministrator} onEdit={() => navigation.navigate('EventForm', { event, band: event?.band })} />
                 {/* HEADER */}
                 <View style={styles.headerContainer}>
@@ -83,7 +84,7 @@ const EventScreen = ({ route }) => {
                         style={styles.image} />
                     <View style={{ paddingHorizontal: 8, paddingBottom: 15, width: '100%' }}>
                         <Text style={styles.bandName}>{event?.band?.name}</Text>
-                        <Text style={styles.title}>{event?.Performance ? event.Performance.name : "Ensayo"}</Text>
+                        <Text style={styles.title}>{event && event.name }</Text>
                     </View>
                     <View style={{ paddingHorizontal: 8, gap: 10, paddingBottom: 30, paddingTop: 20, width: '100%', borderTopWidth: 1, borderTopColor: GlobalStyle.lightGray }}>
                         {event?.Performance &&
@@ -116,7 +117,12 @@ const EventScreen = ({ route }) => {
                                 latitude={eventLat}
                                 longitude={eventLng}
                                 location={event.location || 'Ubicacion del evento'}
+                                explorable={true}
+                                selectable={false}
+                                mapHeight={200}
                                 zoomDelta={0.004}
+                                onMapTouchStart={() => setScrollEnabled(false)}
+                                onMapTouchEnd={() => setScrollEnabled(true)}
                             />
                         ) : (
                             <View style={styles.mapFallback}>

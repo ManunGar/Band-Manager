@@ -63,7 +63,7 @@ const ConfigurationScreen = ({ route }) => {
                 <View style={styles.sectionContainer}>
                     <View style={styles.subSectionContainer}>
                         <Text style={styles.subSectionTitle}>Sobre la aplicación</Text>
-                        <Text style={styles.subSectionText}>Versión 0.1.1</Text>
+                        <Text style={styles.subSectionText}>Versión 0.1.2</Text>
                     </View>
                 </View>
             </ScrollView>

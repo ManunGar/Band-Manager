@@ -12,15 +12,25 @@ import Input from './Input';
  * @param {string} label - Input label
  * @param {string} placeholder - Input placeholder
  */
-const AddressAutocomplete = ({ 
-    initialValue = '', 
-    onAddressSelect, 
-    label = 'Dirección', 
+const AddressAutocomplete = ({
+    initialValue = '',
+    onAddressSelect,
+    label = 'Dirección',
     placeholder = 'Calle, Plaza, Avenida...'
 }) => {
     const [query, setQuery] = useState(initialValue);
     const [suggestions, setSuggestions] = useState([]);
     const searchTimeoutRef = useRef(null);
+
+    // Clear pending search timeout on unmount to avoid updates after unmount
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+                searchTimeoutRef.current = null;
+            }
+        };
+    }, []);
 
     // Update query when initialValue changes
     useEffect(() => {
@@ -39,7 +49,7 @@ const AddressAutocomplete = ({
                 `https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=5`
             );
             const data = await response.json();
-            
+
             // Return all results (streets, buildings, cities, etc.)
             setSuggestions(data.features);
         } catch (error) {
@@ -51,17 +61,17 @@ const AddressAutocomplete = ({
     // Handle search input with debounce
     const handleSearch = (text) => {
         setQuery(text);
-        
+
         // Clear coordinates when user modifies text
         if (onAddressSelect) {
             onAddressSelect({ location: text, latitude: null, longitude: null });
         }
-        
+
         // Cancel previous timeout if it exists
         if (searchTimeoutRef.current) {
             clearTimeout(searchTimeoutRef.current);
         }
-        
+
         // New timeout to fetch suggestions after user stops typing for 500ms
         searchTimeoutRef.current = setTimeout(() => {
             fetchAddressSuggestions(text);
@@ -92,15 +102,15 @@ const AddressAutocomplete = ({
         const props = item.properties;
         const addressName = buildShortAddress(props);
         setQuery(addressName);
-        
+
         // Extract coordinates
         const [longitude, latitude] = item.geometry.coordinates;
-        
+
         // Call callback with address data
         if (onAddressSelect) {
             onAddressSelect({ location: addressName, latitude, longitude });
         }
-        
+
         // Clear suggestions after selection
         setSuggestions([]);
     };
@@ -108,7 +118,7 @@ const AddressAutocomplete = ({
     // Format suggestion text to display
     const formatSuggestion = (item) => {
         const props = item.properties;
-        
+
         // Primary text: name or street with house number
         const primaryParts = [
             props.name,
@@ -138,7 +148,7 @@ const AddressAutocomplete = ({
                 onChangeText={handleSearch}
             />
             <Text style={styles.helperText}>Selecciona una dirección de las sugerencias</Text>
-            
+
             {query && suggestions.length > 0 && (
                 <View style={styles.suggestionsContainer}>
                     {suggestions.map((item, index) => {

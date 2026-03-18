@@ -14,7 +14,6 @@ const Stack = createStackNavigator();
 export default function App() {
 
   useEffect(() => {
-    NavigationBar.setBackgroundColorAsync("#FFFFFF");
     NavigationBar.setButtonStyleAsync("dark");
   }, []);
 

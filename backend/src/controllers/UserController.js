@@ -173,7 +173,8 @@ const changePassword = async (req, res) => {
             return res.status(401).send({ error: 'Current password is incorrect' });
         }
         // Update password
-        await user.update({ password: password });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await user.update({ password: hashedPassword });
         res.status(200).send({ message: 'Password changed successfully' });
     } catch (error) {
         console.error('Error in changePassword:', error);

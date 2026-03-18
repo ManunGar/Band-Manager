@@ -1,6 +1,6 @@
 import Svg, { Path } from "react-native-svg"
 
-function LogoutIcon({width, height, fill, stroke, strokeWidth}, props) {
+function LogoutIcon({width, height, fill, stroke, strokeWidth, ...props}) {
   return (
     <Svg
       xmlns="http://www.w3.org/2000/svg"

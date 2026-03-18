@@ -1,151 +1,183 @@
-import { useEffect, useRef, useState } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, Text, UIManager, View } from 'react-native';
-import MapView, { Marker, UrlTile } from 'react-native-maps';
 
-const hasNativeMapView = () => {
-    if (Platform.OS === 'web') {
-        return false;
-    }
+import { useMemo } from "react";
+import { Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { WebView } from "react-native-webview";
+import * as GlobalStyle from '../GlobalStyle';
 
-    const getConfig = UIManager.getViewManagerConfig;
-    if (typeof getConfig !== 'function') {
-        return false;
-    }
-
-    return Boolean(getConfig('AIRMap') || getConfig('AIRGoogleMap'));
-};
-
-const EventMapView = ({
-    latitude,
-    longitude,
-    location,
-    interactive = false,
-    onCoordinateChange,
+export default function EventMapView({
+    latitude = 37.3886,
+    longitude = -5.9823,
+    explorable = true,
+    selectable = false,
     mapHeight = 150,
     zoomDelta = 0.01,
-}) => {
-    const mapRef = useRef(null);
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
-    const [markerCoordinate, setMarkerCoordinate] = useState(
-        Number.isFinite(lat) && Number.isFinite(lng)
-            ? { latitude: lat, longitude: lng }
-            : null,
-    );
-
-    useEffect(() => {
-        if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            setMarkerCoordinate({ latitude: lat, longitude: lng });
-
-            // Keep map centered when coordinates change from form input/autocomplete.
-            if (mapRef.current) {
-                mapRef.current.animateToRegion(
-                    {
-                        latitude: lat,
-                        longitude: lng,
-                        latitudeDelta: zoomDelta,
-                        longitudeDelta: zoomDelta,
-                    },
-                    350,
-                );
+    zoom = 15,
+    onCoordinateChange,
+    onMapTouchStart,
+    onMapTouchEnd,
+}) {
+    // Si se pasa zoomDelta, lo convertimos a un nivel de zoom aproximado
+    const zoomLevel = zoomDelta ? Math.round(Math.log2(360 / zoomDelta)) : zoom;
+    const html = useMemo(() => `
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <link
+            href="https://unpkg.com/maplibre-gl@5.20.2/dist/maplibre-gl.css"
+            rel="stylesheet"
+        />
+        <style>
+            html, body, #map {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
             }
-        }
-    }, [lat, lng, zoomDelta]);
 
-    if (isNaN(lat) || isNaN(lng)) {
+            body {
+                overflow: hidden;
+            }
+
+            #marker {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: ${GlobalStyle.yellow};
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <script src="https://unpkg.com/maplibre-gl@5.20.2/dist/maplibre-gl.js"></script>
+        <script>
+            const initialLng = ${longitude};
+            const initialLat = ${latitude};
+
+            const map = new maplibregl.Map({
+                container: "map",
+                style: "https://tiles.openfreemap.org/styles/liberty",
+                center: [initialLng, initialLat],
+                zoom: ${zoomLevel},
+                attributionControl: false,
+                dragPan: ${explorable},
+                scrollZoom: ${explorable},
+                doubleClickZoom: ${explorable},
+                touchZoomRotate: ${explorable},
+            });
+
+            map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+            const markerEl = document.createElement("div");
+            markerEl.id = "marker";
+
+            const marker = new maplibregl.Marker({
+                element: markerEl,
+                draggable: ${selectable}
+            })
+                .setLngLat([initialLng, initialLat])
+                .addTo(map);
+
+            function sendCoords(lng, lat, source) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                    longitude: lng,
+                    latitude: lat,
+                    source
+                }));
+            }
+
+            map.on("click", (e) => {
+                if (!${selectable}) return;
+                const lng = e.lngLat.lng;
+                const lat = e.lngLat.lat;
+                marker.setLngLat([lng, lat]);
+                sendCoords(lng, lat, "map-click");
+            });
+
+            if (${selectable}) {
+                marker.on("dragend", () => {
+                    const pos = marker.getLngLat();
+                    sendCoords(pos.lng, pos.lat, "marker-drag");
+                });
+            }
+        </script>
+    </body>
+</html>
+    `, [latitude, longitude, explorable, selectable, zoomLevel]);
+
+    const handleMessage = (event) => {
+        try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (onCoordinateChange) {
+                onCoordinateChange({ latitude: data.latitude, longitude: data.longitude, source: data.source });
+            }
+        } catch (error) {
+            console.warn("Error procesando coordenadas del mapa:", error);
+        }
+    };
+
+    if (isNaN(latitude) || isNaN(longitude)) {
         return (
-            <View style={[styles.container, { height: mapHeight }]}>
+            <View style={[styles.container, { height: mapHeight }]}> 
                 <Text style={styles.errorText}>Coordenadas inválidas</Text>
             </View>
         );
     }
 
     const openInGoogleMaps = () => {
-        const url = `https://www.google.com/maps?q=${lat},${lng}`;
-        Linking.openURL(url);
-    };
-
-    if (!hasNativeMapView()) {
-        return (
-            <View style={[styles.container, { height: mapHeight }]}>
-                <Text style={styles.errorText}>El modulo nativo del mapa no esta disponible en esta build.</Text>
-                <Pressable style={styles.fallbackButton} onPress={openInGoogleMaps}>
-                    <Text style={styles.fallbackButtonText}>Abrir en Google Maps</Text>
-                </Pressable>
-            </View>
-        );
-    }
-
-    const updateCoordinates = (nextCoordinate) => {
-        setMarkerCoordinate(nextCoordinate);
-        if (onCoordinateChange) {
-            onCoordinateChange(nextCoordinate);
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            const url = Platform.select({
+                ios: `http://maps.apple.com/?ll=${lat},${lng}`,
+                android: `geo:${lat},${lng}?q=${lat},${lng}`,
+                default: `https://www.google.com/maps?q=${lat},${lng}`
+            });
+            Linking.openURL(url);
         }
     };
 
     return (
-        <View style={[styles.container, { height: mapHeight }]}>
-            <MapView
-                ref={mapRef}
-                style={[styles.map, { height: mapHeight }]}
-                mapType={Platform.OS === 'android' ? 'none' : 'standard'}
-                initialRegion={{
-                    latitude: lat,
-                    longitude: lng,
-                    latitudeDelta: zoomDelta,
-                    longitudeDelta: zoomDelta,
-                }}
-                scrollEnabled={interactive}
-                rotateEnabled={interactive}
-                zoomEnabled={interactive}
-                pitchEnabled={interactive}
-                onPress={(event) => {
-                    if (interactive) {
-                        updateCoordinates(event.nativeEvent.coordinate);
-                        return;
-                    }
-
-                    openInGoogleMaps();
-                }}
-            >
-                <UrlTile
-                    urlTemplate="https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-                    maximumZ={20}
-                    shouldReplaceMapContent={Platform.OS === 'ios'}
-                />
-                {markerCoordinate && (
-                    <Marker
-                        coordinate={markerCoordinate}
-                        draggable={interactive}
-                        onDragEnd={(event) => updateCoordinates(event.nativeEvent.coordinate)}
-                    />
-                )}
-            </MapView>
+        <View style={[styles.container, { height: mapHeight }]}> 
+            <WebView
+                originWhitelist={["*"]}
+                source={{ html }}
+                onMessage={handleMessage}
+                javaScriptEnabled
+                domStorageEnabled
+                style={styles.webview}
+                onTouchStart={onMapTouchStart}
+                onTouchEnd={onMapTouchEnd}
+            />
             <Text style={styles.attribution}>
-                Map tiles by CARTO, data by OpenStreetMap contributors
+                MapLibre + OpenStreetMap
             </Text>
+            <Pressable style={styles.mapButton} onPress={openInGoogleMaps} android_ripple={{color:'#e0e0e0'}}>
+                <Text style={styles.mapButtonIcon}>📍</Text>
+                <Text style={styles.mapButtonText}>Ver en el mapa</Text>
+            </Pressable>
         </View>
     );
-};
-
-export default EventMapView;
+}
 
 const styles = StyleSheet.create({
     container: {
-        height: 150,
-        width: '100%',
-        borderRadius: 10,
-        overflow: 'hidden',
-        justifyContent: 'center',
-        alignItems: 'center',
+        width: "100%",
+        borderRadius: 12,
+        overflow: "hidden",
         position: 'relative',
+        backgroundColor: '#f8f8f8',
     },
-    map: {
-        width: '100%',
-        height: 150,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#bdc3c7',
+    webview: {
+        flex: 1,
+        backgroundColor: "transparent",
     },
     attribution: {
         position: 'absolute',
@@ -157,6 +189,24 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
         borderRadius: 4,
     },
+    mapButton: {
+        position: 'absolute',
+        bottom: 24,
+        right: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.85)',
+        borderRadius: 4,
+        paddingHorizontal: 4,
+    },
+    mapButtonIcon: {
+        fontSize: 10,
+        marginRight: 6,
+    },
+    mapButtonText: {
+        fontSize: 10,
+        color: GlobalStyle.yellow,
+    },
     errorText: {
         textAlign: 'center',
         color: '#c0392b',
@@ -164,16 +214,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 20,
         paddingBottom: 10,
-    },
-    fallbackButton: {
-        backgroundColor: '#2d6cdf',
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 8,
-        marginBottom: 12,
-    },
-    fallbackButtonText: {
-        color: '#ffffff',
-        fontSize: 13,
     },
 });

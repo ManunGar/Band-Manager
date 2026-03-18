@@ -1,6 +1,6 @@
 import Svg, { Path } from "react-native-svg"
 
-function RightArrowIcon({width, height, fill, stroke, strokeWidth}, props) {
+function RightArrowIcon({width, height, fill, stroke, strokeWidth, ...props}) {
   return (
     <Svg
       width={width || 13}

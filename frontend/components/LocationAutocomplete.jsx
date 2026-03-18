@@ -11,11 +11,11 @@ import Input from './Input';
  * @param {string} label - Input label
  * @param {string} placeholder - Input placeholder
  */
-const LocationAutocomplete = ({ 
-    initialValue = '', 
-    onLocationSelect, 
-    label = 'Ubicación', 
-    placeholder = 'Ciudad, Localidad, Pueblo...' 
+const LocationAutocomplete = ({
+    initialValue = '',
+    onLocationSelect,
+    label = 'Ubicación',
+    placeholder = 'Ciudad, Localidad, Pueblo...'
 }) => {
     const [query, setQuery] = useState(initialValue);
     const [suggestions, setSuggestions] = useState([]);
@@ -39,10 +39,12 @@ const LocationAutocomplete = ({
                 `https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=5`
             );
             const data = await response.json();
-            
+
             // Filter only city results
-            const cityResults = data.features.filter(item => item.properties.type === 'city');
-            
+            const cityResults = data.features.filter(item =>
+                ['city', 'town', 'village'].includes(item.properties.type)
+            );
+
             setSuggestions(cityResults);
         } catch (error) {
             console.error('Error fetching location suggestions:', error);
@@ -54,22 +56,31 @@ const LocationAutocomplete = ({
     const handleSearch = (text) => {
         setQuery(text);
         setHasSelectedLocation(false);
-        
+
         // Clear coordinates when user modifies text
         if (onLocationSelect) {
             onLocationSelect({ location: text, latitude: null, longitude: null });
         }
-        
+
         // Cancel previous timeout if it exists
         if (searchTimeoutRef.current) {
             clearTimeout(searchTimeoutRef.current);
         }
-        
+
         // New timeout to fetch suggestions after user stops typing for 500ms
         searchTimeoutRef.current = setTimeout(() => {
             fetchLocationSuggestions(text);
         }, 500);
     };
+
+    // Clear any pending search timeout on unmount to avoid state updates after unmount
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // Handle selection of a location suggestion
     const handleSelectLocation = (item) => {
@@ -79,19 +90,19 @@ const LocationAutocomplete = ({
             item.properties.county,
             item.properties.country,
         ].filter(Boolean); // Remove undefined/null values
-        
+
         const locationName = parts.join(', ');
         setQuery(locationName);
         setHasSelectedLocation(true);
-        
+
         // Extract coordinates
         const [longitude, latitude] = item.geometry.coordinates;
-        
+
         // Call callback with location data
         if (onLocationSelect) {
             onLocationSelect({ location: locationName, latitude, longitude });
         }
-        
+
         // Clear suggestions after selection
         setSuggestions([]);
     };
@@ -105,7 +116,7 @@ const LocationAutocomplete = ({
                 onChangeText={handleSearch}
             />
             <Text style={styles.helperText}>Selecciona una ubicación de las sugerencias</Text>
-            
+
             {query && suggestions.length > 0 && (
                 <View style={styles.suggestionsContainer}>
                     {suggestions.map((item, index) => (

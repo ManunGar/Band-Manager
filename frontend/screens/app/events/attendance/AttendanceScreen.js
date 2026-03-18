@@ -53,7 +53,7 @@ const AttendanceScreen = ({ route }) => {
                 editEnabled={true}
                 style={{ alignItems: 'left', marginBottom: 0 }}>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.title}>{event?.Performance?.name || "Ensayo"}</Text>
+                    <Text style={styles.title}>{event?.name}</Text>
                     <Text style={styles.subTitle}>{event?.band.name}</Text>
                 </View>
             </TopContainer>

@@ -87,11 +87,11 @@ export default function Index({ route }) {
                 <Text style={{ fontFamily: 'Oswald_500', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
                     Añade nuevos componentes a tu equipo mediante el código de invitación:
                 </Text>
-                <Text style={{ fontFamily: 'BebasNeue', color: GlobalStyle.black, fontSize: 24, color: GlobalStyle.black, margin: 'auto' }}>
+                <Text selectable={true} style={{ fontFamily: 'BebasNeue', color: GlobalStyle.black, fontSize: 24, color: GlobalStyle.black, margin: 'auto' }}>
                     {band?.code || 'Cargando...'}
                 </Text>
                 <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.gray, fontSize: 12, marginVertical: 10 }}>
-                    Comparte este código con las personas que quieras invitar a tu equipo o comparte el siguiente enlace para que puedan acceder con mayor rapidez.
+                    Comparte este código con las personas que quieras invitar a tu equipo.
                 </Text>
                 {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', alignContent: 'center', marginVertical: 15, paddingInline: 15, borderRadius: 8, backgroundColor: GlobalStyle.lightBackground }}>
                     <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.blue, fontSize: 16, marginVertical: 10, textDecorationLine: 'underline' }}>

@@ -12,7 +12,7 @@ const UpcomingEvent = ({ event }) => {
         <TouchableOpacity onPress={() => navigation.navigate('Event', { eventId: event.id })}>
             <Image source={event.Performance?.picture ? { uri: `${event.Performance.picture}` } : event.Performance ? performanceDefaultImage : rehearsalDefaultImage} style={{ width: 280, height: 140, borderRadius: 10 }} />
             <View>
-                <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{event.Performance?.name || 'Ensayo'}</Text>
+                <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{event?.name || 'Evento'}</Text>
                 <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">{parseDateTime(event.date, event.initialTime)} {event.Performance?.place ? `· ${event.Performance.place}` : ''}</Text>
             </View>
         </TouchableOpacity>

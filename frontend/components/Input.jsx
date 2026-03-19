@@ -16,6 +16,7 @@ const Input = ({ placeholder, label, value, onChangeText, secureTextEntry, keybo
                 style={[styles.input, multiline && styles.multilineInput]}
                 value={value == null ? '' : String(value)}
                 placeholder={placeholder}
+                placeholderTextColor={GlobalStyle.darkGray}
                 onChangeText={onChangeText}
                 secureTextEntry={!showPassword}
                 autoCapitalize={autoCapitalize || "none"}

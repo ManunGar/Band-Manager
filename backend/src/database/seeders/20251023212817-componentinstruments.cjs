@@ -14,7 +14,7 @@ module.exports = {
       },
       {
         componentId: 1,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -23,14 +23,14 @@ module.exports = {
       // Component 2: Javier en Banda 2 - Trompeta y Fliscorno
       {
         componentId: 2,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         componentId: 2,
-        instrumentId: 18, // Fliscorno
+        instrumentId: 24, // Fliscorno
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -39,14 +39,14 @@ module.exports = {
       // Component 3: Carlos en Banda 1 - Saxofones
       {
         componentId: 3,
-        instrumentId: 8, // Saxofón alto
+        instrumentId: 13, // Saxofón alto
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         componentId: 3,
-        instrumentId: 10, // Saxofón tenor
+        instrumentId: 15, // Saxofón tenor
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -55,7 +55,7 @@ module.exports = {
       // Component 4: Antonio en Banda 1 - Tuba
       {
         componentId: 4,
-        instrumentId: 15, // Tuba
+        instrumentId: 21, // Tuba
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -64,7 +64,7 @@ module.exports = {
       // Component 5: Antonio en Banda 3 - Tuba
       {
         componentId: 5,
-        instrumentId: 15, // Tuba
+        instrumentId: 21, // Tuba
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -80,7 +80,7 @@ module.exports = {
       },
       {
         componentId: 6,
-        instrumentId: 20, // Percusión
+        instrumentId: 26, // Percusión
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -89,14 +89,14 @@ module.exports = {
       // Component 7: Miguel en Banda 2 - Trombón y Bombardino
       {
         componentId: 7,
-        instrumentId: 14, // Trombón
+        instrumentId: 20, // Trombón
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         componentId: 7,
-        instrumentId: 16, // Bombardino
+        instrumentId: 22, // Bombardino
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -105,14 +105,14 @@ module.exports = {
       // Component 8: María en Banda 1 - Flauta y Flautín
       {
         componentId: 8,
-        instrumentId: 2, // Flauta
+        instrumentId: 3, // Flauta
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         componentId: 8,
-        instrumentId: 3, // Flautín
+        instrumentId: 4, // Flautín
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -121,7 +121,7 @@ module.exports = {
       // Component 9: María en Banda 2 - Flauta
       {
         componentId: 9,
-        instrumentId: 2, // Flauta
+        instrumentId: 3, // Flauta
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -137,7 +137,7 @@ module.exports = {
       },
       {
         componentId: 10,
-        instrumentId: 5, // Clarinete
+        instrumentId: 6, // Clarinete
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -146,7 +146,7 @@ module.exports = {
       // Component 11: Isabel en Banda 3 - Trompa
       {
         componentId: 11,
-        instrumentId: 13, // Trompa
+        instrumentId: 19, // Trompa
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -155,14 +155,14 @@ module.exports = {
       // Component 12: Laura en Banda 2 - Corneta y Trompeta
       {
         componentId: 12,
-        instrumentId: 19, // Corneta
+        instrumentId: 25, // Corneta
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         componentId: 12,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -171,7 +171,7 @@ module.exports = {
       // Component 13: Laura en Banda 3 - Corneta
       {
         componentId: 13,
-        instrumentId: 19, // Corneta
+        instrumentId: 25, // Corneta
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -180,14 +180,14 @@ module.exports = {
       // Component 14: Elena en Banda 1 - Saxofón barítono y Clarinete bajo
       {
         componentId: 14,
-        instrumentId: 11, // Saxofón barítono
+        instrumentId: 16, // Saxofón barítono
         principal: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         componentId: 14,
-        instrumentId: 7, // Clarinete bajo
+        instrumentId: 9, // Clarinete bajo
         principal: false,
         createdAt: new Date(),
         updatedAt: new Date()

@@ -9,6 +9,9 @@ const loadModel = (sequelize, DataTypes) => {
     static associate(models) {
       // Event relationship with Performance (One-to-One)
       Performance.belongsTo(models.Event, { foreignKey: 'eventId' });
+
+      // Agreement relationship with Performance (One-to-Many)
+      Performance.hasMany(models.Agreement, { foreignKey: 'performanceId', as: 'agreements' });
     }
   }
   Performance.init({

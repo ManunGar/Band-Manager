@@ -17,6 +17,9 @@ const loadModel = (sequelize, DataTypes) => {
       // Instrument relationship with Agreement (Many-to-One)
       Agreement.belongsTo(models.Instrument, { foreignKey: 'instrumentId', as: 'instrument' });
 
+      // Application relationship with Agreement (One-to-Many)
+      Agreement.hasMany(models.Application, { foreignKey: 'agreementId', as: 'applications' });
+
     }
   }
   Agreement.init({
@@ -49,6 +52,12 @@ const loadModel = (sequelize, DataTypes) => {
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
+    },
+    status: {
+      type: DataTypes.ENUM,
+      values: ['open', 'closed'],
+      defaultValue: 'open',
+      allowNull: false
     },
     amount: {
       allowNull: false,

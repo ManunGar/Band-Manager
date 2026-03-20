@@ -44,7 +44,7 @@ const loadModel = (sequelize, DataTypes) => {
     },
     rate: {
       type: DataTypes.DOUBLE,
-      allowNull: false
+      allowNull: true
     },
     type: {
       type: DataTypes.ENUM,

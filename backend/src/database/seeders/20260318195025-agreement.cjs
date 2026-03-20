@@ -9,6 +9,7 @@ module.exports = {
         performanceId: 1, // Event 1 -> Band 1
         musicianId: 1,
         instrumentId: 21, // Tuba
+        status: 'closed',
         amount: 1,
         payment: 180,
         description: 'Se busca tuba para refuerzo en concierto de Navidad',
@@ -19,6 +20,7 @@ module.exports = {
         performanceId: 3, // Event 3 -> Band 1
         musicianId: 2,
         instrumentId: 16, // Saxofon baritono
+        status: 'open',
         amount: 1,
         payment: 150,
         description: 'Refuerzo de saxofon baritono para repertorio romantico',
@@ -29,6 +31,7 @@ module.exports = {
         performanceId: 4, // Event 4 -> Band 1
         musicianId: 1,
         instrumentId: 19, // Trompa
+        status: 'closed',
         amount: 1,
         payment: 170,
         description: 'Sustitución de trompa para concierto de Semana Santa',
@@ -41,6 +44,7 @@ module.exports = {
         performanceId: 6, // Event 9 -> Band 2
         musicianId: 4,
         instrumentId: 23, // Trompeta
+        status: 'open',
         amount: 2,
         payment: 140,
         description: 'Se necesitan dos trompetas para pasacalles',
@@ -51,6 +55,7 @@ module.exports = {
         performanceId: 8, // Event 11 -> Band 2
         musicianId: 4,
         instrumentId: 5, // Oboe
+        status: 'closed',
         amount: 1,
         payment: 160,
         description: 'Refuerzo de oboe para concierto de primavera',
@@ -61,6 +66,7 @@ module.exports = {
         performanceId: 9, // Event 12 -> Band 2
         musicianId: 4,
         instrumentId: 22, // Bombardino
+        status: 'open',
         amount: 1,
         payment: 155,
         description: 'Se busca bombardino para feria patronal',
@@ -73,6 +79,7 @@ module.exports = {
         performanceId: 10, // Event 17 -> Band 3
         musicianId: 7,
         instrumentId: 17, // Fagot
+        status: 'closed',
         amount: 1,
         payment: 190,
         description: 'Fagot para misa del gallo y repertorio sacro',
@@ -83,6 +90,7 @@ module.exports = {
         performanceId: 12, // Event 19 -> Band 3
         musicianId: 7,
         instrumentId: 27, // Tambor
+        status: 'closed',
         amount: 1,
         payment: 130,
         description: 'Tambor para pasacalles del Dia de Andalucia',
@@ -93,6 +101,7 @@ module.exports = {
         performanceId: 14, // Event 21 -> Band 3
         musicianId: 7,
         instrumentId: 6, // Clarinete
+        status: 'open',
         amount: 2,
         payment: 165,
         description: 'Dos clarinetes para concierto de verano',

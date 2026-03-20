@@ -39,6 +39,11 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
+      status: {
+        type: Sequelize.ENUM('open', 'closed'),
+        defaultValue: 'open',
+        allowNull: false
+      },
       amount: {
         allowNull: false,
         type: Sequelize.INTEGER,

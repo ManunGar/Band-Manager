@@ -1,10 +1,10 @@
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import BandEndpoints from '../../../api/BandEndpoints'
 import Band from '../../../components/Band'
 import BottomSheet from '../../../components/BottomSheet'
-import Input from '../../../components/Input'
 import LinkText from '../../../components/LinkText'
 import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
@@ -17,9 +17,9 @@ const BandsScreen = () => {
     const navigation = useNavigation()
     const sheetRef = useRef(null)
     const codeSheetRef = useRef(null)
-    const {user} = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
     const snapPoints = useMemo(() => ['70%'], [])
-    const codeSnapPoints = useMemo(() => ['35%'], [])
+    const codeSnapPoints = useMemo(() => [])
 
     useFocusEffect(
         useCallback(() => {
@@ -71,7 +71,7 @@ const BandsScreen = () => {
     }
 
     return (
-        <View>
+        <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
             <TopContainer
                 backEnabled={false}
                 editEnabled={false}
@@ -89,7 +89,7 @@ const BandsScreen = () => {
                 )}
                 ItemSeparatorComponent={() => <View style={{ paddingTop: 12 }}></View>}
                 ListEmptyComponent={
-                    <Text style={styles.noBandsText}> {`No perteneces a ninguna banda.\n`} <LinkText onPress={openSheet}>Crea una nueva <Text style={{color: GlobalStyles.gray }}>o</Text> Únete a una</LinkText></Text>
+                    <Text style={styles.noBandsText}> {`No perteneces a ninguna banda.\n`} <LinkText onPress={openSheet}>Crea una nueva <Text style={{ color: GlobalStyles.gray }}>o</Text> Únete a una</LinkText></Text>
                 }
                 contentContainerStyle={{ paddingBottom: 150 }}
             />
@@ -124,13 +124,16 @@ const BandsScreen = () => {
                 </TouchableOpacity>
             </BottomSheet>
             {/* BOTTOM SHEET MODAL TO JOIN BAND */}
-            <BottomSheet sheetRef={codeSheetRef} snapPoints={codeSnapPoints} style={{ gap: 10 }}>
-                <Input
-                    placeholder="Introduce el código de la banda"
-                    value={code}
-                    onChangeText={setCode}
-                    label={'Utiliza el código proporcionado por tu banda'}
-                />
+            <BottomSheet sheetRef={codeSheetRef} snapPoints={codeSnapPoints} style={{ gap: 10, paddingBlock: 10 }}>
+                <View style={styles.input}>
+                    <BottomSheetTextInput
+                        style={styles.textInput}
+                        placeholderTextColor={GlobalStyles.gray}
+                        placeholder="Introduce el código de la banda a la que quieres unirte"
+                        value={code}
+                        onChangeText={setCode}
+                    />
+                </View>
                 <TouchableOpacity
                     onPress={findBandByCode}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: `${GlobalStyles.yellow}a9`, alignItems: 'center', marginTop: 6 }}
@@ -147,7 +150,7 @@ const BandsScreen = () => {
                     <Text style={{ fontWeight: '600', color: '#111827' }}>Cancelar</Text>
                 </TouchableOpacity>
             </BottomSheet>
-        </View>
+        </KeyboardAvoidingView>
     )
 }
 
@@ -163,5 +166,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'gray',
         textAlign: 'center',
-    }
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: GlobalStyles.lightGray,
+        borderRadius: 8,
+        paddingInline: 10,
+        fontFamily: 'Oswald_400',
+        fontSize: 16,
+    },
+    textInput: {
+        fontFamily: 'Oswald_400',
+        fontSize: 16,
+        color: GlobalStyles.black
+    },
 })

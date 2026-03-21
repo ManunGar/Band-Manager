@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { isBandMember } from "../middleware/BandMiddleware.js";
 import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
 import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
@@ -28,8 +28,10 @@ const listEvents = async (req, res) => {
 
         // Build where clause
         const where = {
-            bandId: _buildBandIdFilter(bandIdNumber, musicianComponents),
-            ..._buildTimeScopeFilter(timeScope)
+            [Op.and]: [
+                { bandId: _buildBandIdFilter(bandIdNumber, musicianComponents) },
+                _buildTimeScopeFilter(timeScope)
+            ]
         };
 
         // Build include array and order
@@ -421,39 +423,26 @@ const _buildBandIdFilter = (bandIdNumber, musicianComponents) => {
 
 // Build timeScope filter for events query
 const _buildTimeScopeFilter = (timeScope) => {
-    const now = new Date();
-    const filter = {};
-    
+    let filter;
+
     if (timeScope === 'past') {
-        // Events that have already ended
-        filter[Op.or] = [
-            {
-                date: { [Op.lt]: now },
-                endTime: null
-            },
-            {
-                [Op.and]: [
-                    { date: { [Op.lte]: now } },
-                    { endTime: { [Op.ne]: null } }
-                ]
-            }
-        ];
+        // Past: dates before today, or today with initialTime earlier than current DB time
+        filter = {
+            [Op.or]: [
+                Sequelize.literal("DATE(`Event`.`date`) < CURDATE()"),
+                Sequelize.literal("DATE(`Event`.`date`) = CURDATE() AND `Event`.`initialTime` < CURTIME()")
+            ]
+        };
     } else {
-        // 'upcoming' or any other value - events that haven't ended yet
-        filter[Op.or] = [
-            {
-                date: { [Op.gt]: now },
-                endTime: null
-            },
-            {
-                [Op.and]: [
-                    { date: { [Op.gte]: now } },
-                    { endTime: { [Op.ne]: null } }
-                ]
-            }
-        ];
+        // Upcoming: dates after today, or today with initialTime >= current DB time
+        filter = {
+            [Op.or]: [
+                Sequelize.literal("DATE(`Event`.`date`) > CURDATE()"),
+                Sequelize.literal("DATE(`Event`.`date`) = CURDATE() AND `Event`.`initialTime` >= CURTIME()")
+            ]
+        };
     }
-    
+
     return filter;
 };
 

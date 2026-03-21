@@ -50,6 +50,15 @@ const loadFileRoutes = function (app) {
         AgreementController.applyToAgreement
     );
 
+    // Approve or reject an application route
+    app.put('/agreements/:agreementId/applications/:applicationId',
+        isLoggedIn,
+        isAgreementOwner,
+        AgreementValidation.updateApplicationStatus,
+        handleValidation,
+        AgreementController.updateApplicationStatus
+    );
+
 }
 
 export default loadFileRoutes;

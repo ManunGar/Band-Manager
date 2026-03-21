@@ -24,4 +24,8 @@ const update = [
     check('description').optional().isString().isLength({ max: 255 }).withMessage('Description must be a string with a maximum length of 255 characters')
 ]
 
-export { create, update };
+const updateApplicationStatus = [
+    check('status').exists().isIn(['accepted', 'rejected']).withMessage('Status must be either "accepted" or "rejected"')
+]
+
+export { create, update, updateApplicationStatus };

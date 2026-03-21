@@ -215,13 +215,71 @@ const applyToAgreement = async (req, res) => {
     }
 }
 
+// Function to update the status of an application (accepted or rejected)
+const updateApplicationStatus = async (req, res) => {
+    const transaction = await Application.sequelize.transaction();
+    try {
+        // Find the application to update, ensuring it belongs to the specified agreement and is of type 'musician_apply'
+        const application = await Application.findOne({
+            where: {
+                id: req.params.applicationId,
+                agreementId: req.params.agreementId,
+                type: 'musician_apply',
+                status: 'pending' // Only allow updating applications that are currently pending
+            },
+            transaction
+        });
+        if (!application) {
+            return res.status(404).json({ error: 'Application not found' });
+        }
+        await application.update({ status: req.body.status }, { transaction });
+        // Check if the last application was accepted, if so, reject all the other applications for the same agreement and close the agreement
+        if (req.body.status === 'accepted') {
+            const agreements = await Agreement.findByPk(application.agreementId, {
+                include: {
+                    model: Application,
+                    as: 'applications'
+                },
+                transaction
+            });
+            if (agreements.applications.filter(a => a.status === 'accepted').length >= agreements.amount) {
+                await Application.update(
+                    { status: 'rejected' },
+                    {
+                        where: {
+                            agreementId: application.agreementId,
+                            id: { [Op.ne]: application.id },
+                            status: 'pending'
+                        },
+                        transaction
+                    }
+                );
+                await Agreement.update(
+                    { status: 'closed' },
+                    {
+                        where: { id: application.agreementId },
+                        transaction
+                    }
+                );
+            }
+        }
+        await transaction.commit();
+        return res.status(200).json({ message: 'Application status updated successfully', application });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error updating application status:', error);
+        res.status(500).json({ error: 'An error occurred while updating the application status' });
+    }
+}
+
 const AgreementController = {
     listAgreements,
     getAgreement,
     createAgreement,
     updateAgreement,
     deleteAgreement,
-    applyToAgreement
+    applyToAgreement,
+    updateApplicationStatus
 }
 
 export default AgreementController;

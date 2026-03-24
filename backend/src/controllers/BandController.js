@@ -280,6 +280,7 @@ const addEventToBand = async (req, res) => {
         const event = await Event.create({
             name: req.body.name,
             date: req.body.date,
+            endDate: req.body.endDate,
             initialTime: req.body.initialTime,
             endTime: req.body.endTime,
             location: req.body.location,

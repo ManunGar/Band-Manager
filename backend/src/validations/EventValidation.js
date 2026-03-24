@@ -4,6 +4,34 @@ import { checkFileIsImage, checkFileMaxSize } from "./FileValidationHelper.js";
 
 const maxFileSize = 2 * 1024 * 1024 // 2MB
 
+const _normalizeDateOnly = (value) => {
+    if (!value) return null;
+    const parsedDate = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+    return parsedDate.toISOString().slice(0, 10);
+}
+
+const _getEffectiveEventRange = async (req) => {
+    if (req._effectiveEventRange) return req._effectiveEventRange;
+
+    let currentEvent = null;
+    const eventId = Number(req.params?.eventId);
+    if (Number.isInteger(eventId)) {
+        currentEvent = await Event.findByPk(eventId, {
+            attributes: ['date', 'endDate', 'initialTime', 'endTime']
+        });
+    }
+
+    req._effectiveEventRange = {
+        date: req.body.date ?? currentEvent?.date ?? null,
+        endDate: req.body.endDate ?? currentEvent?.endDate ?? req.body.date ?? currentEvent?.date ?? null,
+        initialTime: req.body.initialTime ?? currentEvent?.initialTime ?? null,
+        endTime: req.body.endTime ?? currentEvent?.endTime ?? null
+    };
+
+    return req._effectiveEventRange;
+}
+
 const _instrumentsAttendanceExist = async (value, { req }) => {
     if (!Array.isArray(value)) {
         return Promise.reject(new Error('Instruments must be an array of instrument IDs'));
@@ -20,12 +48,20 @@ const _instrumentsAttendanceExist = async (value, { req }) => {
     return Promise.resolve();
 }
 
-const _endTimeAfterInitialTime = async (value, { req }) => {
-    const initialTime = req.body.initialTime;
-    if (!initialTime) return Promise.resolve();
+const _validateTimeOrderForEffectiveRange = async (_value, { req }) => {
+    const effectiveRange = await _getEffectiveEventRange(req);
+    const startDateOnly = _normalizeDateOnly(effectiveRange.date);
+    const endDateOnly = _normalizeDateOnly(effectiveRange.endDate);
+    const initialTime = effectiveRange.initialTime;
+    const endTime = effectiveRange.endTime;
+
+    if (!initialTime || !endTime || !startDateOnly || !endDateOnly) return Promise.resolve();
+
+    // Time order only needs validation when event starts and ends on the same day.
+    if (startDateOnly !== endDateOnly) return Promise.resolve();
 
     const [initHour, initMin] = initialTime.split(':').map(Number);
-    const [endHour, endMin] = value.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
 
     const initMinutes = initHour * 60 + initMin;
     const endMinutes = endHour * 60 + endMin;
@@ -33,6 +69,20 @@ const _endTimeAfterInitialTime = async (value, { req }) => {
     if (endMinutes <= initMinutes) {
         return Promise.reject(new Error('End time must be after initial time'));
     }
+    return Promise.resolve();
+}
+
+const _endDateAfterOrEqualDate = async (value, { req }) => {
+    const effectiveRange = await _getEffectiveEventRange(req);
+    const startDateOnly = _normalizeDateOnly(effectiveRange.date);
+    const endDateOnly = _normalizeDateOnly(value ?? effectiveRange.endDate);
+
+    if (!startDateOnly || !endDateOnly) return Promise.resolve();
+
+    if (endDateOnly < startDateOnly) {
+        return Promise.reject(new Error('End date cannot be before start date'));
+    }
+
     return Promise.resolve();
 }
 
@@ -106,13 +156,19 @@ const create = [
             }
             return true;
         }),
+    check('endDate')
+        .exists().withMessage('End date is required')
+        .isISO8601().withMessage('End date must be a valid ISO 8601 date')
+        .toDate()
+        .custom(_endDateAfterOrEqualDate),
     check('initialTime')
         .exists().withMessage('Initial time is required')
-        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Initial time must be in HH:MM format'),
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Initial time must be in HH:MM format')
+        .custom(_validateTimeOrderForEffectiveRange),
     check('endTime')
         .exists().withMessage('End time is required')
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('End time must be in HH:MM format')
-        .custom(_endTimeAfterInitialTime),
+        .custom(_validateTimeOrderForEffectiveRange),
     check('name')
         .exists().withMessage('Event name is required')
         .isString().withMessage('Event name must be a string')
@@ -162,13 +218,19 @@ const update = [
             }
             return true;
         }),
+    check('endDate')
+        .optional()
+        .isISO8601().withMessage('End date must be a valid ISO 8601 date')
+        .toDate()
+        .custom(_endDateAfterOrEqualDate),
     check('initialTime')
         .optional()
-        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Initial time must be in HH:MM format'),
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Initial time must be in HH:MM format')
+        .custom(_validateTimeOrderForEffectiveRange),
     check('endTime')
         .optional()
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('End time must be in HH:MM format')
-        .custom(_endTimeAfterInitialTime),
+        .custom(_validateTimeOrderForEffectiveRange),
     check('name')
         .optional()
         .if((value) => value !== null && value !== undefined && value !== '')

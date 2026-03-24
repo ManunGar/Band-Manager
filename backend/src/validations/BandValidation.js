@@ -58,7 +58,16 @@ const _bandNameUnique = async (value, { req }) => {
 
 const _endTimeAfterInitialTime = async (value, { req }) => {
     const initialTime = req.body.initialTime;
-    if (!initialTime) return Promise.resolve();
+    const startDate = req.body.date;
+    const endDate = req.body.endDate || startDate;
+
+    if (!initialTime || !startDate || !endDate) return Promise.resolve();
+
+    const normalizedStartDate = new Date(startDate).toISOString().slice(0, 10);
+    const normalizedEndDate = new Date(endDate).toISOString().slice(0, 10);
+
+    // Time order only needs validation when event starts and ends on the same day.
+    if (normalizedStartDate !== normalizedEndDate) return Promise.resolve();
 
     const [initHour, initMin] = initialTime.split(':').map(Number);
     const [endHour, endMin] = value.split(':').map(Number);
@@ -69,6 +78,20 @@ const _endTimeAfterInitialTime = async (value, { req }) => {
     if (endMinutes <= initMinutes) {
         return Promise.reject(new Error('End time must be after initial time'));
     }
+    return Promise.resolve();
+}
+
+const _endDateAfterOrEqualDate = async (value, { req }) => {
+    const startDate = req.body.date;
+    if (!startDate || !value) return Promise.resolve();
+
+    const startDateOnly = new Date(startDate).toISOString().slice(0, 10);
+    const endDateOnly = new Date(value).toISOString().slice(0, 10);
+
+    if (endDateOnly < startDateOnly) {
+        return Promise.reject(new Error('End date cannot be before start date'));
+    }
+
     return Promise.resolve();
 }
 
@@ -198,6 +221,11 @@ const addEvent = [
             }
             return true;
         }),
+    check('endDate')
+        .exists().withMessage('End date is required')
+        .isISO8601().withMessage('End date must be a valid ISO 8601 date')
+        .toDate()
+        .custom(_endDateAfterOrEqualDate),
     check('initialTime')
         .exists().withMessage('Initial time is required')
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Initial time must be in HH:MM format'),

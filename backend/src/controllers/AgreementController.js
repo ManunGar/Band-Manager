@@ -44,10 +44,9 @@ const listAgreements = async (req, res) => {
             eventDateWhere[Op.gte] = startDate;
         } else if (endDate) {
             eventDateWhere[Op.lte] = `${endDate} 23:59:59`;
-        } else {
-            // Keep current behavior: only upcoming agreements when no date range is provided.
-            eventDateWhere[Op.gte] = new Date();
         }
+
+        const upcomingEventFilter = Sequelize.literal("TIMESTAMP(DATE(COALESCE(`performance->Event`.`endDate`, `performance->Event`.`date`)), COALESCE(`performance->Event`.`endTime`, `performance->Event`.`initialTime`)) >= NOW()");
 
         const result = await Agreement.findAndCountAll({
             distinct: true,
@@ -69,7 +68,8 @@ const listAgreements = async (req, res) => {
                     required: true, // Only include performances that have an event
                     order: [['date', 'ASC']],
                     where: {
-                        date: eventDateWhere,
+                        ...(Object.keys(eventDateWhere).length > 0 ? { date: eventDateWhere } : {}),
+                        ...(Object.keys(eventDateWhere).length === 0 ? { [Op.and]: [upcomingEventFilter] } : {}),
                         ...(search ? {
                             [Op.or]: [
                                 { name: { [Op.like]: `%${search.toLowerCase()}%` } },
@@ -299,7 +299,13 @@ const createAgreement = async (req, res) => {
         if (!performance || !performance.Event) {
             return res.status(404).json({ error: 'Performance not found' });
         }
-        if (performance.Event.date < new Date()) {
+        const eventEndDate = new Date(performance.Event.endDate || performance.Event.date)
+            .toISOString()
+            .slice(0, 10);
+        const eventEndTime = (performance.Event.endTime || performance.Event.initialTime || '00:00:00').slice(0, 8);
+        const eventEndDateTime = new Date(`${eventEndDate}T${eventEndTime}`);
+
+        if (eventEndDateTime < new Date()) {
             return res.status(400).json({ error: 'Cannot create agreement for past events' });
         }
         await Agreement.create({

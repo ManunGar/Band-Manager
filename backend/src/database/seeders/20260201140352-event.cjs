@@ -10,6 +10,7 @@ module.exports = {
       {
         bandId: 1,
         date: '2025-12-15',
+        endDate: '2025-12-15',
         initialTime: '19:00:00',
         endTime: '21:30:00',
         name: 'Concierto de Navidad 2025',
@@ -22,6 +23,7 @@ module.exports = {
       {
         bandId: 1,
         date: '2026-01-05',
+        endDate: '2026-01-05',
         initialTime: '12:00:00',
         endTime: '13:30:00',
         name: 'Cabalgata de Reyes Magos',
@@ -34,6 +36,7 @@ module.exports = {
       {
         bandId: 1,
         date: '2027-02-14',
+        endDate: '2027-02-14',
         initialTime: '20:00:00',
         endTime: '22:00:00',
         name: 'Concierto de San Valentín',
@@ -46,6 +49,7 @@ module.exports = {
       {
         bandId: 1,
         date: '2027-03-28',
+        endDate: '2027-03-28',
         initialTime: '18:30:00',
         endTime: '20:30:00',
         name: 'Concierto de Semana Santa',
@@ -60,6 +64,7 @@ module.exports = {
       {
         bandId: 1,
         date: '2025-12-10',
+        endDate: '2025-12-10',
         initialTime: '20:00:00',
         endTime: '22:00:00',
         name: 'Ensayo',
@@ -72,6 +77,7 @@ module.exports = {
       {
         bandId: 1,
         date: '2026-01-28',
+        endDate: '2026-01-28',
         initialTime: '20:00:00',
         endTime: '22:00:00',
         name: 'Ensayo',
@@ -84,6 +90,7 @@ module.exports = {
       {
         bandId: 1,
         date: '2027-02-11',
+        endDate: '2027-02-11',
         initialTime: '20:00:00',
         endTime: '22:00:00',
         name: 'Ensayo',
@@ -100,6 +107,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2025-11-20',
+        endDate: '2025-11-20',
         initialTime: '19:30:00',
         endTime: '21:00:00',
         name: 'Concierto de Santa Cecilia',
@@ -112,6 +120,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2026-01-18',
+        endDate: '2026-01-18',
         initialTime: '13:00:00',
         endTime: '14:30:00',
         name: 'Pasacalles por el Casco Antiguo',
@@ -124,6 +133,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2027-02-22',
+        endDate: '2027-02-22',
         initialTime: '12:00:00',
         endTime: '14:00:00',
         name: 'Carnaval 2026',
@@ -136,6 +146,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2027-04-05',
+        endDate: '2027-04-05',
         initialTime: '19:00:00',
         endTime: '21:00:00',
         name: 'Concierto de Primavera',
@@ -148,6 +159,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2027-05-15',
+        endDate: '2027-05-15',
         initialTime: '20:00:00',
         endTime: '22:30:00',
         name: 'Feria de Mayo',
@@ -162,6 +174,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2026-01-15',
+        endDate: '2026-01-15',
         initialTime: '19:30:00',
         endTime: '21:30:00',
         name: 'Ensayo',
@@ -174,6 +187,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2027-02-05',
+        endDate: '2027-02-05',
         initialTime: '19:30:00',
         endTime: '21:30:00',
         name: 'Ensayo',
@@ -186,6 +200,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2027-02-19',
+        endDate: '2027-02-19',
         initialTime: '19:30:00',
         endTime: '21:30:00',
         name: 'Ensayo',
@@ -198,6 +213,7 @@ module.exports = {
       {
         bandId: 2,
         date: '2027-04-02',
+        endDate: '2027-04-02',
         initialTime: '19:30:00',
         endTime: '21:30:00',
         name: 'Ensayo',
@@ -214,6 +230,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2025-12-24',
+        endDate: '2025-12-24',
         initialTime: '23:00:00',
         endTime: '00:30:00',
         name: 'Misa del Gallo',
@@ -226,6 +243,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2026-01-12',
+        endDate: '2026-01-12',
         initialTime: '18:00:00',
         endTime: '19:30:00',
         name: 'Concierto de Año Nuevo',
@@ -238,6 +256,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2027-03-15',
+        endDate: '2027-03-15',
         initialTime: '12:30:00',
         endTime: '14:00:00',
         name: 'Día de Andalucía',
@@ -250,6 +269,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2027-04-19',
+        endDate: '2027-04-19',
         initialTime: '11:00:00',
         endTime: '13:00:00',
         name: 'Procesión de Semana Santa',
@@ -262,6 +282,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2027-06-07',
+        endDate: '2027-06-07',
         initialTime: '21:00:00',
         endTime: '23:00:00',
         name: 'Concierto de Verano',
@@ -276,6 +297,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2025-12-20',
+        endDate: '2025-12-20',
         initialTime: '20:30:00',
         endTime: '22:30:00',
         name: 'Ensayo',
@@ -288,6 +310,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2027-02-08',
+        endDate: '2027-02-08',
         initialTime: '20:30:00',
         endTime: '22:30:00',
         name: 'Ensayo',
@@ -300,6 +323,7 @@ module.exports = {
       {
         bandId: 3,
         date: '2027-03-12',
+        endDate: '2027-03-12',
         initialTime: '20:30:00',
         endTime: '22:30:00',
         name: 'Ensayo',
@@ -316,3 +340,4 @@ module.exports = {
     return queryInterface.bulkDelete('Events', null, {});
   }
 };
+

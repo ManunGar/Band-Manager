@@ -73,15 +73,15 @@ const hasRequirementToSee = async (req, res, next) => {
                 }
             }
         });
+        if (!agreement) {
+            return res.status(404).send({ error: 'Agreement not found' });
+        }
         const component = await Component.findOne({
             where: {
                 musicianId: req.user.musician.id,
                 bandId: agreement.performance.Event.band.id
             }
         })
-        if (!agreement) {
-            return res.status(404).send({ error: 'Agreement not found' });
-        }
         const hasInstrument = musicianInstrumentsId.includes(agreement.instrumentId);
         if ( agreement.musicianId !== musicianId && !hasInstrument) {
             return res.status(403).send({ error: 'Access denied. You do not have the required instrument for this agreement.' });
@@ -117,15 +117,15 @@ const hasRequirementToApply = async (req, res, next) => {
                 }
             }
         });
+        if (!agreement) {
+            return res.status(404).send({ error: 'Agreement not found' });
+        }
         const component = await Component.findOne({
             where: {
                 musicianId: req.user.musician.id,
                 bandId: agreement.performance.Event.band.id
             }
         })
-        if (!agreement) {
-            return res.status(404).send({ error: 'Agreement not found' });
-        }
         const hasInstrument = musicianInstrumentsId.includes(agreement.instrumentId);
         const isAfterDeadline = new Date() > new Date(agreement.performance.Event.date);
         if ( agreement.musicianId === musicianId) {
@@ -134,7 +134,7 @@ const hasRequirementToApply = async (req, res, next) => {
             return res.status(403).send({ error: 'Access denied. You do not have the required instrument for this agreement.' });
         } else if (component) {
             return res.status(403).send({ error: 'Access denied. You are a member of the band associated with this agreement.' });
-        } else if (agreement.status !== 'open' && !isAfterDeadline) {
+        } else if (agreement.status !== 'open' || isAfterDeadline) {
             return res.status(403).send({ error: 'Access denied. This agreement is not open for applications.' });
         } else {            
         const existingApplication = await Application.findOne({

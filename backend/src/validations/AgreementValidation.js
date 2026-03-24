@@ -14,13 +14,13 @@ const create = [
     check('instrumentId').exists().isInt().custom(_checkInstrumentExists),
     check('performanceId').exists().isInt().withMessage('Performance ID must be an integer'),
     check('amount').exists().isInt({ gt: 0 }).withMessage('Amount must be a positive number'),
-    check('payment').exists().isInt({ gt: 0 }).withMessage('Payment must be a decimal number with 2 decimal places'),
+    check('payment').exists().isFloat({ gt: 0 }).withMessage('Payment must be a positive decimal number'),
     check('description').exists().isString().isLength({ max: 255 }).withMessage('Description must be a string with a maximum length of 255 characters')
 ]
 
 const update = [
     check('amount').optional().isInt({ gt: 0 }).withMessage('Amount must be a positive number'),
-    check('payment').optional().isInt({ gt: 0 }).withMessage('Payment must be a decimal number with 2 decimal places'),
+    check('payment').optional().isFloat({ gt: 0 }).withMessage('Payment must be a positive decimal number'),
     check('description').optional().isString().isLength({ max: 255 }).withMessage('Description must be a string with a maximum length of 255 characters')
 ]
 

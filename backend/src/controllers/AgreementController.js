@@ -34,6 +34,8 @@ const listAgreements = async (req, res) => {
         }
 
         const result = await Agreement.findAndCountAll({
+            distinct: true,
+            col: 'id',
             where: {
                 instrumentId: {
                     [Op.in]: musicianInstrumentIds
@@ -42,7 +44,6 @@ const listAgreements = async (req, res) => {
             },
             limit,
             offset,
-            order: [['createdAt', 'DESC']],
             include: [{
                 model: Performance,
                 as: 'performance',
@@ -50,6 +51,7 @@ const listAgreements = async (req, res) => {
                 include: {
                     model: Event,
                     required: true, // Only include performances that have an event
+                    order: [['date', 'ASC']],
                     where: {
                         date: {
                             [Op.gte]: new Date() // Only include agreements for upcoming events
@@ -210,15 +212,13 @@ const getAgreement = async (req, res) => {
 const createAgreement = async (req, res) => {
     const performanceId = req.body.performanceId;
     try {
-        const event = await Event.findOne({
-            where: {
-                id: performanceId
-            }
+        const performance = await Performance.findByPk(performanceId, {
+            include: { model: Event, required: true }
         });
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
+        if (!performance || !performance.Event) {
+            return res.status(404).json({ error: 'Performance not found' });
         }
-        if (event.date < new Date()) {
+        if (performance.Event.date < new Date()) {
             return res.status(400).json({ error: 'Cannot create agreement for past events' });
         }
         await Agreement.create({
@@ -243,7 +243,8 @@ const updateAgreement = async (req, res) => {
         if (!agreement) {
             return res.status(404).json({ error: 'Agreement not found' });
         }
-        await agreement.update(req.body);
+        const { amount, payment, description } = req.body;
+        await agreement.update({ amount, payment, description });
         return res.status(200).json({ message: 'Agreement updated successfully', agreement });
 
     } catch (error) {
@@ -298,19 +299,20 @@ const updateApplicationStatus = async (req, res) => {
             transaction
         });
         if (!application) {
+            await transaction.rollback();
             return res.status(404).json({ error: 'Application not found' });
         }
         await application.update({ status: req.body.status }, { transaction });
         // Check if the last application was accepted, if so, reject all the other applications for the same agreement and close the agreement
         if (req.body.status === 'accepted') {
-            const agreements = await Agreement.findByPk(application.agreementId, {
+            const agreement = await Agreement.findByPk(application.agreementId, {
                 include: {
                     model: Application,
                     as: 'applications'
                 },
                 transaction
             });
-            if (agreements.applications.filter(a => a.status === 'accepted').length >= agreements.amount) {
+            if (agreement.applications.filter(a => a.status === 'accepted').length >= agreement.amount) {
                 await Application.update(
                     { status: 'rejected' },
                     {

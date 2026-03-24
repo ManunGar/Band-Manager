@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { Agreement, Application, Band, Component, Event, Musician, Performance } from "../models/sequelize.js";
 
 // Function to list 
@@ -87,6 +87,74 @@ const listAgreements = async (req, res) => {
     } catch (error) {
         console.error('Error listing agreements:', error);
         res.status(500).json({ error: 'An error occurred while listing agreements' });
+    }
+}
+
+// Function to list the agreements of the authenticated musician
+const listMyAgreements = async (req, res) => {
+    const musicianId = req.user.musician.id;
+    const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
+    const search = req.query.search ? req.query.search.trim() : null;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const startDate = dateRegex.test(req.query.startDate) ? req.query.startDate : null;
+    const endDate = dateRegex.test(req.query.endDate) ? req.query.endDate : null;
+
+    try {
+        const agreementWhere = {
+            musicianId,
+            ...(Number.isInteger(instrumentId) ? { instrumentId } : {})
+        };
+
+        const eventWhere = {};
+
+        if (search) {
+            eventWhere[Op.or] = [
+                { name: { [Op.like]: `%${search}%` } },
+                { location: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        if (startDate && endDate) {
+            eventWhere.date = { [Op.between]: [startDate, `${endDate} 23:59:59`] };
+        } else if (startDate) {
+            eventWhere.date = { [Op.gte]: startDate };
+        } else if (endDate) {
+            eventWhere.date = { [Op.lte]: `${endDate} 23:59:59` };
+        }
+
+        const agreements = await Agreement.findAll({
+            where: agreementWhere,
+            include: [{
+                model: Performance,
+                as: 'performance',
+                required: true,
+                include: {
+                    model: Event,
+                    required: true,
+                    where: eventWhere,
+                    include: {
+                        model: Band,
+                        as: 'band',
+                        attributes: ['id', 'name', 'profile_picture'],
+                        required: true,
+                    }
+                }
+            }, {
+                model: Application,
+                as: 'applications',
+                attributes: ['id'],
+                required: false,
+            }],
+            order: [
+                [Sequelize.literal('`performance->Event`.`date`'), 'DESC'],
+                [Sequelize.literal('`performance->Event`.`initialTime`'), 'DESC']
+            ]
+        });
+
+        return res.status(200).json(agreements);
+    } catch (error) {
+        console.error('Error listing my agreements:', error);
+        res.status(500).json({ error: 'An error occurred while listing your agreements' });
     }
 }
 
@@ -274,6 +342,7 @@ const updateApplicationStatus = async (req, res) => {
 
 const AgreementController = {
     listAgreements,
+    listMyAgreements,
     getAgreement,
     createAgreement,
     updateAgreement,

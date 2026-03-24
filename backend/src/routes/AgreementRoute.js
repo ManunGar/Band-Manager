@@ -21,6 +21,12 @@ const loadFileRoutes = function (app) {
             AgreementController.listAgreements
         )
 
+    // List me agreements route
+    app.get('/agreements/me',
+        isLoggedIn,
+        AgreementController.listMyAgreements
+    );
+
     // Get, update and delete agreement by ID route
     app.route('/agreements/:agreementId')
         .get(

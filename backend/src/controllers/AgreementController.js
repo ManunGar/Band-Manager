@@ -160,6 +160,73 @@ const listMyAgreements = async (req, res) => {
     }
 }
 
+// Function to list the applications of the authenticated musician
+const listMyApplications = async (req, res) => {
+    const musicianId = req.user.musician.id;
+    const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
+    const search = req.query.search ? req.query.search.trim() : null;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const startDate = dateRegex.test(req.query.startDate) ? req.query.startDate : null;
+    const endDate = dateRegex.test(req.query.endDate) ? req.query.endDate : null;
+
+    try {
+        const agreementWhere = {
+            ...(Number.isInteger(instrumentId) ? { instrumentId } : {})
+        };
+
+        const eventWhere = {};
+
+        if (search) {
+            eventWhere[Op.or] = [
+                { name: { [Op.like]: `%${search}%` } },
+                { location: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        if (startDate && endDate) {
+            eventWhere.date = { [Op.between]: [startDate, `${endDate} 23:59:59`] };
+        } else if (startDate) {
+            eventWhere.date = { [Op.gte]: startDate };
+        } else if (endDate) {
+            eventWhere.date = { [Op.lte]: `${endDate} 23:59:59` };
+        }
+
+        const applications = await Application.findAll({
+            where: { musicianId },
+            include: {
+                model: Agreement,
+                as: 'agreement',
+                required: true,
+                where: agreementWhere,
+                include: {
+                    model: Performance,
+                    as: 'performance',
+                    required: true,
+                    include: {
+                        model: Event,
+                        required: true,
+                        where: eventWhere,
+                        include: {
+                            model: Band,
+                            as: 'band',
+                            attributes: ['id', 'name', 'profile_picture'],
+                            required: true,
+                        }
+                    }
+                }
+            },
+            order: [
+                [Sequelize.literal('`agreement->performance->Event`.`date`'), 'DESC'],
+                [Sequelize.literal('`agreement->performance->Event`.`initialTime`'), 'DESC']
+            ]
+        });
+        return res.status(200).json(applications);
+    } catch (error) {
+        console.error('Error listing my applications:', error);
+        res.status(500).json({ error: 'An error occurred while listing your applications' });
+    }
+}
+
 // Function to get an agreement by ID
 const getAgreement = async (req, res) => {
     try {
@@ -345,6 +412,7 @@ const updateApplicationStatus = async (req, res) => {
 const AgreementController = {
     listAgreements,
     listMyAgreements,
+    listMyApplications,
     getAgreement,
     createAgreement,
     updateAgreement,

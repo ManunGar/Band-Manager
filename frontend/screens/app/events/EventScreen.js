@@ -75,9 +75,7 @@ const EventScreen = ({ route }) => {
     const hasValidCoordinates = Number.isFinite(eventLat) && Number.isFinite(eventLng);
     const startDateText = event?.date ? parseDate(event.date) : '';
     const endDateText = event?.endDate ? parseDate(event.endDate) : startDateText;
-    const eventDateText = startDateText && endDateText && startDateText !== endDateText
-        ? `${startDateText} -\n ${endDateText}`
-        : startDateText;
+    const eventDateText = startDateText;;
     const eventEndDate = event?.endDate || event?.date;
     const eventEndTime = (event?.endTime || event?.initialTime || '00:00:00').substring(0, 8);
     const eventEndDateTime = eventEndDate ? new Date(`${eventEndDate.slice(0, 10)}T${eventEndTime}`) : null;

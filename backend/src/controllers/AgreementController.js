@@ -8,6 +8,9 @@ const listAgreements = async (req, res) => {
         const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0); // Default to 0
         const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
         const search = req.query.search ? req.query.search.trim() : null;
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        const startDate = dateRegex.test(req.query.startDate) ? req.query.startDate : null;
+        const endDate = dateRegex.test(req.query.endDate) ? req.query.endDate : null;
         const musician = await Musician.findByPk(req.user.musician.id, {
             include: {
                 model: Component,
@@ -33,6 +36,19 @@ const listAgreements = async (req, res) => {
             });
         }
 
+        const eventDateWhere = {};
+
+        if (startDate && endDate) {
+            eventDateWhere[Op.between] = [startDate, `${endDate} 23:59:59`];
+        } else if (startDate) {
+            eventDateWhere[Op.gte] = startDate;
+        } else if (endDate) {
+            eventDateWhere[Op.lte] = `${endDate} 23:59:59`;
+        } else {
+            // Keep current behavior: only upcoming agreements when no date range is provided.
+            eventDateWhere[Op.gte] = new Date();
+        }
+
         const result = await Agreement.findAndCountAll({
             distinct: true,
             col: 'id',
@@ -53,9 +69,7 @@ const listAgreements = async (req, res) => {
                     required: true, // Only include performances that have an event
                     order: [['date', 'ASC']],
                     where: {
-                        date: {
-                            [Op.gte]: new Date() // Only include agreements for upcoming events
-                        },
+                        date: eventDateWhere,
                         ...(search ? {
                             [Op.or]: [
                                 { name: { [Op.like]: `%${search.toLowerCase()}%` } },

@@ -31,6 +31,18 @@ const schema = Yup.object({
         .required('La fecha es requerida')
         .min(new Date(), 'La fecha debe ser en el futuro')
         .typeError('Debe ser una fecha válida'),
+    endDate: Yup.date()
+        .required('La fecha de fin es requerida')
+        .typeError('Debe ser una fecha válida')
+        .test('is-after-start-date', 'La fecha de fin no puede ser anterior a la fecha de inicio', function (value) {
+            const { date } = this.parent;
+            if (!date || !value) return true;
+
+            const startDate = moment(date).format('YYYY-MM-DD');
+            const finishDate = moment(value).format('YYYY-MM-DD');
+
+            return finishDate >= startDate;
+        }),
     initialTime: Yup.string()
         .required('La hora inicial es requerida')
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'La hora debe estar en formato HH:MM'),
@@ -38,8 +50,11 @@ const schema = Yup.object({
         .required('La hora final es requerida')
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'La hora debe estar en formato HH:MM')
         .test('is-after', 'La hora final debe ser posterior a la hora inicial', function (value) {
-            const { initialTime } = this.parent;
-            if (!initialTime || !value) return true;
+            const { initialTime, date, endDate } = this.parent;
+            if (!initialTime || !value || !date || !endDate) return true;
+
+            const sameDay = moment(date).format('YYYY-MM-DD') === moment(endDate).format('YYYY-MM-DD');
+            if (!sameDay) return true;
 
             const [initHour, initMin] = initialTime.split(':').map(Number);
             const [endHour, endMin] = value.split(':').map(Number);
@@ -81,6 +96,7 @@ const EventFormScreen = ({ route }) => {
     const { eventFormData, updateEventFormData, resetEventFormData } = useEventForm();
     const [eventType, setEventType] = useState((event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances');
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showEndDatePicker, setShowEndDatePicker] = useState(false);
     const [showInitialTimePicker, setShowInitialTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
     const [imagePreview, setImagePreview] = useState(null);
@@ -90,6 +106,7 @@ const EventFormScreen = ({ route }) => {
 
     const imageSheetRef = useRef(null);
     const reverseGeocodeRequestRef = useRef(0);
+    const endTimeAutoFilledRef = useRef(false);
 
     // Reset context and initialize form when screen is focused
     useFocusEffect(
@@ -107,6 +124,7 @@ const EventFormScreen = ({ route }) => {
                     updateEventFormData({ 
                         eventId: currentEventId,
                         date: event.date || '',
+                        endDate: event.endDate || event.date || '',
                         initialTime: event.initialTime?.substring(0, 5) || '',
                         endTime: event.endTime?.substring(0, 5) || '',
                         name: event.name || event.Performance?.name || '',
@@ -139,6 +157,7 @@ const EventFormScreen = ({ route }) => {
             // If context belongs to current event, use context data (user may have navigated to EventInstruments and back)
             // Otherwise use event data directly
             date: (eventFormData.eventId === (event?.id || null)) ? eventFormData.date : (event?.date || ''),
+            endDate: (eventFormData.eventId === (event?.id || null)) ? eventFormData.endDate : (event?.endDate || event?.date || ''),
             initialTime: (eventFormData.eventId === (event?.id || null)) ? eventFormData.initialTime : (event?.initialTime?.substring(0, 5) || ''),
             endTime: (eventFormData.eventId === (event?.id || null)) ? eventFormData.endTime : (event?.endTime?.substring(0, 5) || ''),
             name: (eventFormData.eventId === (event?.id || null)) ? eventFormData.name : (event?.name || event?.Performance?.name || ''),
@@ -178,10 +197,17 @@ const EventFormScreen = ({ route }) => {
     })
 
     // Transform date to ISO format yyyy-mm-dd without offset
-    const setDate = (date) => {
+    const setDate = (field, date) => {
         const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000); // Fix UTC offset
         const iso = localDate.toISOString().slice(0, 10);
+        formik.setFieldValue(field, iso);
+    };
+
+    const setStartDate = (date) => {
+        const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        const iso = localDate.toISOString().slice(0, 10);
         formik.setFieldValue('date', iso);
+        formik.setFieldValue('endDate', iso);
     };
 
     const formatDate = (date) => {
@@ -193,6 +219,76 @@ const EventFormScreen = ({ route }) => {
         const hours = time.getHours().toString().padStart(2, '0');
         const minutes = time.getMinutes().toString().padStart(2, '0');
         formik.setFieldValue(field, `${hours}:${minutes}`);
+    }
+
+    const calculateTwoHoursAfter = (timeString) => {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null;
+
+        const totalMinutes = (hours * 60 + minutes + 120) % (24 * 60);
+        const nextHours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+        const nextMinutes = (totalMinutes % 60).toString().padStart(2, '0');
+
+        return `${nextHours}:${nextMinutes}`;
+    }
+
+    const getMinutesFromTime = (timeString) => {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null;
+        return hours * 60 + minutes;
+    }
+
+    const applyEndTimeChange = (value) => {
+        formik.setFieldValue('endTime', value);
+
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!timeRegex.test(value)) return;
+
+        const startMinutes = getMinutesFromTime(formik.values.initialTime || '');
+        const endMinutes = getMinutesFromTime(value);
+
+        if (
+            endTimeAutoFilledRef.current &&
+            startMinutes !== null &&
+            endMinutes !== null &&
+            formik.values.date &&
+            endMinutes < startMinutes
+        ) {
+            const nextDay = moment(formik.values.date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
+            formik.setFieldValue('endDate', nextDay);
+        }
+
+        // Once user sets a valid end time manually, stop treating it as auto-filled.
+        endTimeAutoFilledRef.current = false;
+    }
+
+    const setStartTime = (time) => {
+        const hours = time.getHours().toString().padStart(2, '0');
+        const minutes = time.getMinutes().toString().padStart(2, '0');
+        const startTime = `${hours}:${minutes}`;
+
+        formik.setFieldValue('initialTime', startTime);
+
+        if (!formik.values.endTime) {
+            const suggestedEndTime = calculateTwoHoursAfter(startTime);
+            if (suggestedEndTime) {
+                formik.setFieldValue('endTime', suggestedEndTime);
+                endTimeAutoFilledRef.current = true;
+            }
+        }
+    }
+
+    const handleInitialTimeChange = (value) => {
+        formik.setFieldValue('initialTime', value);
+
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!formik.values.endTime && timeRegex.test(value)) {
+            const suggestedEndTime = calculateTwoHoursAfter(value);
+            if (suggestedEndTime) {
+                formik.setFieldValue('endTime', suggestedEndTime);
+                endTimeAutoFilledRef.current = true;
+            }
+        }
     }
 
     // Convert HH:MM string to Date object for DateTimePicker
@@ -363,38 +459,35 @@ const EventFormScreen = ({ route }) => {
                                 onMapTouchEnd={() => setScrollEnabled(true)}
                             />
                         </View>
-                        {/* EVENT DATE */}
-                        <View style={styles.inputContainer}>
-                            <Input
-                                label="Fecha"
-                                placeholder="2024-12-31"
-                                value={formatDate(formik.values.date)}
-                                onChangeText={formik.handleChange('date')}
-                                onPress={() => setShowDatePicker(true)}
-                                textContentType={"date-time"} />
-                            <Error name="date" formik={formik} />
-                            {showDatePicker && (
-                                <DateTimePicker
-                                    value={formik.values.date ? new Date(formik.values.date) : new Date()}
-                                    mode="date"
-                                    dateFormat='DD-MM-YYYY'
-                                    onChange={(e, selectedDate) => {
-                                        setShowDatePicker(false);
-                                        if (selectedDate) setDate(selectedDate);
-                                    }}
-                                />
-                            )}
-                        </View>
-                        {/* EVENT TIMES */}
-                        <View style={styles.timeContainer}>
+                        {/* EVENT DATE/TIME */}
+                        <View style={styles.dateTimeRow}>
                             <View style={[styles.inputContainer, { flex: 1 }]}>
                                 <Input
-                                    label="Hora de Inicio"
+                                    label="Fecha Inicio"
+                                    placeholder="2024-12-31"
+                                    value={formatDate(formik.values.date)}
+                                    onChangeText={formik.handleChange('date')}
+                                    onPress={() => setShowDatePicker(true)}
+                                    textContentType={"date-time"} />
+                                {showDatePicker && (
+                                    <DateTimePicker
+                                        value={formik.values.date ? new Date(formik.values.date) : new Date()}
+                                        mode="date"
+                                        dateFormat='DD-MM-YYYY'
+                                        onChange={(e, selectedDate) => {
+                                            setShowDatePicker(false);
+                                            if (selectedDate) setStartDate(selectedDate);
+                                        }}
+                                    />
+                                )}
+                            </View>
+                            <View style={[styles.inputContainer, { flex: 1 }]}>
+                                <Input
+                                    label="Hora Inicio"
                                     placeholder="HH:MM"
                                     value={formik.values.initialTime}
-                                    onChangeText={formik.handleChange('initialTime')}
+                                    onChangeText={handleInitialTimeChange}
                                     onPress={() => setShowInitialTimePicker(true)} />
-                                <Error name="initialTime" formik={formik} />
                                 {showInitialTimePicker && (
                                     <DateTimePicker
                                         value={getTimeAsDate(formik.values.initialTime)}
@@ -402,19 +495,44 @@ const EventFormScreen = ({ route }) => {
                                         is24Hour={true}
                                         onChange={(e, selectTime) => {
                                             setShowInitialTimePicker(false);
-                                            if (selectTime) setTime('initialTime', selectTime);
+                                            if (selectTime) setStartTime(selectTime);
+                                        }}
+                                    />
+                                )}
+                            </View>
+                        </View>
+                        <View style={styles.dateTimeErrorRow}>
+                            <Error name="date" formik={formik} />
+                            <Error name="initialTime" formik={formik} />
+                        </View>
+                        <View style={styles.dateTimeRow}>
+                            <View style={[styles.inputContainer, { flex: 1 }]}>
+                                <Input
+                                    label="Fecha Fin"
+                                    placeholder="2024-12-31"
+                                    value={formatDate(formik.values.endDate)}
+                                    onChangeText={formik.handleChange('endDate')}
+                                    onPress={() => setShowEndDatePicker(true)}
+                                    textContentType={"date-time"} />
+                                {showEndDatePicker && (
+                                    <DateTimePicker
+                                        value={formik.values.endDate ? new Date(formik.values.endDate) : (formik.values.date ? new Date(formik.values.date) : new Date())}
+                                        mode="date"
+                                        dateFormat='DD-MM-YYYY'
+                                        onChange={(e, selectedDate) => {
+                                            setShowEndDatePicker(false);
+                                            if (selectedDate) setDate('endDate', selectedDate);
                                         }}
                                     />
                                 )}
                             </View>
                             <View style={[styles.inputContainer, { flex: 1 }]}>
                                 <Input
-                                    label="Hora de Fin"
+                                    label="Hora Fin"
                                     placeholder="HH:MM"
                                     value={formik.values.endTime}
-                                    onChangeText={formik.handleChange('endTime')}
+                                    onChangeText={applyEndTimeChange}
                                     onPress={() => setShowEndTimePicker(true)} />
-                                <Error name="endTime" formik={formik} />
                                 {showEndTimePicker && (
                                     <DateTimePicker
                                         value={getTimeAsDate(formik.values.endTime)}
@@ -422,11 +540,19 @@ const EventFormScreen = ({ route }) => {
                                         is24Hour={true}
                                         onChange={(e, selectTime) => {
                                             setShowEndTimePicker(false);
-                                            if (selectTime) setTime('endTime', selectTime);
+                                            if (selectTime) {
+                                                const hours = selectTime.getHours().toString().padStart(2, '0');
+                                                const minutes = selectTime.getMinutes().toString().padStart(2, '0');
+                                                applyEndTimeChange(`${hours}:${minutes}`);
+                                            }
                                         }}
                                     />
                                 )}
                             </View>
+                        </View>
+                        <View style={styles.dateTimeErrorRow}>
+                            <Error name="endDate" formik={formik} />
+                            <Error name="endTime" formik={formik} />
                         </View>
                         {/* PERFORMANCE IMAGE */}
                         {eventType === 'performances' &&
@@ -534,10 +660,14 @@ const styles = StyleSheet.create({
     inputContainer: {
         marginBottom: 20
     },
-    timeContainer: {
+    dateTimeRow: {
         display: 'flex',
         flexDirection: 'row',
         gap: 20
+    },
+    dateTimeErrorRow: {
+        marginTop: -30,
+        marginBottom: 20
     },
     label: {
         fontSize: 16,

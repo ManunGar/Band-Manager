@@ -60,6 +60,10 @@ const loadModel = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false
     },
+    endDate: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
     bandId: {
       type: DataTypes.INTEGER,
       references: {

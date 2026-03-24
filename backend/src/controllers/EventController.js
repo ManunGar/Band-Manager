@@ -36,7 +36,9 @@ const listEvents = async (req, res) => {
 
         // Build include array and order
         const include = _buildEventIncludes(type);
-        const order = timeScope === 'past' ? [['date', 'DESC']] : [['date', 'ASC']];
+        const order = timeScope === 'past'
+            ? [['endDate', 'DESC'], ['endTime', 'DESC']]
+            : [['date', 'ASC'], ['initialTime', 'ASC']];
 
         // Fetch events
         const events = await Event.findAll({ where, include, order });
@@ -423,27 +425,14 @@ const _buildBandIdFilter = (bandIdNumber, musicianComponents) => {
 
 // Build timeScope filter for events query
 const _buildTimeScopeFilter = (timeScope) => {
-    let filter;
+    const eventEndDateTime = "TIMESTAMP(DATE(COALESCE(`Event`.`endDate`, `Event`.`date`)), COALESCE(`Event`.`endTime`, `Event`.`initialTime`))";
 
     if (timeScope === 'past') {
-        // Past: dates before today, or today with initialTime earlier than current DB time
-        filter = {
-            [Op.or]: [
-                Sequelize.literal("DATE(`Event`.`date`) < CURDATE()"),
-                Sequelize.literal("DATE(`Event`.`date`) = CURDATE() AND `Event`.`initialTime` < CURTIME()")
-            ]
-        };
-    } else {
-        // Upcoming: dates after today, or today with initialTime >= current DB time
-        filter = {
-            [Op.or]: [
-                Sequelize.literal("DATE(`Event`.`date`) > CURDATE()"),
-                Sequelize.literal("DATE(`Event`.`date`) = CURDATE() AND `Event`.`initialTime` >= CURTIME()")
-            ]
-        };
+        return Sequelize.literal(`${eventEndDateTime} < NOW()`);
     }
 
-    return filter;
+    // Upcoming includes events that have not finished yet.
+    return Sequelize.literal(`${eventEndDateTime} >= NOW()`);
 };
 
 // Build include array for events query based on type

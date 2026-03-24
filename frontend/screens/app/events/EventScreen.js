@@ -73,6 +73,13 @@ const EventScreen = ({ route }) => {
     const eventLat = Number.parseFloat(event?.latitude);
     const eventLng = Number.parseFloat(event?.longitude);
     const hasValidCoordinates = Number.isFinite(eventLat) && Number.isFinite(eventLng);
+    const startDateText = event?.date ? parseDate(event.date) : '';
+    const endDateText = event?.endDate ? parseDate(event.endDate) : startDateText;
+    const eventDateText = startDateText;;
+    const eventEndDate = event?.endDate || event?.date;
+    const eventEndTime = (event?.endTime || event?.initialTime || '00:00:00').substring(0, 8);
+    const eventEndDateTime = eventEndDate ? new Date(`${eventEndDate.slice(0, 10)}T${eventEndTime}`) : null;
+    const isAttendanceOpen = eventEndDateTime ? eventEndDateTime >= new Date() : false;
 
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
@@ -95,7 +102,7 @@ const EventScreen = ({ route }) => {
                         {event &&
                             <View style={styles.textContainer}>
                                 <AgendaIcon width={20} height={20} fill={GlobalStyle.black} strokeWidth={30} />
-                                <Text style={styles.text}>{parseDate(event?.date)}</Text>
+                                <Text style={styles.text}>{eventDateText}</Text>
                             </View>}
                         {event &&
                             <View style={styles.textContainer}>
@@ -151,7 +158,7 @@ const EventScreen = ({ route }) => {
                         }
                     </View>
                     {event?.attendance.participates ? <View>
-                        {event?.date > new Date().toISOString() ?
+                        {isAttendanceOpen ?
                             <View style={{ flex: 1 }}>
                                 {/* BUTTONS */}
                                 <View style={{ flexDirection: 'row', gap: 20, maxWidth: 400, margin: 'auto' }}>

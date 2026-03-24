@@ -28,6 +28,9 @@ const loadModel = (sequelize, DataTypes) => {
 
       // Component relationship with Musician (One-to-Many)
       Musician.hasMany(models.Component, { foreignKey: 'musicianId', as: 'components' });
+
+      // Agreement relationship with Musician (One-to-Many)
+      Musician.hasMany(models.Agreement, { foreignKey: 'musicianId', as: 'agreements' });
     }
   }
   Musician.init({

@@ -30,6 +30,7 @@ const InputSearch = ({ placeholder, value, onChangeText, keyboardType, onPress }
                 style={styles.input}
                 value={value}
                 placeholder={placeholder}
+                placeholderTextColor={GlobalStyle.gray}
                 onChangeText={onChangeText}
                 autoCapitalize="none"
                 keyboardType={keyboardType || 'default'}

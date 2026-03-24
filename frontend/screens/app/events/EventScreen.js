@@ -176,6 +176,7 @@ const EventScreen = ({ route }) => {
                                     <View style={styles.input}>
                                         <BottomSheetTextInput
                                             style={styles.textInput}
+                                            placeholderTextColor={GlobalStyle.gray}
                                             placeholder="Escribe un comentario/justificación..."
                                             value={comment}
                                             onChangeText={setComment}

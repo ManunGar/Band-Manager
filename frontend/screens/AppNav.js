@@ -6,12 +6,13 @@ import { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../contexts/AuthContext'
 import AppStack from './app/AppStack'
 import AuthStack from './auth/AuthStack'
+import LoadingScreen from './auth/LoadingScreen'
 
 const AppNav = () => {
 
     const {user, getToken, isLoading} = useContext(AuthContext)
     const [isReady, setIsReady] = useState(false);
-
+    
     const [fontsLoaded] = useFonts({
         'BebasNeue': BebasNeue_400Regular,
         'Oswald_400': Oswald_400Regular,
@@ -20,9 +21,10 @@ const AppNav = () => {
         'Oswald_300': Oswald_300Light,
         'Oswald_700': Oswald_700Bold,
     });
-
+    
     const init = async () => {
         await getToken();
+        console.log("🚀 ~ AppNav ~ user:", user)
         setTimeout(() => {
             setIsReady(true);
         }, 2000);
@@ -33,7 +35,7 @@ const AppNav = () => {
     }, []);
 
     if (!fontsLoaded || !isReady) {
-        return null;
+        return <LoadingScreen />;
     }
 
 

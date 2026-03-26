@@ -8,7 +8,7 @@ import ProfileIcon from '../../components/icons/ProfileIcon';
 import MyTabBar from '../../components/MyTabBar';
 import Account from './account/AccountStack';
 import Agenda from './agenda/AgendaStack';
-import Agreement from './agreements/Agreement';
+import Agreement from './agreements/AgreementStack';
 import Bands from './bands/BandStack';
 import Notification from './notifications/Notification';
 

@@ -1,10 +1,8 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useLinkBuilder, useNavigation } from '@react-navigation/native';
-import { useContext } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import InputSearch from '../../../components/InputSearch';
 import TopContainer from '../../../components/TopContainer';
-import { AuthContext } from '../../../contexts/AuthContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import Agreement from './stack/Agreement';
 
@@ -28,11 +26,10 @@ export default AgreementsScreen
 
 function MyTabBar({ state, descriptors, navigation }) {
     const { buildHref } = useLinkBuilder();
-    const { user, isBandAdministrator } = useContext(AuthContext);
     const navigationScreen = useNavigation();
 
     return (
-        <TopContainer backEnabled={false} editEnabled={false} createEnabled={true} style={{ alignItems: 'left', paddingBottom: 12 }}>
+        <TopContainer backEnabled={false} editEnabled={false} createEnabled={true} style={{ alignItems: 'left', paddingBottom: 12, marginBottom: 10 }}>
             <View style={{ alignItems: 'flex-start', marginTop: -55, marginLeft: -0 }}>
                 <Text style={styles.title}>Ofertas de Contratos</Text>
                 <Text style={styles.subtitle}>Aquí podrás gestionar tus acuerdos con otros músicos y bandas.</Text>

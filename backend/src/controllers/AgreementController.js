@@ -1,5 +1,5 @@
 import { Op, Sequelize } from "sequelize";
-import { Agreement, Application, Band, Component, Event, Musician, Performance } from "../models/sequelize.js";
+import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance } from "../models/sequelize.js";
 
 // Function to list 
 const listAgreements = async (req, res) => {
@@ -79,6 +79,11 @@ const listAgreements = async (req, res) => {
                         bandId: {
                             [Op.notIn]: musician.components.map(component => component.bandId)
                         }
+                    },
+                    include: {
+                        model: Band,
+                        as: 'band',
+                        attributes: ['id', 'name', 'profile_picture'],
                     }
                 }
             }, {
@@ -86,6 +91,11 @@ const listAgreements = async (req, res) => {
                 as: 'applications',
                 attributes: ['id', 'musicianId', 'agreementId', 'type'],
                 required: false, // Include agreements even if they have no applications
+            }, {
+                model: Instrument,
+                as: 'instrument',
+                attributes: ['id', 'name'],
+                required: true, // Only include agreements that have an instrument
             }]
         })
 

@@ -1,0 +1,141 @@
+/* =========================================================
+   Footer styles
+   ========================================================= */
+
+.footer {
+  background: var(--color-footer-bg);
+  border-top: 1px solid rgba(246, 171, 51, 0.10);
+  padding: var(--space-2xl) 0 var(--space-lg);
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
+/* --- Top row --- */
+
+.top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2xl);
+  align-items: start;
+  margin-bottom: var(--space-xl);
+}
+
+/* Brand block */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--color-yellow);
+  line-height: 1;
+}
+
+.tagline {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--color-gray);
+  line-height: 1.5;
+}
+
+/* Link group container */
+.linkGroups {
+  display: flex;
+  gap: var(--space-2xl);
+}
+
+.linkGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.groupTitle {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-yellow);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--space-xs);
+}
+
+.link {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--color-gray);
+  transition: color var(--transition-fast);
+}
+
+.link:hover {
+  color: var(--color-white);
+}
+
+/* --- Divider --- */
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin-bottom: var(--space-lg);
+}
+
+/* --- Bottom row --- */
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.copyright {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.githubLink {
+  color: var(--color-gray);
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+.githubLink:hover {
+  color: var(--color-white);
+}
+
+/* ---- Responsive breakpoints ---- */
+
+@media (max-width: 640px) {
+  .top {
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+  }
+
+  .linkGroups {
+    gap: var(--space-xl);
+  }
+
+  .inner {
+    padding: 0 var(--space-lg);
+  }
+}
+
+@media (max-width: 400px) {
+  .bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+}

@@ -1,23 +1,30 @@
-import logo from './logo.svg';
+/* =========================================================
+   App.js — Main application shell.
+   Assembles all landing page sections in document order.
+   ========================================================= */
+
 import './App.css';
+
+import Navbar      from './components/Navbar/Navbar';
+import Hero        from './components/Hero/Hero';
+import Pillars     from './components/Pillars/Pillars';
+import FeatureGrid from './components/FeatureGrid/FeatureGrid';
+import HowItWorks  from './components/HowItWorks/HowItWorks';
+import Download    from './components/Download/Download';
+import Footer      from './components/Footer/Footer';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <Navbar />
+      <main>
+        <Hero />
+        <Pillars />
+        <FeatureGrid />
+        <HowItWorks />
+        <Download />
+      </main>
+      <Footer />
     </div>
   );
 }

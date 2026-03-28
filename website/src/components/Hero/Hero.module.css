@@ -1,0 +1,303 @@
+/* =========================================================
+   Hero styles
+   ========================================================= */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  background: var(--color-blue);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding-top: var(--nav-height);
+}
+
+/* --- Background decorative elements --- */
+
+/* Large radial gradient blob (right side) */
+.blob {
+  position: absolute;
+  right: -10%;
+  top: -20%;
+  width: 70vw;
+  height: 100vh;
+  background: radial-gradient(
+    ellipse at 30% 50%,
+    rgba(246, 171, 51, 0.15) 0%,
+    transparent 65%
+  );
+  border-radius: 50% 60% 40% 70% / 60% 50% 70% 40%;
+  pointer-events: none;
+}
+
+/* Outer floating ring */
+.ringOuter {
+  position: absolute;
+  right: 8%;
+  top: 50%;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 171, 51, 0.10);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Inner floating ring */
+.ringInner {
+  position: absolute;
+  right: 14%;
+  top: 50%;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 171, 51, 0.18);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* --- Two-column content layout --- */
+
+.content {
+  max-width: var(--max-width);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: var(--space-2xl);
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Text block (left column) --- */
+
+.textBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: fadeInUp 0.6s ease both;
+}
+
+/* Small yellow overline label */
+.tagline {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-yellow);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: var(--space-md);
+}
+
+/* Large display title */
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(56px, 8vw, 96px);
+  color: var(--color-white);
+  line-height: 0.95;
+  text-transform: uppercase;
+  margin-bottom: var(--space-lg);
+}
+
+/* Description paragraph */
+.description {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 17px;
+  color: var(--color-gray);
+  line-height: 1.65;
+  max-width: 480px;
+  margin-bottom: var(--space-xl);
+}
+
+/* Horizontal button row */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+/* Yellow pill primary CTA */
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--color-yellow);
+  color: var(--color-blue);
+  border-radius: var(--radius-pill);
+  padding: 14px 32px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-yellow);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 48px rgba(246, 171, 51, 0.40);
+}
+
+/* Ghost secondary link */
+.secondaryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-gray);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color var(--transition-fast);
+}
+
+.secondaryLink:hover {
+  color: var(--color-white);
+}
+
+/* --- Decorative visual card (right column) --- */
+
+.visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInUp 0.6s 0.2s ease both;
+}
+
+/* Glassmorphism mock-UI card */
+.visualCard {
+  width: 100%;
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(246, 171, 51, 0.15);
+  border-radius: 20px;
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* Traffic-light dots row */
+.mockHeader {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+}
+
+.mockDotRed,
+.mockDotYellow,
+.mockDotGreen {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.mockDotRed    { background: rgba(234, 53, 53, 0.60); }
+.mockDotYellow { background: rgba(246, 171, 51, 0.60); }
+.mockDotGreen  { background: rgba(38, 147, 56, 0.60); }
+
+/* Mock title placeholder bar */
+.mockTitle {
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.10);
+  width: 55%;
+  margin-bottom: var(--space-lg);
+}
+
+/* Mock list row */
+.mockRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.mockAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(246, 171, 51, 0.20);
+  flex-shrink: 0;
+}
+
+.mockLines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.mockBarFull  { height: 10px; border-radius: 4px; background: rgba(255,255,255,0.12); width: 100%; }
+.mockBarMid   { height: 8px;  border-radius: 4px; background: rgba(255,255,255,0.07); width: 70%; }
+.mockBarShort { height: 8px;  border-radius: 4px; background: rgba(255,255,255,0.07); width: 45%; }
+
+/* Mock CTA button strip */
+.mockCta {
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: rgba(246, 171, 51, 0.25);
+  margin-top: var(--space-md);
+}
+
+/* --- Scroll indicator (bouncing arrow) --- */
+
+.scrollIndicator {
+  position: absolute;
+  bottom: var(--space-xl);
+  left: 50%;
+  color: var(--color-gray);
+  animation: bounce 2s ease-in-out infinite;
+  z-index: 1;
+}
+
+/* ---- Responsive breakpoints ---- */
+
+@media (max-width: 960px) {
+  .content {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .description {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .actions {
+    justify-content: center;
+  }
+
+  .visual {
+    display: none;
+  }
+
+  .ringOuter,
+  .ringInner {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: clamp(48px, 14vw, 72px);
+  }
+
+  .description {
+    font-size: 15px;
+  }
+
+  .primaryButton {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+}

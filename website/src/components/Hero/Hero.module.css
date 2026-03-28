@@ -144,23 +144,6 @@
   box-shadow: 0 0 48px rgba(246, 171, 51, 0.40);
 }
 
-/* Ghost secondary link */
-.secondaryLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--color-gray);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: color var(--transition-fast);
-}
-
-.secondaryLink:hover {
-  color: var(--color-white);
-}
 
 /* --- Decorative visual card (right column) --- */
 
@@ -171,8 +154,9 @@
   animation: fadeInUp 0.6s 0.2s ease both;
 }
 
-/* Glassmorphism mock-UI card */
+/* Glassmorphism card containing the app logo */
 .visualCard {
+  position: relative;
   width: 100%;
   max-width: 360px;
   background: rgba(255, 255, 255, 0.04);
@@ -180,71 +164,34 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(246, 171, 51, 0.15);
   border-radius: 20px;
-  padding: var(--space-lg);
+  padding: var(--space-xl) var(--space-lg);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
-/* Traffic-light dots row */
-.mockHeader {
-  display: flex;
-  gap: 6px;
-  margin-bottom: var(--space-md);
+/* Radial glow behind the logo */
+.logoGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(246, 171, 51, 0.12) 0%,
+    transparent 70%
+  );
+  border-radius: 20px;
+  pointer-events: none;
 }
 
-.mockDotRed,
-.mockDotYellow,
-.mockDotGreen {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.mockDotRed    { background: rgba(234, 53, 53, 0.60); }
-.mockDotYellow { background: rgba(246, 171, 51, 0.60); }
-.mockDotGreen  { background: rgba(38, 147, 56, 0.60); }
-
-/* Mock title placeholder bar */
-.mockTitle {
-  height: 20px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.10);
-  width: 55%;
-  margin-bottom: var(--space-lg);
-}
-
-/* Mock list row */
-.mockRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-
-.mockAvatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(246, 171, 51, 0.20);
-  flex-shrink: 0;
-}
-
-.mockLines {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.mockBarFull  { height: 10px; border-radius: 4px; background: rgba(255,255,255,0.12); width: 100%; }
-.mockBarMid   { height: 8px;  border-radius: 4px; background: rgba(255,255,255,0.07); width: 70%; }
-.mockBarShort { height: 8px;  border-radius: 4px; background: rgba(255,255,255,0.07); width: 45%; }
-
-/* Mock CTA button strip */
-.mockCta {
-  height: 38px;
-  border-radius: var(--radius-pill);
-  background: rgba(246, 171, 51, 0.25);
-  margin-top: var(--space-md);
+/* App logo — inverted to white so it reads on the dark card background */
+.logoImage {
+  position: relative;
+  width: 70%;
+  max-width: 220px;
+  display: block;
+  margin: var(--space-xl) auto;
+  /* Convert the dark-blue logo to white for the dark card background */
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
 }
 
 /* --- Scroll indicator (bouncing arrow) --- */

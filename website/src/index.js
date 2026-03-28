@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+/* Initialize i18n before the app renders so translations are ready immediately */
+import './i18n';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 

@@ -1,14 +1,18 @@
 /* =========================================================
    Hero.jsx — Full-viewport opening section.
    Left: headline text + CTA buttons.
-   Right: abstract decorative element (CSS-only, no images).
+   Right: decorative card with the app logo.
    ========================================================= */
 
+import { useTranslation } from 'react-i18next';
 import { FaAndroid } from 'react-icons/fa';
-import { FiArrowRight, FiChevronDown, FiGithub } from 'react-icons/fi';
+import { FiChevronDown } from 'react-icons/fi';
+import logoImg from '../../assets/logo.png';
 import styles from './Hero.module.css';
 
 function Hero() {
+  const { t } = useTranslation();
+
   return (
     <section id="hero" className={styles.hero}>
 
@@ -23,78 +27,37 @@ function Hero() {
 
         {/* Left — text block */}
         <div className={styles.textBlock}>
-          <p className={styles.tagline}>Your Band. Your Musicians. Your Stage.</p>
+          <p className={styles.tagline}>{t('hero.tagline')}</p>
 
+          {/* Brand name stays in English as it is a proper name */}
           <h1 className={styles.title}>Band<br />Manager</h1>
 
-          <p className={styles.description}>
-            The all-in-one platform for managing your band, scheduling rehearsals
-            and performances, and hiring the right musicians for every event.
-          </p>
+          <p className={styles.description}>{t('hero.description')}</p>
 
           <div className={styles.actions}>
             {/* Primary: APK download */}
             <a
               href="#download"
               className={styles.primaryButton}
-              aria-label="Download Band Manager for Android"
+              aria-label={t('download.downloadAriaLabel')}
             >
               <FaAndroid size={20} />
-              Download for Android
-            </a>
-
-            {/* Secondary: GitHub repo */}
-            <a
-              href="https://github.com/ManunGar/Band-Manager"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.secondaryLink}
-            >
-              <FiGithub size={16} />
-              View on GitHub
-              <FiArrowRight size={14} />
+              {t('hero.downloadButton')}
             </a>
           </div>
         </div>
 
-        {/* Right — abstract decorative card (CSS-only mock UI) */}
+        {/* Right — decorative card showing the app logo */}
         <div className={styles.visual} aria-hidden="true">
           <div className={styles.visualCard}>
-            {/* Mock app header */}
-            <div className={styles.mockHeader}>
-              <div className={styles.mockDotRed}   />
-              <div className={styles.mockDotYellow}/>
-              <div className={styles.mockDotGreen} />
-            </div>
-
-            {/* Mock title bar */}
-            <div className={styles.mockTitle} />
-
-            {/* Mock content bars — simulating a list */}
-            <div className={styles.mockRow}>
-              <div className={styles.mockAvatar} />
-              <div className={styles.mockLines}>
-                <div className={styles.mockBarFull}  />
-                <div className={styles.mockBarShort} />
-              </div>
-            </div>
-            <div className={styles.mockRow}>
-              <div className={styles.mockAvatar} />
-              <div className={styles.mockLines}>
-                <div className={styles.mockBarFull}  />
-                <div className={styles.mockBarMid}   />
-              </div>
-            </div>
-            <div className={styles.mockRow}>
-              <div className={styles.mockAvatar} />
-              <div className={styles.mockLines}>
-                <div className={styles.mockBarFull}  />
-                <div className={styles.mockBarShort} />
-              </div>
-            </div>
-
-            {/* Mock CTA strip */}
-            <div className={styles.mockCta} />
+            {/* Subtle yellow glow behind the logo */}
+            <div className={styles.logoGlow} />
+            {/* App logo — CSS filter converts dark-blue to white for dark bg */}
+            <img
+              src={logoImg}
+              alt="Band Manager logo"
+              className={styles.logoImage}
+            />
           </div>
         </div>
 

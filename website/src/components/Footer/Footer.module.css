@@ -104,17 +104,6 @@
   color: rgba(255, 255, 255, 0.28);
 }
 
-.githubLink {
-  color: var(--color-gray);
-  transition: color var(--transition-fast);
-  display: flex;
-  align-items: center;
-}
-
-.githubLink:hover {
-  color: var(--color-white);
-}
-
 /* ---- Responsive breakpoints ---- */
 
 @media (max-width: 640px) {

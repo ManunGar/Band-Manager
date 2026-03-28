@@ -63,6 +63,33 @@
   color: var(--color-yellow);
 }
 
+/* Right-side control group (language toggle + CTA) */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+/* Language toggle button */
+.langToggle {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-gray);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-pill);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.langToggle:hover {
+  color: var(--color-white);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 /* CTA pill button */
 .ctaButton {
   font-family: var(--font-body);
@@ -119,6 +146,34 @@
   opacity: 1;
 }
 
+/* Bottom row of mobile menu: lang toggle + CTA button */
+.mobileBottom {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+/* Language toggle inside the mobile menu */
+.mobileLangToggle {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-gray);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-pill);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.mobileLangToggle:hover {
+  color: var(--color-white);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 .mobileCta {
   display: inline-block;
   font-family: var(--font-body);
@@ -131,14 +186,14 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   text-align: center;
-  margin-top: var(--space-sm);
+  flex: 1;
 }
 
 /* ---- Responsive breakpoints ---- */
 
 @media (max-width: 768px) {
   .nav,
-  .ctaButton {
+  .controls {
     display: none;
   }
 

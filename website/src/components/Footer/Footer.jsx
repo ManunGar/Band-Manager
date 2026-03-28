@@ -2,10 +2,11 @@
    Footer.jsx — Site footer with links and project attribution.
    ========================================================= */
 
-import { FiGithub } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import styles from './Footer.module.css';
 
 function Footer() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -17,39 +18,24 @@ function Footer() {
 
           {/* Brand block */}
           <div className={styles.brand}>
+            {/* Brand name stays in English as a proper name */}
             <span className={styles.logo}>Band Manager</span>
-            <p className={styles.tagline}>For musicians, by musicians.</p>
+            <p className={styles.tagline}>{t('footer.tagline')}</p>
           </div>
 
           {/* Navigation link groups */}
           <div className={styles.linkGroups}>
             <div className={styles.linkGroup}>
-              <h4 className={styles.groupTitle}>Project</h4>
-              <a
-                href="https://github.com/ManunGar/Band-Manager"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-              >
-                GitHub
-              </a>
+              <h4 className={styles.groupTitle}>{t('footer.projectGroup')}</h4>
               <a href="#download" className={styles.link}>
-                Download APK
+                {t('footer.downloadApk')}
               </a>
             </div>
 
             <div className={styles.linkGroup}>
-              <h4 className={styles.groupTitle}>About</h4>
+              <h4 className={styles.groupTitle}>{t('footer.aboutGroup')}</h4>
               <a href="#features" className={styles.link}>
-                Features
-              </a>
-              <a
-                href="https://github.com/ManunGar/Band-Manager/blob/main/LICENSE"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-              >
-                License
+                {t('footer.featuresLink')}
               </a>
             </div>
           </div>
@@ -58,20 +44,11 @@ function Footer() {
         {/* Horizontal divider */}
         <div className={styles.divider} aria-hidden="true" />
 
-        {/* Bottom row: copyright | GitHub icon */}
+        {/* Bottom row: copyright */}
         <div className={styles.bottom}>
           <p className={styles.copyright}>
-            © {currentYear} Band Manager — University Final Project
+            © {currentYear} Band Manager
           </p>
-          <a
-            href="https://github.com/ManunGar/Band-Manager"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.githubLink}
-            aria-label="View source on GitHub"
-          >
-            <FiGithub size={20} />
-          </a>
         </div>
 
       </div>

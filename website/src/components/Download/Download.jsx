@@ -4,11 +4,14 @@
    NOTE: Place the APK file at public/downloads/band-manager.apk
    ========================================================= */
 
+import { useTranslation } from 'react-i18next';
 import { FaAndroid } from 'react-icons/fa';
 import { FiAlertCircle } from 'react-icons/fi';
 import styles from './Download.module.css';
 
 function Download() {
+  const { t } = useTranslation();
+
   return (
     <section id="download" className={styles.section}>
 
@@ -19,54 +22,38 @@ function Download() {
         <div className={styles.card}>
 
           {/* Section label */}
-          <span className={styles.label}>Available Now</span>
+          <span className={styles.label}>{t('download.label')}</span>
 
-          {/* App title */}
+          {/* App title — brand name stays in English */}
           <h2 className={styles.title}>Band Manager</h2>
 
           {/* One-liner pitch */}
-          <p className={styles.subtitle}>
-            Free. No subscription. Direct APK download for Android.
-          </p>
+          <p className={styles.subtitle}>{t('download.subtitle')}</p>
 
           {/* Primary download button
               The `download` attribute triggers a file save dialog.
-              TODO: replace href with the actual APK path once file is placed in public/downloads/ */}
+              TODO: verify APK is placed at public/downloads/band-manager.apk */}
           <a
-            href="/downloads/band-manager.apk"
-            download="band-manager.apk"
+            href="https://n8n-production-a7f5.up.railway.app/form/f021fa06-5daa-4dbd-9265-608286a144b9"
             className={styles.downloadButton}
-            aria-label="Download Band Manager APK for Android"
+            aria-label={t('download.downloadAriaLabel')}
           >
             <FaAndroid size={22} />
-            Download APK
+            {t('download.downloadButton')}
           </a>
 
           {/* Platform compatibility badge */}
           <div className={styles.badges}>
             <div className={styles.badge}>
               <FaAndroid size={16} />
-              <span>Android</span>
+              <span>{t('download.androidBadge')}</span>
             </div>
           </div>
 
           {/* Sideloading disclaimer */}
           <p className={styles.disclaimer}>
             <FiAlertCircle size={14} />
-            Not available on Google Play Store — sideloading required.
-          </p>
-
-          {/* Project context */}
-          <p className={styles.openSource}>
-            Open source · University final project ·{' '}
-            <a
-              href="https://github.com/ManunGar/Band-Manager"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.repoLink}
-            >
-              View on GitHub
-            </a>
+            {t('download.disclaimer')}
           </p>
 
         </div>

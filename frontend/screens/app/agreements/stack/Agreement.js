@@ -2,9 +2,12 @@ import { useContext, useEffect, useState } from 'react';
 import { FlatList, View } from 'react-native';
 import AgreementEndpoints from '../../../../api/AgreementEndpoints';
 import AgreementCard from '../../../../components/AgreementCard';
+import LinkText from '../../../../components/LinkText';
 import Tag from '../../../../components/Tap';
 import { useAgreementSearch } from '../../../../contexts/AgreementSearchContext';
 import { AuthContext } from '../../../../contexts/AuthContext';
+
+const PAGE_SIZE = 5;
 
 const Agreement = () => {
     const { user } = useContext(AuthContext);
@@ -14,29 +17,41 @@ const Agreement = () => {
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(false);
 
+    // When filters change: reset list and fetch from page 0
     useEffect(() => {
-        fetchAgreements();
-    }, [instrumentId, debouncedSearch, offset, startDate, endDate]);
+        const fetch = async () => {
+            try {
+                const fetched = await AgreementEndpoints.listAgreements(
+                    instrumentId, debouncedSearch, 0, PAGE_SIZE, startDate, endDate
+                );
+                setAgreements(fetched.data);
+                setHasMore(fetched.hasMore);
+                setOffset(0);
+            } catch (error) {
+                console.error('Error fetching agreements:', error);
+            }
+        };
+        fetch();
+    }, [instrumentId, debouncedSearch, startDate, endDate]);
 
-    const fetchAgreements = async () => {
-        try {
-            const fetchedAgreements = await AgreementEndpoints.listAgreements(
-                instrumentId,
-                debouncedSearch,
-                offset,
-                5,
-                startDate,
-                endDate
-            );
-            setAgreements(fetchedAgreements.data);
-            setHasMore(fetchedAgreements.hasMore);
-        } catch (error) {
-            console.error('Error fetching agreements:', error);
-        }
-    };
+    // When offset increases (load more): append to existing list
+    useEffect(() => {
+        if (offset === 0) return;
+        const fetch = async () => {
+            try {
+                const fetched = await AgreementEndpoints.listAgreements(
+                    instrumentId, debouncedSearch, offset, PAGE_SIZE, startDate, endDate
+                );
+                setAgreements(prev => [...prev, ...fetched.data]);
+                setHasMore(fetched.hasMore);
+            } catch (error) {
+                console.error('Error fetching agreements:', error);
+            }
+        };
+        fetch();
+    }, [offset]);
 
     const onChangeInstrument = (id) => {
-        setOffset(0);
         setInstrumentId(id);
     };
 
@@ -63,11 +78,16 @@ const Agreement = () => {
                 renderItem={({ item }) => (
                     <AgreementCard agreement={item} />
                 )}
-                // onEndReached={() => {
-                //     if (hasMore) {
-                //         setOffset((prevOffset) => prevOffset + 5);
-                //     }
-                // }}
+                ListFooterComponent={() =>
+                    hasMore ? (
+                        <LinkText
+                            style={{ textAlign: 'center', paddingVertical: 10 }}
+                            onPress={() => setOffset(prev => prev + PAGE_SIZE)}
+                        >
+                            Cargar Más
+                        </LinkText>
+                    ) : null
+                }
             />
 
         </View>

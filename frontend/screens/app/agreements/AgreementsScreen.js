@@ -8,6 +8,9 @@ import TopContainer from '../../../components/TopContainer';
 import { useAgreementSearch } from '../../../contexts/AgreementSearchContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import Agreement from './stack/Agreement';
+import Applications from './stack/Applications';
+import Musicians from './stack/Musicians';
+import MyAgreements from './stack/MyAgreements';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -21,9 +24,9 @@ const AgreementsScreen = () => {
                 screenOptions={{ swipeEnabled: false }}
             >
                 <Tab.Screen name="Contratos" component={Agreement} />
-                <Tab.Screen name="Músicos" component={Agreement} />
-                <Tab.Screen name="Mis Ofertas" component={Agreement} />
-                <Tab.Screen name="Solicitudes" component={Agreement} />
+                <Tab.Screen name="Músicos" component={Musicians} />
+                <Tab.Screen name="Mis Ofertas" component={MyAgreements} />
+                <Tab.Screen name="Solicitudes" component={Applications} />
             </Tab.Navigator>
             <AgreementFilterSheet sheetRef={filterSheetRef} />
         </>

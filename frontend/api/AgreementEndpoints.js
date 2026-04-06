@@ -22,6 +22,24 @@ const listAgreements = async (instrumentId, search, offset, limit, startDate, en
     }
 };
 
+// Endpoint to list agreements created by authenticated musician
+const listMyAgreements = async (instrumentId, search, startDate, endDate) => {
+    try {
+        const response = await axios.get(`${baseUrl}/agreements/me`, {
+            params: {
+                instrumentId,
+                search,
+                startDate,
+                endDate,
+            }
+        });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
-    listAgreements
+    listAgreements,
+    listMyAgreements
 }

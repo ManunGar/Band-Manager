@@ -185,6 +185,11 @@ const listMyAgreements = async (req, res) => {
                 as: 'applications',
                 attributes: ['id'],
                 required: false,
+            }, {
+                model: Instrument,
+                as: 'instrument',
+                attributes: ['id', 'name', 'image'],
+                required: true,
             }],
             order: [
                 [Sequelize.literal('`performance->Event`.`date`'), 'DESC'],

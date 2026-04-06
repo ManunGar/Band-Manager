@@ -1,0 +1,122 @@
+/* =========================================================
+   FeatureGrid styles
+   Light background for section contrast rhythm.
+   ========================================================= */
+
+.section {
+  background: var(--color-light-bg);
+  padding: var(--space-3xl) 0;
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
+/* --- Section header --- */
+
+.header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.label {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-blue);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: var(--space-sm);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 48px);
+  color: var(--color-blue);
+  line-height: 1;
+  margin-bottom: var(--space-md);
+}
+
+.subheading {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--color-dark-gray);
+  line-height: 1.6;
+}
+
+/* --- 3-column card grid --- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+/* Feature card */
+.card {
+  background: var(--color-white);
+  border-radius: var(--radius-card);
+  padding: var(--space-lg);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+}
+
+/* Icon container */
+.iconWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--color-yellow-10);
+  border: 1px solid var(--color-yellow-20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-yellow);
+  margin-bottom: var(--space-md);
+}
+
+/* Card typography — dark text on light background */
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--color-blue);
+  line-height: 1;
+  margin-bottom: var(--space-sm);
+}
+
+.cardDescription {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--color-dark-gray);
+  line-height: 1.6;
+}
+
+/* ---- Responsive breakpoints ---- */
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inner {
+    padding: 0 var(--space-lg);
+  }
+}

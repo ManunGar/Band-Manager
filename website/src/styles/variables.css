@@ -1,0 +1,54 @@
+/* =========================================================
+   Design tokens — mirrored from frontend/GlobalStyle.js
+   and extended with web-specific derived values.
+   ========================================================= */
+
+:root {
+  /* --- Brand colors (from mobile app) --- */
+  --color-yellow:      #F6AB33;
+  --color-blue:        #17243F;
+  --color-white:       #FFFFFF;
+  --color-light-bg:    #F0F0F0;
+  --color-gray:        #8C8C8C;
+  --color-dark-gray:   #717171;
+  --color-light-gray:  #D9D9D9;
+  --color-black:       #000000;
+
+  /* --- Derived / web-only tokens --- */
+  --color-blue-90:     rgba(23, 36, 63, 0.90);   /* glassmorphism base */
+  --color-blue-60:     rgba(23, 36, 63, 0.60);
+  --color-yellow-20:   rgba(246, 171, 51, 0.20);  /* icon bg tint */
+  --color-yellow-10:   rgba(246, 171, 51, 0.10);
+  --color-footer-bg:   #0F1929;                   /* slightly darker than blue */
+
+  /* --- Typography --- */
+  --font-display:  'Bebas Neue', sans-serif;
+  --font-body:     'Oswald', sans-serif;
+
+  /* --- Spacing scale (multiples of 4 / 8) --- */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   16px;
+  --space-lg:   24px;
+  --space-xl:   40px;
+  --space-2xl:  64px;
+  --space-3xl:  96px;
+
+  /* --- Border radii (from mobile UI patterns) --- */
+  --radius-pill:   40px;
+  --radius-card:   10px;
+  --radius-input:  30px;
+
+  /* --- Shadows --- */
+  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.10);
+  --shadow-yellow:  0 0 32px rgba(246, 171, 51, 0.25);
+  --shadow-nav:     0 2px 20px rgba(0, 0, 0, 0.20);
+
+  /* --- Layout --- */
+  --max-width:   1200px;
+  --nav-height:  72px;
+
+  /* --- Transitions --- */
+  --transition-fast: 0.18s ease;
+  --transition-med:  0.30s ease;
+}

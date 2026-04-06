@@ -1,0 +1,154 @@
+/* =========================================================
+   HowItWorks styles
+   ========================================================= */
+
+.section {
+  background: var(--color-blue);
+  padding: var(--space-3xl) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
+/* --- Section header --- */
+
+.header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.label {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-yellow);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: var(--space-sm);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 48px);
+  color: var(--color-white);
+  line-height: 1;
+  margin-bottom: var(--space-md);
+}
+
+.subheading {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--color-gray);
+  line-height: 1.6;
+}
+
+/* --- 4-column steps grid --- */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  position: relative;
+}
+
+/* Individual step */
+.step {
+  position: relative;
+  text-align: center;
+  padding: var(--space-lg) var(--space-md);
+}
+
+/* Dashed horizontal connector between steps.
+   Hidden on the last step via :last-child. */
+.connector {
+  position: absolute;
+  top: 72px; /* aligns with icon center */
+  left: 60%;
+  right: -40%;
+  height: 0;
+  border-top: 2px dashed rgba(246, 171, 51, 0.28);
+  pointer-events: none;
+}
+
+.step:last-child .connector {
+  display: none;
+}
+
+/* Large decorative step number */
+.number {
+  font-family: var(--font-display);
+  font-size: 72px;
+  line-height: 1;
+  color: rgba(246, 171, 51, 0.12);
+  margin-bottom: var(--space-xs);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Icon circle */
+.iconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-yellow-10);
+  border: 2px solid var(--color-yellow-20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-yellow);
+  margin: 0 auto var(--space-md);
+  position: relative;
+  z-index: 1;
+}
+
+/* Step text */
+.stepTitle {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--color-white);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-sm);
+}
+
+.stepDescription {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--color-gray);
+  line-height: 1.65;
+}
+
+/* ---- Responsive breakpoints ---- */
+
+@media (max-width: 960px) {
+  .steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Hide horizontal connector on 2-col layout to avoid visual confusion */
+  .connector {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .inner {
+    padding: 0 var(--space-lg);
+  }
+}

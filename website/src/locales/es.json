@@ -1,0 +1,125 @@
+{
+  "nav": {
+    "features": "Características",
+    "howItWorks": "Cómo Funciona",
+    "download": "Descargar",
+    "downloadApk": "Descargar APK"
+  },
+  "hero": {
+    "tagline": "Tu banda. Tus músicos. Tu escenario.",
+    "description": "La plataforma todo en uno para gestionar tu banda, programar ensayos y actuaciones, y contratar a los músicos adecuados para cada evento.",
+    "downloadButton": "Descargar para Android"
+  },
+  "pillars": {
+    "label": "Dos Pilares",
+    "heading": "Todo lo que tu banda necesita",
+    "subheading": "Desde la gestión diaria hasta la contratación puntual — una sola app lo cubre todo.",
+    "bandManagement": {
+      "title": "Gestión de Banda",
+      "subtitle": "Control total. Sin fricciones.",
+      "description": "Crea y gestiona tu banda, programa ensayos y actuaciones, controla la asistencia de los miembros y organiza todo desde un solo lugar.",
+      "bullets": [
+        "Agenda y calendario de eventos",
+        "Control de asistencia por evento",
+        "Roles y permisos de miembros",
+        "Códigos únicos para unirse a la banda"
+      ]
+    },
+    "musicianHiring": {
+      "title": "Contratación de Músicos",
+      "subtitle": "Encuentra al músico ideal. Siempre.",
+      "description": "Publica acuerdos abiertos para músicos externos, gestiona solicitudes y formaliza colaboraciones con contrato y detalles de pago incluidos.",
+      "bullets": [
+        "Acuerdos de contratación abiertos",
+        "Flujo de solicitud y revisión",
+        "Seguimiento de honorarios y pagos",
+        "Filtrado por instrumento"
+      ]
+    }
+  },
+  "featureGrid": {
+    "label": "Características",
+    "heading": "Todo en un solo lugar",
+    "subheading": "Desde perfiles hasta pagos, Band Manager cubre el ciclo completo de gestión de bandas y contratación de músicos.",
+    "items": [
+      {
+        "id": "musician-profiles",
+        "title": "Perfiles de Músico",
+        "description": "Instrumentos, niveles de competencia e información personal, todo en un lugar."
+      },
+      {
+        "id": "band-creation",
+        "title": "Creación de Banda",
+        "description": "Crea bandas, genera códigos únicos de acceso y gestiona a los miembros fácilmente."
+      },
+      {
+        "id": "event-scheduling",
+        "title": "Programación de Eventos",
+        "description": "Planifica ensayos y actuaciones con fecha, hora y ubicación."
+      },
+      {
+        "id": "attendance-tracking",
+        "title": "Control de Asistencia",
+        "description": "Sabe quién confirmó, quién declinó y quién todavía no ha respondido."
+      },
+      {
+        "id": "hire-musicians",
+        "title": "Contratar Músicos",
+        "description": "Publica puestos abiertos y acepta solicitudes de músicos externos."
+      },
+      {
+        "id": "agreements",
+        "title": "Acuerdos",
+        "description": "Formaliza contratos con detalles de pago, rol e información de la actuación."
+      }
+    ]
+  },
+  "howItWorks": {
+    "label": "Cómo Funciona",
+    "heading": "En marcha en minutos",
+    "subheading": "Cuatro sencillos pasos para pasar del registro a una banda completamente gestionada.",
+    "steps": [
+      {
+        "id": "step-1",
+        "number": "01",
+        "title": "Crea tu Perfil",
+        "description": "Regístrate y crea tu perfil de músico con tus instrumentos y niveles de competencia."
+      },
+      {
+        "id": "step-2",
+        "number": "02",
+        "title": "Únete o Crea una Banda",
+        "description": "Crea una nueva banda e invita a miembros con un código único, o únete a una existente."
+      },
+      {
+        "id": "step-3",
+        "number": "03",
+        "title": "Programa y Asiste a Eventos",
+        "description": "Añade ensayos y actuaciones, confirma la asistencia y controla quién aparece."
+      },
+      {
+        "id": "step-4",
+        "number": "04",
+        "title": "Contrata o Sé Contratado",
+        "description": "Publica acuerdos abiertos para músicos externos, o postúlate como músico para actuaciones."
+      }
+    ]
+  },
+  "download": {
+    "label": "Disponible Ahora",
+    "subtitle": "Gratis. Sin suscripción. Descarga directa del APK para Android.",
+    "downloadButton": "Descargar APK",
+    "downloadAriaLabel": "Descargar Band Manager APK para Android",
+    "androidBadge": "Android",
+    "disclaimer": "No disponible en Google Play Store — se requiere instalación manual.",
+    "openSource": "Código abierto · Proyecto Final de Universidad"
+  },
+  "footer": {
+    "tagline": "Para músicos, por músicos.",
+    "projectGroup": "Proyecto",
+    "aboutGroup": "Acerca de",
+    "downloadApk": "Descargar APK",
+    "featuresLink": "Características",
+    "copyright": "Proyecto Final de Universidad"
+  }
+}

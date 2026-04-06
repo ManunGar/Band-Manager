@@ -1,0 +1,169 @@
+/* =========================================================
+   Download styles
+   ========================================================= */
+
+.section {
+  background: var(--color-blue);
+  padding: var(--space-3xl) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Large centered radial glow for drama */
+.glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(
+    circle,
+    rgba(246, 171, 51, 0.13) 0%,
+    transparent 65%
+  );
+  pointer-events: none;
+}
+
+.inner {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+  position: relative;
+  z-index: 1;
+}
+
+/* Glassmorphism centered card */
+.card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(246, 171, 51, 0.20);
+  border-radius: 20px;
+  padding: var(--space-2xl);
+  text-align: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Section label */
+.label {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-yellow);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: var(--space-md);
+}
+
+/* App title */
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 8vw, 80px);
+  color: var(--color-white);
+  line-height: 1;
+  margin-bottom: var(--space-md);
+}
+
+/* Pitch subtitle */
+.subtitle {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--color-gray);
+  line-height: 1.6;
+  margin-bottom: var(--space-xl);
+}
+
+/* Large yellow pill download button */
+.downloadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--color-yellow);
+  color: var(--color-blue);
+  border-radius: var(--radius-pill);
+  padding: 16px 44px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-yellow);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.downloadButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 56px rgba(246, 171, 51, 0.45);
+}
+
+/* Platform badge row */
+.badges {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--color-light-gray);
+}
+
+/* Sideloading disclaimer */
+.disclaimer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--color-gray);
+  margin-top: var(--space-lg);
+}
+
+/* Open source note */
+.openSource {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.25);
+  margin-top: var(--space-sm);
+}
+
+.repoLink {
+  color: rgba(246, 171, 51, 0.60);
+  transition: color var(--transition-fast);
+}
+
+.repoLink:hover {
+  color: var(--color-yellow);
+}
+
+/* ---- Responsive breakpoints ---- */
+
+@media (max-width: 480px) {
+  .inner {
+    padding: 0 var(--space-lg);
+  }
+
+  .card {
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .downloadButton {
+    padding: 14px 32px;
+    font-size: 15px;
+  }
+}

@@ -3,7 +3,6 @@ import { useLinkBuilder } from '@react-navigation/native';
 import { useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AgreementFilterSheet from '../../../components/AgreementFilterSheet';
-import FilterIcon from '../../../components/icons/FilterIcon';
 import InputSearch from '../../../components/InputSearch';
 import TopContainer from '../../../components/TopContainer';
 import { useAgreementSearch } from '../../../contexts/AgreementSearchContext';
@@ -51,9 +50,9 @@ function MyTabBar({ state, descriptors, navigation, onFilterPress }) {
                         onChangeText={setSearch}
                     />
                 </View>
-                <Pressable onPress={onFilterPress} hitSlop={10}>
+                {/* <Pressable onPress={onFilterPress} hitSlop={10}>
                     <FilterIcon />
-                </Pressable>
+                </Pressable> */}
             </View>
             <View style={{ width: '100%' }}>
                 <ScrollView

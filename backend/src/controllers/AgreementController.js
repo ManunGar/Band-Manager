@@ -1,6 +1,23 @@
 import { Op, Sequelize } from "sequelize";
 import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance } from "../models/sequelize.js";
 
+const normalizeDateQuery = (value) => {
+    if (!value) return null;
+
+    const raw = Array.isArray(value) ? value[0] : value;
+    const dateString = String(raw).trim();
+    if (!dateString) return null;
+
+    // Preserve selected day for ISO-like inputs such as 2026-04-06T00:00:00.000Z.
+    const isoPrefix = dateString.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoPrefix) return isoPrefix[1];
+
+    const parsedDate = new Date(dateString);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+
+    return parsedDate.toISOString().slice(0, 10);
+};
+
 // Function to list 
 const listAgreements = async (req, res) => {
     try {
@@ -8,9 +25,8 @@ const listAgreements = async (req, res) => {
         const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0); // Default to 0
         const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
         const search = req.query.search ? req.query.search.trim() : null;
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        const startDate = dateRegex.test(req.query.startDate) ? req.query.startDate : null;
-        const endDate = dateRegex.test(req.query.endDate) ? req.query.endDate : null;
+        const startDate = normalizeDateQuery(req.query.startDate);
+        const endDate = normalizeDateQuery(req.query.endDate);
         const musician = await Musician.findByPk(req.user.musician.id, {
             include: {
                 model: Component,
@@ -121,9 +137,8 @@ const listMyAgreements = async (req, res) => {
     const musicianId = req.user.musician.id;
     const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
     const search = req.query.search ? req.query.search.trim() : null;
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    const startDate = dateRegex.test(req.query.startDate) ? req.query.startDate : null;
-    const endDate = dateRegex.test(req.query.endDate) ? req.query.endDate : null;
+    const startDate = normalizeDateQuery(req.query.startDate);
+    const endDate = normalizeDateQuery(req.query.endDate);
 
     try {
         const agreementWhere = {
@@ -189,9 +204,8 @@ const listMyApplications = async (req, res) => {
     const musicianId = req.user.musician.id;
     const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
     const search = req.query.search ? req.query.search.trim() : null;
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    const startDate = dateRegex.test(req.query.startDate) ? req.query.startDate : null;
-    const endDate = dateRegex.test(req.query.endDate) ? req.query.endDate : null;
+    const startDate = normalizeDateQuery(req.query.startDate);
+    const endDate = normalizeDateQuery(req.query.endDate);
 
     try {
         const agreementWhere = {

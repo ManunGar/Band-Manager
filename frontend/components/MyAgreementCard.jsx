@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
     },
     applicationsBadge: {
         position: 'absolute',
-        top: 10,
-        left: 10,
+        bottom: 10,
+        right: 10,
         backgroundColor: '#FFF5E6',
         borderRadius: 10,
         paddingHorizontal: 8,
@@ -101,7 +101,6 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     eventName: {
-        marginTop: 2,
         paddingRight: 54,
         fontFamily: 'Oswald_500',
         fontSize: 22,

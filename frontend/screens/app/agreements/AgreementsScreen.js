@@ -1,42 +1,59 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { useLinkBuilder, useNavigation } from '@react-navigation/native';
+import { useLinkBuilder } from '@react-navigation/native';
+import { useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import AgreementFilterSheet from '../../../components/AgreementFilterSheet';
+import FilterIcon from '../../../components/icons/FilterIcon';
 import InputSearch from '../../../components/InputSearch';
 import TopContainer from '../../../components/TopContainer';
+import { useAgreementSearch } from '../../../contexts/AgreementSearchContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import Agreement from './stack/Agreement';
 
 const Tab = createMaterialTopTabNavigator();
 
 const AgreementsScreen = () => {
+    const filterSheetRef = useRef(null);
+
     return (
-        < Tab.Navigator
-            tabBar={(props) => <MyTabBar {...props} />}
-            screenOptions={{ swipeEnabled: false }}
-        >
-            <Tab.Screen name="Contratos" component={Agreement} />
-            <Tab.Screen name="Músicos" component={Agreement} />
-            <Tab.Screen name="Mis Ofertas" component={Agreement} />
-            <Tab.Screen name="Solicitudes" component={Agreement} />
-        </Tab.Navigator >
+        <>
+            <Tab.Navigator
+                tabBar={(props) => <MyTabBar {...props} onFilterPress={() => filterSheetRef.current?.present()} />}
+                screenOptions={{ swipeEnabled: false }}
+            >
+                <Tab.Screen name="Contratos" component={Agreement} />
+                <Tab.Screen name="Músicos" component={Agreement} />
+                <Tab.Screen name="Mis Ofertas" component={Agreement} />
+                <Tab.Screen name="Solicitudes" component={Agreement} />
+            </Tab.Navigator>
+            <AgreementFilterSheet sheetRef={filterSheetRef} />
+        </>
     )
 }
 
 export default AgreementsScreen
 
-function MyTabBar({ state, descriptors, navigation }) {
+function MyTabBar({ state, descriptors, navigation, onFilterPress }) {
     const { buildHref } = useLinkBuilder();
-    const navigationScreen = useNavigation();
+    const { search, setSearch, clearAll } = useAgreementSearch();
 
     return (
-        <TopContainer backEnabled={false} editEnabled={false} createEnabled={true} style={{ alignItems: 'left', paddingBottom: 12, marginBottom: 10 }}>
+        <TopContainer backEnabled={false} editEnabled={false} createEnabled={false} filterEnabled={true} onFilter={onFilterPress} style={{ alignItems: 'left', paddingBottom: 12, marginBottom: 10 }}>
             <View style={{ alignItems: 'flex-start', marginTop: -55, marginLeft: -0 }}>
                 <Text style={styles.title}>Ofertas de Contratos</Text>
                 <Text style={styles.subtitle}>Aquí podrás gestionar tus acuerdos con otros músicos y bandas.</Text>
             </View>
-            <View style={{ marginTop: 20 }} >
-                <InputSearch
-                    placeholder="Buscar ofertas de contratos" />
+            <View style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%' }} >
+                <View style={{ flex: 1 }}>
+                    <InputSearch
+                        placeholder="Buscar ofertas de contratos"
+                        value={search}
+                        onChangeText={setSearch}
+                    />
+                </View>
+                <Pressable onPress={onFilterPress} hitSlop={10}>
+                    <FilterIcon />
+                </Pressable>
             </View>
             <View style={{ width: '100%' }}>
                 <ScrollView
@@ -64,6 +81,7 @@ function MyTabBar({ state, descriptors, navigation }) {
                             });
 
                             if (!isFocused && !event.defaultPrevented) {
+                                clearAll();
                                 navigation.navigate(route.name, route.params);
                             }
                         };

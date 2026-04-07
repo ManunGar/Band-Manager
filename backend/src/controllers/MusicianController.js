@@ -1,32 +1,275 @@
-import { Band, Component, Instrument, Musician, User } from "../models/sequelize.js";
+import { Op, Sequelize } from "sequelize";
+import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance, User } from "../models/sequelize.js";
 
-// Function to get account details of the logged-in musician
-const accountDetails = async (req, res) => {
-    const user = req.user;
+const _getMusicianAverageRate = async (musicianId) => {
+    const result = await Application.findOne({
+        where: {
+            musicianId,
+            status: 'accepted',
+            type: 'musician_apply',
+            rate: { [Op.not]: null }
+        },
+        attributes: [[Sequelize.fn('AVG', Sequelize.col('rate')), 'averageRate']],
+        raw: true
+    });
+
+    if (!result || result.averageRate === null) {
+        return null;
+    }
+
+    return Number(Number(result.averageRate).toFixed(2));
+}
+
+const _canViewMusicianProfile = (authenticatedMusicianId, musician) => {
+    return authenticatedMusicianId === musician.id || musician.isProfilePrivate === false;
+}
+
+const _getProfileBaseData = async (musicianId) => {
+    return Musician.findByPk(musicianId, {
+        include: [
+            {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'full_name', 'location', 'latitude', 'longitude', 'phone', 'email', 'profile_picture']
+            },
+            {
+                model: Instrument,
+                as: 'instruments',
+                through: { attributes: ['level'] }
+            },
+            {
+                model: Component,
+                as: 'components',
+                include: [{
+                    model: Band,
+                    as: 'band',
+                    attributes: ['id', 'name', 'profile_picture']
+                }]
+            }
+        ]
+    });
+}
+
+// Function to get a musician profile when it is public or belongs to the authenticated musician
+const getMusicianProfile = async (req, res) => {
+    const authenticatedMusicianId = req.user.musician.id;
+    const musicianId = parseInt(req.params.musicianId, 10);
+
     try {
-        // Fetch user details
-        const userDetails = await User.findByPk(user.id, {
-            attributes: { exclude: ['password'] },
-            include: [
-                {
-                    model: Musician,
-                    as: 'musician',
-                    include: [
-                        { model: Instrument, as: 'instruments' },
-                        { model: Component, as: 'components', include: [{ model: Band, as: 'band' }] }
-                    ]
-                }
-            ]
-        });
-        if (!userDetails) {
-            return res.status(404).send({ error: 'User not found' });
+        const musician = await _getProfileBaseData(musicianId);
+        if (!musician) {
+            return res.status(404).send({ error: 'Musician not found' });
         }
-        return res.status(200).send(userDetails);
+
+        if (!_canViewMusicianProfile(authenticatedMusicianId, musician)) {
+            return res.status(403).send({ error: 'Access denied. This profile is private.' });
+        }
+
+        const profile = musician.toJSON();
+        profile.averageRate = await _getMusicianAverageRate(musician.id);
+        profile.isOwner = authenticatedMusicianId === musician.id;
+
+        return res.status(200).send(profile);
     } catch (error) {
-        console.error('Error in accountDetails:', error);
-        return res.status(500).send({ error: 'Error fetching account details' });
+        console.error('Error in getMusicianProfile:', error);
+        return res.status(500).send({ error: 'Error fetching musician profile' });
     }
 };
+
+// Function to list visible musicians with their average rating
+const listMusicians = async (req, res) => {
+    const loggedMusicianId = req.user.musician.id;
+    const search = req.query.search ? req.query.search.trim() : null;
+    const instrumentId = req.query.instrument ? parseInt(req.query.instrument, 10) : null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+    try {
+        const userWhere = {};
+        if (search) {
+            userWhere[Op.or] = [
+                { full_name: { [Op.like]: `%${search}%` } },
+                { location: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const musicianWhere = {
+            isProfilePrivate: false,
+            id: {
+                [Op.ne]: loggedMusicianId
+            }
+        };
+
+        if (Number.isInteger(instrumentId)) {
+            musicianWhere[Op.and] = [
+                Sequelize.literal(`EXISTS (
+                    SELECT 1
+                    FROM MusicianLevels AS ml
+                    WHERE ml.musicianId = Musician.id
+                        AND ml.instrumentId = ${instrumentId}
+                )`)
+            ];
+        }
+
+        const musicians = await Musician.findAndCountAll({
+            where: musicianWhere,
+            distinct: true,
+            col: 'id',
+            limit,
+            offset,
+            attributes: {
+                include: [[
+                    Sequelize.literal(`(
+                        SELECT ROUND(AVG(a.rate), 2)
+                        FROM Applications AS a
+                        WHERE a.musicianId = Musician.id
+                            AND a.status = 'accepted'
+                            AND a.type = 'musician_apply'
+                            AND a.rate IS NOT NULL
+                    )`),
+                    'averageRate'
+                ]]
+            },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'full_name', 'location', 'profile_picture'],
+                    where: userWhere,
+                    required: true
+                },
+                {
+                    model: Instrument,
+                    as: 'instruments'
+                }
+            ],
+            order: [[Sequelize.literal('averageRate IS NULL'), 'ASC'], [Sequelize.literal('averageRate'), 'DESC']]
+        });
+
+        return res.status(200).send({
+            data: musicians.rows,
+            total: musicians.count,
+            limit,
+            offset,
+            loaded: offset + musicians.rows.length,
+            hasMore: offset + musicians.rows.length < musicians.count,
+            nextOffset: offset + musicians.rows.length < musicians.count
+                ? offset + limit
+                : null
+        });
+    } catch (error) {
+        console.error('Error in listMusicians:', error);
+        return res.status(500).send({ error: 'Error listing musicians' });
+    }
+}
+
+// Function to list contracts where a musician has participated (accepted application)
+const listMusicianContracts = async (req, res) => {
+    const authenticatedMusicianId = req.user.musician.id;
+    const musicianId = parseInt(req.params.musicianId, 10);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+    const instrumentId = req.query.instrument ? parseInt(req.query.instrument, 10) : null;
+
+    try {
+        const musician = await Musician.findByPk(musicianId, {
+            attributes: ['id', 'isProfilePrivate']
+        });
+
+        if (!musician) {
+            return res.status(404).send({ error: 'Musician not found' });
+        }
+
+        if (!_canViewMusicianProfile(authenticatedMusicianId, musician)) {
+            return res.status(403).send({ error: 'Access denied. This profile is private.' });
+        }
+
+        const agreementWhere = {};
+        if (Number.isInteger(instrumentId)) {
+            agreementWhere.instrumentId = instrumentId;
+        }
+
+        const contracts = await Application.findAndCountAll({
+            where: {
+                musicianId,
+                status: 'accepted',
+            },
+            limit,
+            offset,
+            include: [{
+                model: Agreement,
+                as: 'agreement',
+                required: true,
+                where: agreementWhere,
+                include: [{
+                    model: Instrument,
+                    as: 'instrument',
+                    attributes: ['id', 'name', 'image'],
+                    required: true
+                }, {
+                    model: Performance,
+                    as: 'performance',
+                    required: true,
+                    include: {
+                        model: Event,
+                        required: true,
+                        include: {
+                            model: Band,
+                            as: 'band',
+                            attributes: ['id', 'name', 'profile_picture'],
+                            required: true
+                        }
+                    }
+                }]
+            }],
+            order: [
+                [Sequelize.literal('`agreement->performance->Event`.`date`'), 'DESC'],
+                [Sequelize.literal('`agreement->performance->Event`.`initialTime`'), 'DESC']
+            ]
+        });
+
+        return res.status(200).send({
+            data: contracts.rows,
+            total: contracts.count,
+            limit,
+            offset,
+            loaded: offset + contracts.rows.length,
+            hasMore: offset + contracts.rows.length < contracts.count,
+            nextOffset: offset + contracts.rows.length < contracts.count
+                ? offset + limit
+                : null
+        });
+    } catch (error) {
+        console.error('Error in listMusicianContracts:', error);
+        return res.status(500).send({ error: 'Error listing musician contracts' });
+    }
+}
+
+// Function to update profile visibility of the authenticated musician
+const updateVisibility = async (req, res) => {
+    const musicianId = req.user.musician.id;
+    const isProfilePrivate = req.body.isProfilePrivate;
+
+    try {
+        const musician = await Musician.findByPk(musicianId);
+        if (!musician) {
+            return res.status(404).send({ error: 'Musician not found' });
+        }
+
+        await musician.update({ isProfilePrivate });
+
+        return res.status(200).send({
+            message: 'Musician profile visibility updated successfully',
+            musician: {
+                id: musician.id,
+                isProfilePrivate: musician.isProfilePrivate
+            }
+        });
+    } catch (error) {
+        console.error('Error in updateVisibility:', error);
+        return res.status(500).send({ error: 'Error updating musician profile visibility' });
+    }
+}
 
 // Function to add instruments to a musician
 const addInstrumentsToMusician = async (req, res) => {
@@ -51,7 +294,10 @@ const addInstrumentsToMusician = async (req, res) => {
 
 const MusicianController = {
     addInstrumentsToMusician,
-    accountDetails
+    getMusicianProfile,
+    listMusicians,
+    listMusicianContracts,
+    updateVisibility
 };
 
 export default MusicianController;

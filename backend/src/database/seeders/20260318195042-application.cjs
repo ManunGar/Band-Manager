@@ -9,7 +9,7 @@ module.exports = {
         musicianId: 3, // has Tuba
         agreementId: 1,
         status: 'accepted',
-        rate: 185,
+        rate: 4.5,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -20,7 +20,6 @@ module.exports = {
         musicianId: 10, // has Saxofon baritono
         agreementId: 2,
         status: 'pending',
-        rate: 155,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -31,7 +30,6 @@ module.exports = {
         musicianId: 8, // has Trompa
         agreementId: 3,
         status: 'accepted',
-        rate: 170,
         type: 'band_invite',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -42,7 +40,6 @@ module.exports = {
         musicianId: 9, // has Trompeta
         agreementId: 4,
         status: 'pending',
-        rate: 145,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -51,7 +48,6 @@ module.exports = {
         musicianId: 7, // has Trompeta
         agreementId: 4,
         status: 'rejected',
-        rate: 140,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -62,7 +58,6 @@ module.exports = {
         musicianId: 6, // has Oboe
         agreementId: 5,
         status: 'accepted',
-        rate: 165,
         type: 'band_invite',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -73,7 +68,6 @@ module.exports = {
         musicianId: 5, // has Bombardino
         agreementId: 6,
         status: 'pending',
-        rate: 158,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -84,7 +78,7 @@ module.exports = {
         musicianId: 10, // has Fagot
         agreementId: 7,
         status: 'accepted',
-        rate: 195,
+        rate: 4,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -95,7 +89,6 @@ module.exports = {
         musicianId: 4, // has Tambor
         agreementId: 8,
         status: 'accepted',
-        rate: 130,
         type: 'band_invite',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -106,7 +99,6 @@ module.exports = {
         musicianId: 1, // has Clarinete
         agreementId: 9,
         status: 'pending',
-        rate: 168,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -115,7 +107,6 @@ module.exports = {
         musicianId: 2, // has Clarinete
         agreementId: 9,
         status: 'accepted',
-        rate: 166,
         type: 'musician_apply',
         createdAt: new Date(),
         updatedAt: new Date()

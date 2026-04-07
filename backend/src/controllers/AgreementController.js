@@ -458,6 +458,35 @@ const updateApplicationStatus = async (req, res) => {
     }
 }
 
+// Function to rate an accepted musician application after the event has ended
+const rateApplication = async (req, res) => {
+    try {
+        const application = req.applicationToRate;
+        const rate = Number(req.body.rate);
+
+        if (!application) {
+            return res.status(404).json({ error: 'Application not found' });
+        }
+
+        await application.update({ rate });
+
+        return res.status(200).json({
+            message: 'Application rated successfully',
+            application: {
+                id: application.id,
+                musicianId: application.musicianId,
+                agreementId: application.agreementId,
+                status: application.status,
+                type: application.type,
+                rate: application.rate
+            }
+        });
+    } catch (error) {
+        console.error('Error rating application:', error);
+        res.status(500).json({ error: 'An error occurred while rating the application' });
+    }
+}
+
 const AgreementController = {
     listAgreements,
     listMyAgreements,
@@ -467,7 +496,8 @@ const AgreementController = {
     updateAgreement,
     deleteAgreement,
     applyToAgreement,
-    updateApplicationStatus
+    updateApplicationStatus,
+    rateApplication
 }
 
 export default AgreementController;

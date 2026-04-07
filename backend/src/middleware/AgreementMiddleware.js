@@ -182,5 +182,64 @@ const hasNoApprovedApplication = async (req, res, next) => {
     }
 }
 
-export { hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin };
+// Middleware to ensure an application can be rated
+// Rules: must belong to agreement, be musician_apply, be accepted and belong to a finished event
+const canRateApplication = async (req, res, next) => {
+    const agreementId = req.params.agreementId;
+    const applicationId = req.params.applicationId;
+
+    try {
+        const application = await Application.findOne({
+            where: {
+                id: applicationId,
+                agreementId
+            },
+            include: {
+                model: Agreement,
+                as: 'agreement',
+                required: true,
+                include: {
+                    model: Performance,
+                    as: 'performance',
+                    required: true,
+                    include: {
+                        model: Event,
+                        required: true
+                    }
+                }
+            }
+        });
+
+        if (!application) {
+            return res.status(404).send({ error: 'Application not found' });
+        }
+
+        if (application.type !== 'musician_apply') {
+            return res.status(403).send({ error: 'Only musician applications can be rated' });
+        }
+
+        if (application.status !== 'accepted') {
+            return res.status(403).send({ error: 'Only accepted applications can be rated' });
+        }
+
+        const event = application.agreement.performance.Event;
+        const eventEndDate = new Date(event.endDate || event.date)
+            .toISOString()
+            .slice(0, 10);
+        const eventEndTime = (event.endTime || event.initialTime || '00:00:00').slice(0, 8);
+        const eventEndDateTime = new Date(`${eventEndDate}T${eventEndTime}`);
+
+        if (eventEndDateTime > new Date()) {
+            return res.status(403).send({ error: 'Application can only be rated after the event has ended' });
+        }
+
+        req.applicationToRate = application;
+        next();
+    } catch (error) {
+        console.error('Error checking if application can be rated:', error);
+        res.status(500).send({ error: 'Error checking if application can be rated' });
+    }
+}
+
+export { canRateApplication, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin };
 

@@ -28,4 +28,14 @@ const updateApplicationStatus = [
     check('status').exists().isIn(['accepted', 'rejected']).withMessage('Status must be either "accepted" or "rejected"')
 ]
 
-export { create, update, updateApplicationStatus };
+const rateApplication = [
+    check('rate')
+        .exists().withMessage('Rate is required')
+        .bail()
+        .isFloat({ min: 0, max: 5 }).withMessage('Rate must be a number between 0 and 5')
+        .bail()
+        .custom((value) => Number.isInteger(Number(value) * 2)).withMessage('Rate must be in intervals of 0.5')
+]
+
+export { create, rateApplication, update, updateApplicationStatus };
+

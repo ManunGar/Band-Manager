@@ -121,6 +121,7 @@ const AgreementDetailScreen = ({ route }) => {
                 <TopContainer
                     style={{ paddingBottom: 0, marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
                     editEnabled={false}
+                    title={band?.name || 'Detalle del Contrato'}
                 />
 
                 {/* HEADER */}

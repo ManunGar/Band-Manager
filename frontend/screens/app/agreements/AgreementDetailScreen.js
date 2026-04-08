@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../api/AgreementEndpoints';
 import bandProfileDefault from '../../../assets/milestones/band_default.png';
@@ -55,6 +55,13 @@ const AgreementDetailScreen = ({ route }) => {
 
     const isAfterDeadline = event?.date ? new Date() > new Date(event.date) : false;
     const isOpen = agreement?.status === 'open' && !isAfterDeadline;
+    const hasEventStarted = useMemo(() => {
+        if (!event?.date) return false;
+        const eventStart = new Date(event.date);
+        const [hours, minutes, seconds] = (event.initialTime || '00:00:00').split(':').map(Number);
+        eventStart.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+        return eventStart <= new Date();
+    }, [event?.date, event?.initialTime]);
 
     const isOwner = agreement?.musicianId === user?.musician?.id;
     const myApplication = agreement?.applications?.find(app => app.musicianId === user?.musician?.id);
@@ -81,8 +88,14 @@ const AgreementDetailScreen = ({ route }) => {
     const updateApplicationStatus = async (applicationId, status) => {
         try {
             setUpdatingApplicationId(applicationId);
-            await AgreementEndpoints.updateApplicationStatus(agreementId, applicationId, status);
+            const response = await AgreementEndpoints.updateApplicationStatus(agreementId, applicationId, status);
             await fetchAgreement();
+
+            if (response?.reopened) {
+                Alert.alert('Solicitud actualizada', 'La solicitud ha sido rechazada y el contrato se ha reabierto.');
+                return;
+            }
+
             Alert.alert('Solicitud actualizada', `La solicitud ha sido ${status === 'accepted' ? 'aceptada' : 'rechazada'} correctamente.`);
         } catch (error) {
             Alert.alert('Error', error.message || 'Hubo un error al actualizar la solicitud.');
@@ -91,12 +104,16 @@ const AgreementDetailScreen = ({ route }) => {
         }
     };
 
-    const handleStatusChange = (applicationId, status) => {
+    const handleStatusChange = (applicationId, status, currentStatus) => {
+        const isRejectingAccepted = status === 'rejected' && currentStatus === 'accepted';
+
         Alert.alert(
             status === 'accepted' ? 'Aceptar solicitud' : 'Rechazar solicitud',
             status === 'accepted'
                 ? '¿Quieres aceptar esta solicitud?'
-                : '¿Quieres rechazar esta solicitud?',
+                : isRejectingAccepted
+                    ? '¿Quieres rechazar esta solicitud ya aceptada? Si el contrato estaba cerrado, se volverá a abrir.'
+                    : '¿Quieres rechazar esta solicitud?',
             [
                 { text: 'Cancelar', style: 'cancel' },
                 {
@@ -234,13 +251,18 @@ const AgreementDetailScreen = ({ route }) => {
                             <Text style={styles.subtitle}>Músicos Inscritos</Text>
                         </View>
                         <Text style={[styles.subtitle, { color: GlobalStyle.yellow }]}>
-                            {totalApplicants} / {agreement?.amount ?? 0}
+                            {totalApplicants}
                         </Text>
                     </View>
 
                     {/* Owner applications list */}
                     {isOwner && (
                         <View style={{ marginTop: 6 }}>
+                            {hasEventStarted && ownerApplications.length > 0 && (
+                                <View style={styles.lockedStatusNotice}>
+                                    <Text style={styles.lockedStatusNoticeText}>El evento ya ha empezado. No se pueden modificar estados de solicitudes.</Text>
+                                </View>
+                            )}
                             {ownerApplications.length === 0 ? (
                                 <View style={styles.infoBox}>
                                     <Text style={[styles.infoText, { color: GlobalStyle.darkGray }]}>Aún no hay músicos inscritos en este contrato.</Text>
@@ -251,7 +273,10 @@ const AgreementDetailScreen = ({ route }) => {
                                     const musicianUser = musician?.user;
                                     const statusStyle = APPLICATION_STATUS[application?.status];
                                     const isPending = application?.status === 'pending';
+                                    const isAccepted = application?.status === 'accepted';
                                     const isUpdating = updatingApplicationId === application?.id;
+                                    const showPendingActions = isPending && !hasEventStarted;
+                                    const showAcceptedRejectAction = isAccepted && !hasEventStarted;
 
                                     return (
                                         <View key={application.id} style={styles.applicantCard}>
@@ -276,22 +301,29 @@ const AgreementDetailScreen = ({ route }) => {
                                                 </View>
                                             </View>
 
-                                            {isPending ? (
+                                            {(showPendingActions || showAcceptedRejectAction) ? (
                                                 <View style={styles.applicantActions}>
-                                                    <Pressable
-                                                        onPress={() => handleStatusChange(application.id, 'accepted')}
-                                                        disabled={Boolean(updatingApplicationId)}
-                                                        style={[styles.actionButton, styles.acceptButton, Boolean(updatingApplicationId) && styles.actionButtonDisabled]}
-                                                    >
-                                                        <Text style={[styles.actionButtonText, styles.acceptButtonText]}>{isUpdating ? 'Procesando...' : 'Aceptar'}</Text>
-                                                    </Pressable>
+                                                    {showPendingActions && (
+                                                        <Pressable
+                                                            onPress={() => handleStatusChange(application.id, 'accepted', application.status)}
+                                                            disabled={Boolean(updatingApplicationId)}
+                                                            style={[styles.actionButton, styles.acceptButton, Boolean(updatingApplicationId) && styles.actionButtonDisabled]}
+                                                        >
+                                                            <Text style={[styles.actionButtonText, styles.acceptButtonText]}>{isUpdating ? 'Procesando...' : 'Aceptar'}</Text>
+                                                        </Pressable>
+                                                    )}
 
                                                     <Pressable
-                                                        onPress={() => handleStatusChange(application.id, 'rejected')}
+                                                        onPress={() => handleStatusChange(application.id, 'rejected', application.status)}
                                                         disabled={Boolean(updatingApplicationId)}
-                                                        style={[styles.actionButton, styles.rejectButton, Boolean(updatingApplicationId) && styles.actionButtonDisabled]}
+                                                        style={[
+                                                            styles.actionButton,
+                                                            styles.rejectButton,
+                                                            showAcceptedRejectAction && styles.singleActionButton,
+                                                            Boolean(updatingApplicationId) && styles.actionButtonDisabled
+                                                        ]}
                                                     >
-                                                        <Text style={[styles.actionButtonText, styles.rejectButtonText]}>{isUpdating ? 'Procesando...' : 'Rechazar'}</Text>
+                                                        <Text style={[styles.actionButtonText, styles.rejectButtonText]}>{isUpdating ? 'Procesando...' : isAccepted ? 'Revertir a rechazado' : 'Rechazar'}</Text>
                                                     </Pressable>
                                                 </View>
                                             ) : (
@@ -543,7 +575,7 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 8,
         borderWidth: 1,
-        paddingVertical: 10,
+        paddingVertical: 3,
         alignItems: 'center',
     },
     actionButtonText: {
@@ -570,5 +602,23 @@ const styles = StyleSheet.create({
     ownerStatusChip: {
         marginTop: 12,
         alignSelf: 'flex-start',
+    },
+    singleActionButton: {
+        flex: 0,
+        minWidth: 180,
+    },
+    lockedStatusNotice: {
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: GlobalStyle.lightGray,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        backgroundColor: GlobalStyle.white,
+    },
+    lockedStatusNoticeText: {
+        fontFamily: 'Oswald_400',
+        fontSize: 14,
+        color: GlobalStyle.gray,
     }
 });

@@ -241,5 +241,52 @@ const canRateApplication = async (req, res, next) => {
     }
 }
 
-export { canRateApplication, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin };
+// Middleware to ensure application status can only be updated before event starts
+const canUpdateApplicationStatus = async (req, res, next) => {
+    const agreementId = req.params.agreementId;
+    const applicationId = req.params.applicationId;
+
+    try {
+        const application = await Application.findOne({
+            where: {
+                id: applicationId,
+                agreementId
+            },
+            include: {
+                model: Agreement,
+                as: 'agreement',
+                required: true,
+                include: {
+                    model: Performance,
+                    as: 'performance',
+                    required: true,
+                    include: {
+                        model: Event,
+                        required: true
+                    }
+                }
+            }
+        });
+
+        if (!application) {
+            return res.status(404).send({ error: 'Application not found' });
+        }
+
+        const event = application.agreement.performance.Event;
+        const startDate = new Date(event.date);
+        const [hours, minutes, seconds] = (event.initialTime || '00:00:00').split(':').map(Number);
+        startDate.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+
+        if (startDate <= new Date()) {
+            return res.status(403).send({ error: 'Application status can only be updated before the event starts' });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Error checking if application status can be updated:', error);
+        res.status(500).send({ error: 'Error checking if application status can be updated' });
+    }
+}
+
+export { canRateApplication, canUpdateApplicationStatus, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin };
 

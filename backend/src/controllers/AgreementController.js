@@ -512,53 +512,83 @@ const applyToAgreement = async (req, res) => {
 const updateApplicationStatus = async (req, res) => {
     const transaction = await Application.sequelize.transaction();
     try {
+        const nextStatus = req.body.status;
+
         // Find the application to update, ensuring it belongs to the specified agreement and is of type 'musician_apply'
         const application = await Application.findOne({
             where: {
                 id: req.params.applicationId,
                 agreementId: req.params.agreementId,
                 type: 'musician_apply',
-                status: 'pending' // Only allow updating applications that are currently pending
+                status: {
+                    [Op.in]: ['pending', 'accepted']
+                }
             },
             transaction
         });
         if (!application) {
             await transaction.rollback();
-            return res.status(404).json({ error: 'Application not found' });
+            return res.status(404).json({ error: 'Application not found or cannot be updated' });
         }
-        await application.update({ status: req.body.status }, { transaction });
-        // Check if the last application was accepted, if so, reject all the other applications for the same agreement and close the agreement
-        if (req.body.status === 'accepted') {
-            const agreement = await Agreement.findByPk(application.agreementId, {
-                include: {
-                    model: Application,
-                    as: 'applications'
-                },
-                transaction
-            });
-            if (agreement.applications.filter(a => a.status === 'accepted').length >= agreement.amount) {
-                await Application.update(
-                    { status: 'rejected' },
-                    {
-                        where: {
-                            agreementId: application.agreementId,
-                            id: { [Op.ne]: application.id },
-                            status: 'pending'
-                        },
-                        transaction
-                    }
-                );
-                await Agreement.update(
-                    { status: 'closed' },
-                    {
-                        where: { id: application.agreementId },
-                        transaction
-                    }
-                );
-            }
+
+        const previousStatus = application.status;
+
+        if (previousStatus === nextStatus) {
+            await transaction.commit();
+            return res.status(200).json({ message: 'Application status updated successfully', application });
         }
+
+        const isAllowedTransition =
+            (previousStatus === 'pending' && (nextStatus === 'accepted' || nextStatus === 'rejected')) ||
+            (previousStatus === 'accepted' && nextStatus === 'rejected');
+
+        if (!isAllowedTransition) {
+            await transaction.rollback();
+            return res.status(400).json({ error: 'Invalid status transition' });
+        }
+
+        await application.update({ status: nextStatus }, { transaction });
+
+        const agreement = await Agreement.findByPk(application.agreementId, {
+            include: {
+                model: Application,
+                as: 'applications',
+                attributes: ['id', 'status']
+            },
+            transaction
+        });
+
+        if (!agreement) {
+            await transaction.rollback();
+            return res.status(404).json({ error: 'Agreement not found' });
+        }
+
+        const acceptedApplicationsCount = agreement.applications.filter(a => a.status === 'accepted').length;
+        let agreementStatus = acceptedApplicationsCount >= agreement.amount ? 'closed' : 'open';
+
+        if (agreementStatus === 'closed') {
+            await Application.update(
+                { status: 'rejected' },
+                {
+                    where: {
+                        agreementId: application.agreementId,
+                        status: 'pending'
+                    },
+                    transaction
+                }
+            );
+        }
+
+        await agreement.update({ status: agreementStatus }, { transaction });
+
         await transaction.commit();
-        return res.status(200).json({ message: 'Application status updated successfully', application });
+
+        return res.status(200).json({
+            message: 'Application status updated successfully',
+            application,
+            agreementStatus,
+            reopened: previousStatus === 'accepted' && nextStatus === 'rejected' && agreementStatus === 'open'
+        });
     } catch (error) {
         await transaction.rollback();
         console.error('Error updating application status:', error);

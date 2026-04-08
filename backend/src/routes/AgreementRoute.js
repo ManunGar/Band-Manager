@@ -1,5 +1,5 @@
 import AgreementController from "../controllers/AgreementController.js";
-import { canRateApplication, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin } from "../middleware/AgreementMiddleware.js";
+import { canRateApplication, canUpdateApplicationStatus, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin } from "../middleware/AgreementMiddleware.js";
 import { isLoggedIn } from "../middleware/AuthMiddleware.js";
 import * as AgreementValidation from "../validations/AgreementValidation.js";
 import { handleValidation } from '../validations/HandleValidation.js';
@@ -66,6 +66,7 @@ const loadFileRoutes = function (app) {
     app.put('/agreements/:agreementId/applications/:applicationId',
         isLoggedIn,
         isAgreementOwner,
+        canUpdateApplicationStatus,
         AgreementValidation.updateApplicationStatus,
         handleValidation,
         AgreementController.updateApplicationStatus

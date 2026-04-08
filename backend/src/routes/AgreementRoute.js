@@ -1,5 +1,5 @@
 import AgreementController from "../controllers/AgreementController.js";
-import { hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin } from "../middleware/AgreementMiddleware.js";
+import { canRateApplication, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin } from "../middleware/AgreementMiddleware.js";
 import { isLoggedIn } from "../middleware/AuthMiddleware.js";
 import * as AgreementValidation from "../validations/AgreementValidation.js";
 import { handleValidation } from '../validations/HandleValidation.js';
@@ -69,6 +69,16 @@ const loadFileRoutes = function (app) {
         AgreementValidation.updateApplicationStatus,
         handleValidation,
         AgreementController.updateApplicationStatus
+    );
+
+    // Rate an accepted application when the related event has already ended
+    app.put('/agreements/:agreementId/applications/:applicationId/rate',
+        isLoggedIn,
+        isAgreementOwner,
+        canRateApplication,
+        AgreementValidation.rateApplication,
+        handleValidation,
+        AgreementController.rateApplication
     );
 
 }

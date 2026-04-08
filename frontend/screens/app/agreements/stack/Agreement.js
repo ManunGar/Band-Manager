@@ -16,6 +16,7 @@ const Agreement = () => {
     const [agreements, setAgreements] = useState([]);
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     // When filters change: reset list and fetch from page 0
     useEffect(() => {
@@ -55,6 +56,22 @@ const Agreement = () => {
         setInstrumentId(id);
     };
 
+    const onRefresh = async () => {
+        setRefreshing(true);
+        try {
+            const fetched = await AgreementEndpoints.listAgreements(
+                instrumentId, debouncedSearch, 0, PAGE_SIZE, startDate, endDate
+            );
+            setAgreements(fetched.data);
+            setHasMore(fetched.hasMore);
+            setOffset(0);
+        } catch (error) {
+            console.error('Error refreshing agreements:', error);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
 
     return (
         <View style={{ flex: 1, paddingInline: 25 }}>
@@ -78,6 +95,8 @@ const Agreement = () => {
                 renderItem={({ item }) => (
                     <AgreementCard agreement={item} />
                 )}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
                 ListFooterComponent={() =>
                     hasMore ? (
                         <LinkText

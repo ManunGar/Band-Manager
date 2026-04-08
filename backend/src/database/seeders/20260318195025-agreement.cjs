@@ -107,6 +107,61 @@ module.exports = {
         description: 'Dos clarinetes para concierto de verano',
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        performanceId: 11, // Event 18 -> Band 3
+        musicianId: 7,
+        instrumentId: 6, // Clarinete
+        status: 'closed',
+        amount: 1,
+        payment: 160,
+        description: 'Refuerzo de clarinete para concierto extraordinario',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        performanceId: 11, // Event 18 -> Band 3
+        musicianId: 7,
+        instrumentId: 8, // Requinto
+        status: 'closed',
+        amount: 1,
+        payment: 170,
+        description: 'Requinto solista para repertorio clasico y popular',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        performanceId: 13, // Event 20 -> Band 3
+        musicianId: 7,
+        instrumentId: 6, // Clarinete
+        status: 'open',
+        amount: 2,
+        payment: 155,
+        description: 'Dos clarinetes para procesion de Semana Santa',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        performanceId: 14, // Event 21 -> Band 3
+        musicianId: 7,
+        instrumentId: 8, // Requinto
+        status: 'open',
+        amount: 1,
+        payment: 175,
+        description: 'Requinto principal para pasodobles en concierto de verano',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        performanceId: 14, // Event 21 -> Band 3
+        musicianId: 7,
+        instrumentId: 6, // Clarinete
+        status: 'open',
+        amount: 1,
+        payment: 162,
+        description: 'Clarinete de refuerzo para cuerda de maderas',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ]);
   },

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { AgreementSearchProvider } from '../../../contexts/AgreementSearchContext';
 import AgreementDetailScreen from './AgreementDetailScreen';
 import AgreementsScreen from './AgreementsScreen';
+import MusicianProfileScreen from './MusicianProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,7 @@ const Agreement = () => {
                     animation: 'slide_from_right' }}>
                     <Stack.Screen name="AgreementScreen" component={AgreementsScreen} />
                     <Stack.Screen name="AgreementDetail" component={AgreementDetailScreen} />
+                    <Stack.Screen name="MusicianProfile" component={MusicianProfileScreen} />
                 </Stack.Navigator>
             </AgreementSearchProvider>
         </View>

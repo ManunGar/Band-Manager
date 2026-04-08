@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { useContext, useEffect, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import MusicianEndpoints from '../../../../api/MusicianEndpoints';
@@ -10,6 +11,7 @@ import * as GlobalStyle from '../../../../GlobalStyle';
 const PAGE_SIZE = 8;
 
 const Musicians = () => {
+    const navigation = useNavigation();
     const { user } = useContext(AuthContext);
     const { debouncedSearch } = useAgreementSearch();
     const [instrumentId, setInstrumentId] = useState(null);
@@ -86,7 +88,12 @@ const Musicians = () => {
                 data={musicians}
                 keyExtractor={(item) => String(item.id)}
                 contentContainerStyle={{ gap: 14, paddingVertical: 20 }}
-                renderItem={({ item }) => <MusicianCard musician={item} />}
+                renderItem={({ item }) => (
+                    <MusicianCard
+                        musician={item}
+                        onPress={() => navigation.navigate('MusicianProfile', { musicianId: item.id })}
+                    />
+                )}
                 refreshing={refreshing}
                 onRefresh={onRefresh}
                 ListEmptyComponent={(

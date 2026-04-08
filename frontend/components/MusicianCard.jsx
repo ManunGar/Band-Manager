@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import profileDefault from '../assets/milestones/profile_default.png';
 import * as GlobalStyle from '../GlobalStyle';
 import LocationIcon from './icons/LocationIcon';
@@ -6,17 +6,17 @@ import StarIcon from './icons/StarIcon';
 
 const formatRate = (rate) => {
     if (rate === null || rate === undefined || Number.isNaN(Number(rate))) {
-        return '_._ / 5';
+        return '_._';
     }
     return `${Number(rate).toFixed(1)}`;
 };
 
-const MusicianCard = ({ musician }) => {
+const MusicianCard = ({ musician, onPress }) => {
     const user = musician?.user || {};
     const instruments = musician?.instruments || [];
 
     return (
-        <View style={styles.card}>
+        <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [styles.card, pressed && onPress && styles.cardPressed]}>
             <View style={styles.headerRow}>
                 <Image
                     source={user?.profile_picture ? { uri: user.profile_picture } : profileDefault}
@@ -58,7 +58,7 @@ const MusicianCard = ({ musician }) => {
                     ))
                 )}
             </View>
-        </View>
+        </Pressable>
     );
 };
 
@@ -70,6 +70,9 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 14,
         gap: 12,
+    },
+    cardPressed: {
+        opacity: 0.92,
     },
     headerRow: {
         flexDirection: 'row',

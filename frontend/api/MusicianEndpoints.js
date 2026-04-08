@@ -13,6 +13,16 @@ const accountDetails = async (musicianId) => {
     }
 };
 
+// Endpoint to get musician profile by ID
+const getMusicianProfile = async (musicianId) => {
+    try {
+        const response = await axios.get(`${baseUrl}/musicians/${musicianId}/profile`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 // Endpoint to add instruments to musician
 const addInstrumentsToMusician = async (preparedData) => {
     try {
@@ -40,8 +50,26 @@ const listMusicians = async (instrumentId, search, offset = 0, limit = 10) => {
     }
 };
 
+// Endpoint to list contracts where a musician has participated
+const listMusicianContracts = async (musicianId, instrumentId, offset = 0, limit = 10) => {
+    try {
+        const response = await axios.get(`${baseUrl}/musicians/${musicianId}/contracts`, {
+            params: {
+                instrument: instrumentId,
+                offset,
+                limit
+            }
+        });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     accountDetails,
+    getMusicianProfile,
     addInstrumentsToMusician,
-    listMusicians
+    listMusicians,
+    listMusicianContracts
 };

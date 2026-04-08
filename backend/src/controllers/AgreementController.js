@@ -1,5 +1,5 @@
 import { Op, Sequelize } from "sequelize";
-import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance } from "../models/sequelize.js";
+import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance, User } from "../models/sequelize.js";
 
 const normalizeDateQuery = (value) => {
     if (!value) return null;
@@ -17,6 +17,80 @@ const normalizeDateQuery = (value) => {
 
     return parsedDate.toISOString().slice(0, 10);
 };
+
+const _getAverageRateByMusician = async (musicianIds = []) => {
+    if (musicianIds.length === 0) return {};
+
+    const averages = await Application.findAll({
+        where: {
+            musicianId: { [Op.in]: musicianIds },
+            status: 'accepted',
+            type: 'musician_apply',
+            rate: { [Op.not]: null }
+        },
+        attributes: [
+            'musicianId',
+            [Sequelize.fn('ROUND', Sequelize.fn('AVG', Sequelize.col('rate')), 2), 'averageRate']
+        ],
+        group: ['musicianId'],
+        raw: true
+    });
+
+    return averages.reduce((acc, row) => {
+        acc[row.musicianId] = row.averageRate !== null ? Number(row.averageRate) : null;
+        return acc;
+    }, {});
+}
+
+const _getAgreementOwnerApplications = async (agreementId, instrumentId) => {
+    const applications = await Application.findAll({
+        where: { agreementId },
+        include: [{
+            model: Musician,
+            as: 'musician',
+            required: true,
+            attributes: ['id'],
+            include: [{
+                model: User,
+                as: 'user',
+                required: true,
+                attributes: ['id', 'full_name', 'location', 'profile_picture']
+            }, {
+                model: Instrument,
+                as: 'instruments',
+                required: false,
+                attributes: ['id', 'name'],
+                through: { attributes: ['level'] },
+                ...(Number.isInteger(instrumentId) ? { where: { id: instrumentId } } : {})
+            }]
+        }],
+        order: [['createdAt', 'ASC']]
+    });
+
+    const musicianIds = [...new Set(applications.map((application) => application.musicianId).filter(Boolean))];
+    const averageRateByMusician = await _getAverageRateByMusician(musicianIds);
+
+    return applications.map((application) => {
+        const applicationJson = application.toJSON();
+        const musician = applicationJson.musician || {};
+        const instrument = musician.instruments?.[0];
+
+        return {
+            id: applicationJson.id,
+            musicianId: applicationJson.musicianId,
+            agreementId: applicationJson.agreementId,
+            type: applicationJson.type,
+            status: applicationJson.status,
+            rate: applicationJson.rate,
+            musician: {
+                id: musician.id,
+                averageRate: averageRateByMusician[applicationJson.musicianId] ?? null,
+                instrumentLevel: instrument?.MusicianLevel?.level ?? null,
+                user: musician.user || null,
+            }
+        }
+    });
+}
 
 // Function to list 
 const listAgreements = async (req, res) => {
@@ -105,7 +179,7 @@ const listAgreements = async (req, res) => {
             }, {
                 model: Application,
                 as: 'applications',
-                attributes: ['id', 'musicianId', 'agreementId', 'type'],
+                attributes: ['id', 'musicianId', 'agreementId', 'type', 'status'],
                 required: false, // Include agreements even if they have no applications
             }, {
                 model: Instrument,
@@ -292,6 +366,21 @@ const getAgreement = async (req, res) => {
                 model: Application,
                 as: 'applications',
                 required: false,
+            }, {
+                model: Instrument,
+                as: 'instrument',
+                attributes: ['id', 'name'],
+                required: false,
+            }, {
+                model: Musician,
+                as: 'musician',
+                required: true,
+                include: {
+                    model: User,
+                    as: 'user',
+                    attributes: ['phone', 'full_name'],
+                    required: true,
+                }
             }]
         });
         if (!agreement) {
@@ -300,16 +389,30 @@ const getAgreement = async (req, res) => {
 
         const isOwner = agreement.musicianId === req.user?.musician?.id;
         if (isOwner) {
-            return res.status(200).json(agreement);
+            const agreementJson = agreement.toJSON();
+            agreementJson.applications = await _getAgreementOwnerApplications(agreement.id, agreement.instrumentId);
+            return res.status(200).json(agreementJson);
         }
 
         const agreementJson = agreement.toJSON();
-        agreementJson.applications = (agreementJson.applications || []).map((application) => ({
-            id: application.id,
-            musicianId: application.musicianId,
-            agreementId: application.agreementId,
-            type: application.type
-        }));
+        const myApplication = agreementJson.applications?.find(app => app.musicianId === req.user?.musician?.id);
+        const isAccepted = myApplication?.status === 'accepted';
+
+        agreementJson.applications = (agreementJson.applications || []).map((application) => {
+            const isMyApp = application.musicianId === req.user?.musician?.id;
+            return {
+                id: application.id,
+                musicianId: application.musicianId,
+                agreementId: application.agreementId,
+                type: application.type,
+                ...(isMyApp ? { status: application.status } : {})
+            };
+        });
+
+        // Only expose owner contact info when the requesting musician has been accepted
+        if (!isAccepted) {
+            delete agreementJson.musician;
+        }
 
         return res.status(200).json(agreementJson);
     } catch (error) {

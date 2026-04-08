@@ -315,7 +315,7 @@ const listMyApplications = async (req, res) => {
                 as: 'agreement',
                 required: true,
                 where: agreementWhere,
-                include: {
+                include: [{
                     model: Performance,
                     as: 'performance',
                     required: true,
@@ -330,7 +330,12 @@ const listMyApplications = async (req, res) => {
                             required: true,
                         }
                     }
-                }
+                }, {
+                    model: Instrument,
+                    as: 'instrument',
+                    attributes: ['id', 'name', 'image'],
+                    required: false,
+                }]
             },
             order: [
                 [Sequelize.literal('`agreement->performance->Event`.`date`'), 'DESC'],

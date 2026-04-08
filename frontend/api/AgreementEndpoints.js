@@ -22,6 +22,18 @@ const listAgreements = async (instrumentId, search, offset, limit, startDate, en
     }
 };
 
+// Endpoint to list applications of the authenticated musician
+const listMyApplications = async (search, startDate, endDate) => {
+    try {
+        const response = await axios.get(`${baseUrl}/applications/me`, {
+            params: { search, startDate, endDate }
+        });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 // Endpoint to list agreements created by authenticated musician
 const listMyAgreements = async (instrumentId, search, startDate, endDate) => {
     try {
@@ -74,6 +86,7 @@ const updateApplicationStatus = async (agreementId, applicationId, status) => {
 export default {
     listAgreements,
     listMyAgreements,
+    listMyApplications,
     getAgreement,
     applyToAgreement,
     updateApplicationStatus,

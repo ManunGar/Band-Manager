@@ -7,9 +7,9 @@ import * as GlobalStyle from '../GlobalStyle'
 import { parseDate } from '../helpers/ParseHelpers'
 
 const APPLICATION_TAG = {
-    pending:  { label: 'Solicitado', bg: '#FFF5E6', border: GlobalStyle.yellow,   color: GlobalStyle.yellow },
-    accepted: { label: 'Aceptado',   bg: '#E8F6EA', border: GlobalStyle.darkGreen, color: GlobalStyle.green  },
-    rejected: { label: 'Rechazado',  bg: '#F4E8E8', border: GlobalStyle.darkRed,  color: GlobalStyle.red    },
+    pending:  { label: 'Solicitado', bg: '#FFF5E6', color: GlobalStyle.yellow },
+    accepted: { label: 'Aceptado',   bg: '#E8F6EA', color: GlobalStyle.green  },
+    rejected: { label: 'Rechazado',  bg: '#F4E8E8', color: GlobalStyle.red    },
 };
 
 const AgreementCard = ({ agreement }) => {
@@ -28,7 +28,7 @@ const AgreementCard = ({ agreement }) => {
                     <Text style={{ color: GlobalStyle.black, fontFamily: 'Oswald_400', fontSize: 16, marginTop: -3 }}>{agreement?.performance?.Event?.band?.name}</Text>
                 </View>
                 {tag && (
-                    <View style={[styles.tag, { backgroundColor: tag.bg, borderColor: tag.border }]}>
+                    <View style={[styles.tag, { backgroundColor: tag.bg }]}>
                         <Text style={[styles.tagText, { color: tag.color }]}>{tag.label}</Text>
                     </View>
                 )}
@@ -59,9 +59,8 @@ const styles = StyleSheet.create({
         backgroundColor: GlobalStyle.gray,
     },
     tag: {
-        borderWidth: 1,
         borderRadius: 20,
-        paddingHorizontal: 8,
+        paddingHorizontal: 10,
         paddingVertical: 3,
         alignSelf: 'flex-start',
     },

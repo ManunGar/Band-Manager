@@ -23,7 +23,25 @@ const addInstrumentsToMusician = async (preparedData) => {
     }
 };
 
+// Endpoint to list visible musicians
+const listMusicians = async (instrumentId, search, offset = 0, limit = 10) => {
+    try {
+        const response = await axios.get(`${baseUrl}/musicians`, {
+            params: {
+                instrument: instrumentId,
+                search,
+                offset,
+                limit
+            }
+        });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     accountDetails,
-    addInstrumentsToMusician
+    addInstrumentsToMusician,
+    listMusicians
 };

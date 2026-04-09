@@ -35,6 +35,7 @@ const AgreementDetailScreen = ({ route }) => {
     const [selectedApplicationToRate, setSelectedApplicationToRate] = useState(null);
     const [selectedRate, setSelectedRate] = useState(0);
     const [ratingApplicationId, setRatingApplicationId] = useState(null);
+    const [deletingAgreement, setDeletingAgreement] = useState(false);
     const navigation = useNavigation();
     const rateSheetRef = useRef(null);
     const rateSheetSnapPoints = useMemo(() => ['50%'], []);
@@ -86,6 +87,7 @@ const AgreementDetailScreen = ({ route }) => {
     const myApplication = agreement?.applications?.find(app => app.musicianId === user?.musician?.id);
     const appStatus = myApplication ? APPLICATION_STATUS[myApplication.status] : null;
     const ownerApplications = agreement?.applications ?? [];
+    const hasAcceptedApplications = ownerApplications.some((application) => application?.status === 'accepted');
 
     const totalApplicants = agreement?.applications?.length ?? 0;
 
@@ -198,6 +200,35 @@ const AgreementDetailScreen = ({ route }) => {
         } finally {
             setRatingApplicationId(null);
         }
+    };
+
+    const deleteAgreement = async () => {
+        try {
+            setDeletingAgreement(true);
+            await AgreementEndpoints.deleteAgreement(agreementId);
+            Alert.alert('Contrato eliminado', 'El contrato se eliminó correctamente.', [
+                { text: 'OK', onPress: () => navigation.goBack() }
+            ]);
+        } catch (error) {
+            Alert.alert('Error', error.message || 'No se pudo eliminar el contrato.');
+        } finally {
+            setDeletingAgreement(false);
+        }
+    };
+
+    const handleDeleteAgreement = () => {
+        Alert.alert(
+            'Eliminar contrato',
+            '¿Seguro que quieres eliminar este contrato? Esta acción no se puede deshacer.',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: deleteAgreement,
+                }
+            ]
+        );
     };
 
     return (
@@ -440,6 +471,27 @@ const AgreementDetailScreen = ({ route }) => {
                                     );
                                 })
                             )}
+
+                            <View style={styles.ownerActionsSection}>
+                                <Pressable
+                                    onPress={handleDeleteAgreement}
+                                    disabled={hasAcceptedApplications || deletingAgreement}
+                                    style={[
+                                        styles.deleteAgreementButton,
+                                        (hasAcceptedApplications || deletingAgreement) && styles.deleteAgreementButtonDisabled
+                                    ]}
+                                >
+                                    <Text style={styles.deleteAgreementButtonText}>
+                                        {deletingAgreement ? 'Eliminando...' : 'Eliminar contrato'}
+                                    </Text>
+                                </Pressable>
+
+                                {hasAcceptedApplications && (
+                                    <Text style={styles.deleteAgreementHint}>
+                                        No puedes eliminar este contrato porque ya tiene solicitudes aceptadas.
+                                    </Text>
+                                )}
+                            </View>
                         </View>
                     )}
 
@@ -915,5 +967,35 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: GlobalStyle.blue,
         textTransform: 'uppercase',
+    },
+    ownerActionsSection: {
+        marginTop: 14,
+    },
+    deleteAgreementButton: {
+        alignSelf: 'center',
+        width: '80%',
+        borderRadius: 40,
+        borderWidth: 1,
+        borderColor: GlobalStyle.darkRed,
+        backgroundColor: '#F4E8E8',
+        paddingVertical: 10,
+        alignItems: 'center',
+    },
+    deleteAgreementButtonDisabled: {
+        borderColor: GlobalStyle.lightGray,
+        backgroundColor: GlobalStyle.lightGray,
+    },
+    deleteAgreementButtonText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 15,
+        color: GlobalStyle.darkRed,
+        textTransform: 'uppercase',
+    },
+    deleteAgreementHint: {
+        marginTop: 8,
+        textAlign: 'center',
+        fontFamily: 'Oswald_400',
+        fontSize: 13,
+        color: GlobalStyle.gray,
     },
 });

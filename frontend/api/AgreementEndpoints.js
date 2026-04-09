@@ -139,6 +139,16 @@ const createAgreement = async (performanceId, instrumentId, amount, payment, des
     }
 };
 
+// Endpoint to delete an agreement (owner only; blocked if there are accepted applications)
+const deleteAgreement = async (agreementId) => {
+    try {
+        const response = await axios.delete(`${baseUrl}/agreements/${agreementId}`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listAgreements,
     listMyAgreements,
@@ -151,4 +161,5 @@ export default {
     listAdminPerformances,
     createAgreement,
     rateApplication,
+    deleteAgreement,
 }

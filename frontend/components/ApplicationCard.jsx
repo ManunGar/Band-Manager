@@ -10,18 +10,21 @@ const STATUS_CONFIG = {
     rejected: { label: 'Rechazado', bg: '#F4E8E8', color: GlobalStyle.red      },
 };
 
-const ApplicationCard = ({ application }) => {
+const ApplicationCard = ({ application, onAccept, onReject, responding }) => {
     const navigation = useNavigation();
     const agreement = application?.agreement;
     const event = agreement?.performance?.Event;
     const band = event?.band;
     const instrument = agreement?.instrument;
     const isBandInvite = application?.type === 'band_invite';
+    const isPending = application?.status === 'pending';
     const statusConfig = STATUS_CONFIG[application?.status] ?? STATUS_CONFIG.pending;
 
     const instrumentImageUri = instrument?.image
         ? `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}`
         : null;
+
+    const showInviteActions = isBandInvite && isPending && (onAccept || onReject);
 
     return (
         <Pressable
@@ -40,7 +43,7 @@ const ApplicationCard = ({ application }) => {
                     {/* Instrument row */}
                     {isBandInvite ? (
                         <Text style={styles.inviteText}>
-                            {instrument?.name ? `${instrument.name} solicitado/a` : 'Invitación de banda'}
+                            {instrument?.name ? `Invitación — ${instrument.name}` : 'Invitación de banda'}
                         </Text>
                     ) : (
                         <View style={styles.instrumentRow}>
@@ -54,9 +57,11 @@ const ApplicationCard = ({ application }) => {
                     )}
                 </View>
 
-                <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
-                    <Text style={[styles.statusText, { color: statusConfig.color }]}>{statusConfig.label}</Text>
-                </View>
+                {!showInviteActions && (
+                    <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
+                        <Text style={[styles.statusText, { color: statusConfig.color }]}>{statusConfig.label}</Text>
+                    </View>
+                )}
             </View>
 
             {/* BOTTOM: date + location */}
@@ -68,6 +73,28 @@ const ApplicationCard = ({ application }) => {
                     <Text style={styles.location} numberOfLines={1}>{event.location}</Text>
                 )}
             </View>
+
+            {/* INVITE ACTIONS: accept / reject for pending band invites */}
+            {showInviteActions && (
+                <View style={styles.inviteActions}>
+                    <Pressable
+                        style={[styles.actionBtn, styles.acceptBtn, responding && styles.actionBtnDisabled]}
+                        onPress={(e) => { e.stopPropagation?.(); onAccept(); }}
+                        disabled={responding}
+                    >
+                        <Text style={[styles.actionBtnText, styles.acceptBtnText]}>
+                            {responding ? 'Procesando...' : 'Aceptar'}
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        style={[styles.actionBtn, styles.rejectBtn, responding && styles.actionBtnDisabled]}
+                        onPress={(e) => { e.stopPropagation?.(); onReject(); }}
+                        disabled={responding}
+                    >
+                        <Text style={[styles.actionBtnText, styles.rejectBtnText]}>Rechazar</Text>
+                    </Pressable>
+                </View>
+            )}
         </Pressable>
     );
 };
@@ -154,5 +181,38 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: GlobalStyle.yellow,
         textTransform: 'uppercase',
+    },
+    inviteActions: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 4,
+    },
+    actionBtn: {
+        flex: 1,
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingVertical: 5,
+        alignItems: 'center',
+    },
+    actionBtnText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 14,
+    },
+    acceptBtn: {
+        backgroundColor: '#E8F6EA',
+        borderColor: GlobalStyle.darkGreen,
+    },
+    acceptBtnText: {
+        color: GlobalStyle.darkGreen,
+    },
+    rejectBtn: {
+        backgroundColor: '#F4E8E8',
+        borderColor: GlobalStyle.darkRed,
+    },
+    rejectBtnText: {
+        color: GlobalStyle.darkRed,
+    },
+    actionBtnDisabled: {
+        opacity: 0.6,
     },
 });

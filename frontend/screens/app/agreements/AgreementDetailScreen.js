@@ -278,9 +278,9 @@ const AgreementDetailScreen = ({ route }) => {
                                     const isPending = application?.status === 'pending';
                                     const isAccepted = application?.status === 'accepted';
                                     const isUpdating = updatingApplicationId === application?.id;
-                                    // Band-invite decisions belong to the invited musician, not the owner
                                     const showPendingActions = isPending && !hasEventStarted && !isBandInvite;
-                                    const showAcceptedRejectAction = isAccepted && !hasEventStarted && !isBandInvite;
+                                    const showRejectAction = !hasEventStarted && (isPending || isAccepted);
+                                    const showAcceptedActionStatus = isAccepted && showRejectAction;
 
                                     return (
                                         <Pressable key={application.id} style={styles.applicantCard} onPress={() => navigation.navigate('MusicianProfile', { musicianId: musician?.id })}>
@@ -314,7 +314,15 @@ const AgreementDetailScreen = ({ route }) => {
                                                 <View style={styles.pendingInviteNotice}>
                                                     <Text style={styles.pendingInviteText}>Invitación pendiente de respuesta</Text>
                                                 </View>
-                                            ) : (showPendingActions || showAcceptedRejectAction) ? (
+                                            ) : null}
+
+                                            {(showPendingActions || showRejectAction) ? (
+                                                <>
+                                                    {showAcceptedActionStatus && (
+                                                        <View style={[styles.statusChip, styles.inlineActionStatusChip, { backgroundColor: statusStyle?.bg }]}> 
+                                                            <Text style={[styles.statusChipText, { color: statusStyle?.color }]}>{statusStyle?.label || application.status}</Text>
+                                                        </View>
+                                                    )}
                                                 <View style={styles.applicantActions}>
                                                     {showPendingActions && (
                                                         <Pressable
@@ -332,13 +340,14 @@ const AgreementDetailScreen = ({ route }) => {
                                                         style={[
                                                             styles.actionButton,
                                                             styles.rejectButton,
-                                                            showAcceptedRejectAction && styles.singleActionButton,
+                                                            !showPendingActions && styles.singleActionButton,
                                                             Boolean(updatingApplicationId) && styles.actionButtonDisabled
                                                         ]}
                                                     >
                                                         <Text style={[styles.actionButtonText, styles.rejectButtonText]}>{isUpdating ? 'Procesando...' : isAccepted ? 'Revertir a rechazado' : 'Rechazar'}</Text>
                                                     </Pressable>
                                                 </View>
+                                                </>
                                             ) : (
                                                 <View style={[styles.statusChip, styles.ownerStatusChip, { backgroundColor: statusStyle?.bg }]}>
                                                     <Text style={[styles.statusChipText, { color: statusStyle?.color }]}>{statusStyle?.label || application.status}</Text>
@@ -614,6 +623,10 @@ const styles = StyleSheet.create({
     },
     ownerStatusChip: {
         marginTop: 12,
+        alignSelf: 'flex-start',
+    },
+    inlineActionStatusChip: {
+        marginTop: 10,
         alignSelf: 'flex-start',
     },
     singleActionButton: {

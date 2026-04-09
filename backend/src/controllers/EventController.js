@@ -325,7 +325,10 @@ const getEventAttendance = async (req, res) => {
             }
         }
 
-        res.status(200).send({ componentsAttendance, attendanceByInstrument});
+        const componentMusicianIds = new Set(event.band.components.map(component => component.musicianId));
+        const contractedMusicians = await _getContractedMusiciansForEvent(eventId, componentMusicianIds);
+
+        res.status(200).send({ componentsAttendance, attendanceByInstrument, contractedMusicians });
     } catch (error) {
         console.error('Error retrieving event attendance:', error);
         res.status(500).send({ error: 'Error retrieving event attendance' });
@@ -404,6 +407,59 @@ const _getMusicianComponents = async (musicianId) => {
             }
         ]
     });
+};
+
+const _getContractedMusiciansForEvent = async (eventId, excludedMusicianIds = new Set()) => {
+    const acceptedApplications = await Application.findAll({
+        where: { status: 'accepted' },
+        include: [{
+            model: Agreement,
+            as: 'agreement',
+            required: true,
+            include: [{
+                model: Performance,
+                as: 'performance',
+                required: true,
+                where: { eventId }
+            }, {
+                model: Instrument,
+                as: 'instrument',
+                required: false,
+                attributes: ['id', 'name', 'image']
+            }]
+        }, {
+            model: Musician,
+            as: 'musician',
+            required: true,
+            attributes: ['id'],
+            include: {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'full_name', 'profile_picture']
+            }
+        }],
+        order: [[{ model: Musician, as: 'musician' }, { model: User, as: 'user' }, 'full_name', 'ASC']]
+    });
+
+    const contractedByMusicianId = new Map();
+
+    for (const application of acceptedApplications) {
+        const musicianId = application?.musicianId;
+
+        if (!musicianId || excludedMusicianIds.has(musicianId) || contractedByMusicianId.has(musicianId)) {
+            continue;
+        }
+
+        contractedByMusicianId.set(musicianId, {
+            applicationId: application.id,
+            musicianId,
+            agreementId: application.agreementId,
+            instrument: application.agreement?.instrument || null,
+            musician: application.musician || null,
+        });
+    }
+
+    return [...contractedByMusicianId.values()];
 };
 
 const _getBandVisibleEvents = async ({ bandIdNumber, musicianComponents, timeScope, type }) => {

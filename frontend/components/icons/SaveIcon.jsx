@@ -1,10 +1,10 @@
-import { TouchableOpacity } from "react-native"
+import { Text, TouchableOpacity } from "react-native"
 import Svg, { Path } from "react-native-svg"
-import LinkText from "../LinkText"
+import * as GlobalStyle from '../../GlobalStyle'
 
 function SaveIcon({ width, height, stroke, strokeWidth, onSave }) {
     return (
-        <TouchableOpacity onPress={onSave} hitSlop={10} style={{ gap:6, flexDirection: 'row', alignContent: 'flex-end', alignItems: 'flex-end' }}>
+        <TouchableOpacity onPress={onSave} hitSlop={10} style={{ gap: 6, flexDirection: 'row', alignContent: 'flex-end', alignItems: 'flex-end' }}>
             <Svg
                 width={width || 24}
                 height={height || 25}
@@ -20,7 +20,7 @@ function SaveIcon({ width, height, stroke, strokeWidth, onSave }) {
                     strokeLinejoin="round"
                 />
             </Svg>
-                <LinkText style={{ marginBottom: -2 }}>Guardar</LinkText>
+            <Text style={{ marginBottom: -2, fontFamily: 'Oswald_400', fontSize: 16, color: GlobalStyle.yellow, }}>Guardar</Text>
         </TouchableOpacity>
     )
 }

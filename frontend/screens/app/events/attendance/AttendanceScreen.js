@@ -12,6 +12,7 @@ import * as GlobalStyle from '../../../../GlobalStyle'
 const AttendanceScreen = ({ route }) => {
     const { event } = route.params
     const [attendance, setAttendance] = useState({})
+    const [contractedMusicians, setContractedMusicians] = useState([])
 
     useFocusEffect(
         useCallback(() => {
@@ -23,6 +24,7 @@ const AttendanceScreen = ({ route }) => {
         try {
             const attendanceData = await EventEndpoints.getEventAttendance(event?.id);
             setAttendance(attendanceData.attendanceByInstrument);
+            setContractedMusicians(attendanceData.contractedMusicians || []);
         } catch (error) {
             console.error("Error fetching attendance:", error);
             Alert.alert("Error", "No se pudo cargar la asistencia del evento. Por favor, inténtalo de nuevo más tarde.");
@@ -50,7 +52,7 @@ const AttendanceScreen = ({ route }) => {
         <View style={{ flex: 1 }}>
             <TopContainer
                 title="Asistencia"
-                editEnabled={true}
+                editEnabled={false}
                 style={{ alignItems: 'left', marginBottom: 0 }}>
                 <View style={styles.titleContainer}>
                     <Text style={styles.title}>{event?.name}</Text>
@@ -70,6 +72,22 @@ const AttendanceScreen = ({ route }) => {
                                 <View style={[styles.deniedBar, { width: `${deniedPercentage}%` }]} />
                             </View>
                         </View>}
+                    ListFooterComponent={() => (
+                        contractedMusicians.length > 0 ? (
+                            <View style={{ marginTop: 26 }}>
+                                <Text style={styles.contractedSectionTitle}>Musicos Contratados</Text>
+                                <FlatList
+                                    data={contractedMusicians}
+                                    keyExtractor={(item, index) => item.musicianId?.toString() || index.toString()}
+                                    renderItem={({ item }) => (
+                                        <ContractedMusicianItem contracted={item} />
+                                    )}
+                                    scrollEnabled={false}
+                                    ItemSeparatorComponent={() => <View style={{ height: 14 }}></View>}
+                                />
+                            </View>
+                        ) : null
+                    )}
                     data={Object.values(attendance)}
                     keyExtractor={(item, index) => item.instrument?.id?.toString() || index.toString()}
                     contentContainerStyle={{ paddingBottom: 100, paddingTop: 0 }}
@@ -143,6 +161,30 @@ const AttendanceComponent = ({ attendance }) => {
                     <Text style={styles.reasonText}>{attendance.reason}</Text>
                 </View>
             }
+        </View>
+    )
+}
+
+const ContractedMusicianItem = ({ contracted }) => {
+    const user = contracted?.musician?.user;
+
+    return (
+        <View style={styles.contractedCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <Image source={user?.profile_picture ? { uri: user.profile_picture } : profileDefault} style={{ width: 46, height: 46, borderRadius: 23 }} />
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.attendanceComponentName}>{user?.full_name || 'Musico'}</Text>
+                    <View style={styles.instrumentTag}>
+                        {contracted?.instrument?.image ? (
+                            <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${contracted.instrument.image}` }} style={{ width: 16, height: 16 }} />
+                        ) : null}
+                        <Text style={styles.instrumentTagText}>{contracted?.instrument?.name || 'Instrumento no indicado'}</Text>
+                    </View>
+                </View>
+            </View>
+            <View style={styles.contractedBadge}>
+                <Text style={styles.contractedBadgeText}>Contratado/a</Text>
+            </View>
         </View>
     )
 }
@@ -257,5 +299,45 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         color: GlobalStyle.gray,
         fontSize: 14
+    },
+    contractedSectionTitle: {
+        fontSize: 18,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyle.black,
+        marginBottom: 12,
+    },
+    contractedCard: {
+        borderWidth: 1,
+        borderColor: GlobalStyle.lightGray,
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8,
+    },
+    contractedBadge: {
+        backgroundColor: '#EAF0FF',
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+    },
+    contractedBadgeText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 11,
+        color: '#3A5FC8',
+        textTransform: 'uppercase',
+    },
+    instrumentTag: {
+        marginTop: -4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+    },
+    instrumentTagText: {
+        fontFamily: 'Oswald_300',
+        fontSize: 16,
+        color: GlobalStyle.darkGray,
     }
 })

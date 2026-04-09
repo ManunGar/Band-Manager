@@ -1,7 +1,7 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import EventEndpoints from '../../../api/EventEndpoints';
 import performancePictureDefault from '../../../assets/milestones/performance_default.jpg';
 import rehearsalPictureDefault from '../../../assets/milestones/rehearsal_default.jpg';
@@ -35,7 +35,7 @@ const EventScreen = ({ route }) => {
 
     useFocusEffect(
         useCallback(() => {
-            event ? setIsBandAdministrator(event.band.components[0].administrator) : setIsBandAdministrator(false);
+            setIsBandAdministrator(Boolean(event?.band?.components?.[0]?.administrator));
             return closeSheet;
         }, [event])
     );
@@ -50,9 +50,9 @@ const EventScreen = ({ route }) => {
 
     const fetchEventDetails = async () => {
         const fetchedEvent = await EventEndpoints.getEventDetails(eventId);
-        fetchedEvent ? setIsBandAdministrator(fetchedEvent.band.components[0].administrator) : setIsBandAdministrator(false);
+        setIsBandAdministrator(Boolean(fetchedEvent?.band?.components?.[0]?.administrator));
         setEvent(fetchedEvent);
-        setAttendance(fetchedEvent?.attendance.present);
+        setAttendance(fetchedEvent?.attendance?.present ?? null);
     }
 
     const handleAttendance = async (confirm) => {
@@ -80,6 +80,7 @@ const EventScreen = ({ route }) => {
     const eventEndTime = (event?.endTime || event?.initialTime || '00:00:00').substring(0, 8);
     const eventEndDateTime = eventEndDate ? new Date(`${eventEndDate.slice(0, 10)}T${eventEndTime}`) : null;
     const isAttendanceOpen = eventEndDateTime ? eventEndDateTime >= new Date() : false;
+    const showAttendanceSection = Boolean(event?.attendance);
 
     return (
         <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} style={{ flex: 1 }}>
@@ -144,21 +145,23 @@ const EventScreen = ({ route }) => {
                         <View style={[styles.input, { marginInline: 20, marginTop: 20 }]}>
                             <Text style={[styles.textInput, { color: GlobalStyle.black }]}>{event?.Performance?.comment}</Text>
                         </View>}
-                    <View style={{ paddingHorizontal: 25, paddingTop: 22, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <AttendanceIcon width={25} height={22} />
-                            <Text style={styles.subtitle}>Asistencia</Text>
-                        </View>
-                        {isBandAdministrator &&
-                            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                                <LinkText onPress={() => navigation.navigate('Attendance', { event })}>Ver</LinkText>
-                                <View style={{borderWidth: 1, borderColor: GlobalStyle.lightGray, borderRadius: 10, width: 1, height: 20}}></View>
-                                <LinkText onPress={() => navigation.navigate('TakeAttendance', { event })}>Pasar Lista</LinkText>
+                    {showAttendanceSection && (
+                        <>
+                            <View style={{ paddingHorizontal: 25, paddingTop: 22, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    <AttendanceIcon width={25} height={22} />
+                                    <Text style={styles.subtitle}>Asistencia</Text>
+                                </View>
+                                {isBandAdministrator &&
+                                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                                        <LinkText onPress={() => navigation.navigate('Attendance', { event })}>Ver</LinkText>
+                                        <View style={{borderWidth: 1, borderColor: GlobalStyle.lightGray, borderRadius: 10, width: 1, height: 20}}></View>
+                                        <LinkText onPress={() => navigation.navigate('TakeAttendance', { event })}>Pasar Lista</LinkText>
+                                    </View>
+                                }
                             </View>
-                        }
-                    </View>
-                    {event?.attendance.participates ? <View>
-                        {isAttendanceOpen ?
+                            {event?.attendance?.participates ? <View>
+                                {isAttendanceOpen ?
                             <View style={{ flex: 1 }}>
                                 {/* BUTTONS */}
                                 <View style={{ flexDirection: 'row', gap: 20, maxWidth: 400, margin: 'auto' }}>
@@ -208,7 +211,9 @@ const EventScreen = ({ route }) => {
                                 </Text>
                             </View>
                         }
-                    </View> : <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, color: GlobalStyle.gray, textAlign: 'center', marginTop: 20 }}>No participas en este evento</Text>}
+                            </View> : <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, color: GlobalStyle.gray, textAlign: 'center', marginTop: 20 }}>No participas en este evento</Text>}
+                        </>
+                    )}
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>

@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import bandProfileDefault from '../assets/milestones/band_default.png';
 import * as GlobalStyle from '../GlobalStyle';
 import { parseDate } from '../helpers/ParseHelpers';
@@ -9,6 +10,7 @@ const STATUS_LABELS = {
 };
 
 const MyAgreementCard = ({ agreement }) => {
+    const navigation = useNavigation();
     const isOpen = agreement?.status === 'open';
     const applicationsCount = agreement?.applications?.length || 0;
     const statusText = STATUS_LABELS[agreement?.status] || agreement?.status || '-';
@@ -17,7 +19,7 @@ const MyAgreementCard = ({ agreement }) => {
         : null;
 
     return (
-        <View style={styles.cardContainer}>
+        <Pressable onPress={() => navigation.navigate('AgreementDetail', { agreementId: agreement.id })} style={styles.cardContainer}>
             {isOpen && (
                 <View style={styles.applicationsBadge}>
                     <Text style={styles.applicationsValue}>{applicationsCount}</Text>
@@ -51,7 +53,7 @@ const MyAgreementCard = ({ agreement }) => {
 
             <Text style={styles.eventDate}>{parseDate(agreement?.performance?.Event?.date)}</Text>
             <Text style={styles.eventLocation}>{agreement?.performance?.Event?.location || '-'}</Text>
-        </View>
+        </Pressable>
     );
 };
 

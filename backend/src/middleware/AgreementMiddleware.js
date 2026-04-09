@@ -1,4 +1,4 @@
-import { Agreement, Application, Band, Component, Event, Performance } from "../models/sequelize.js";
+import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance } from "../models/sequelize.js";
 
 // Middleware to check if the authenticated musician is an admin of the event associated with the performance
 const isEventAdmin = async (req, res, next) => {
@@ -51,7 +51,8 @@ const isAgreementOwner = async (req, res, next) => {
     }
 }
 
-// Middleware to check if the authenticated musician has the requirement to see the agreement (is the owner or has the required instrument)
+// Middleware to check if the authenticated musician has the requirement to see the agreement
+// Allowed when musician is owner, currently has the required instrument, or has application history in the agreement.
 const hasRequirementToSee = async (req, res, next) => {
     const agreementId = req.params.agreementId;
     const musicianId = req.user.musician.id;
@@ -82,10 +83,20 @@ const hasRequirementToSee = async (req, res, next) => {
                 bandId: agreement.performance.Event.band.id
             }
         })
+        const applicationHistory = await Application.findOne({
+            where: {
+                musicianId,
+                agreementId
+            },
+            attributes: ['id']
+        })
+
         const hasInstrument = musicianInstrumentsId.includes(agreement.instrumentId);
-        if ( agreement.musicianId !== musicianId && !hasInstrument) {
+        const hasHistory = Boolean(applicationHistory);
+
+        if ( agreement.musicianId !== musicianId && !hasInstrument && !hasHistory) {
             return res.status(403).send({ error: 'Access denied. You do not have the required instrument for this agreement.' });
-        } else if (agreement.musicianId !== musicianId && component) {
+        } else if (agreement.musicianId !== musicianId && component && !hasHistory) {
             return res.status(403).send({ error: 'Access denied. You are a member of the band associated with this agreement.' });
         }
         next();
@@ -241,5 +252,143 @@ const canRateApplication = async (req, res, next) => {
     }
 }
 
-export { canRateApplication, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin };
+// Middleware to ensure application status can only be updated before event starts
+const canUpdateApplicationStatus = async (req, res, next) => {
+    const agreementId = req.params.agreementId;
+    const applicationId = req.params.applicationId;
+
+    try {
+        const application = await Application.findOne({
+            where: {
+                id: applicationId,
+                agreementId
+            },
+            include: {
+                model: Agreement,
+                as: 'agreement',
+                required: true,
+                include: {
+                    model: Performance,
+                    as: 'performance',
+                    required: true,
+                    include: {
+                        model: Event,
+                        required: true
+                    }
+                }
+            }
+        });
+
+        if (!application) {
+            return res.status(404).send({ error: 'Application not found' });
+        }
+
+        const event = application.agreement.performance.Event;
+        const startDate = new Date(event.date);
+        const [hours, minutes, seconds] = (event.initialTime || '00:00:00').split(':').map(Number);
+        startDate.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+
+        if (startDate <= new Date()) {
+            return res.status(403).send({ error: 'Application status can only be updated before the event starts' });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Error checking if application status can be updated:', error);
+        res.status(500).send({ error: 'Error checking if application status can be updated' });
+    }
+}
+
+// Middleware to check if the agreement owner can invite a specific musician
+const canInviteMusician = async (req, res, next) => {
+    const agreementId = req.params.agreementId;
+    const musicianId = parseInt(req.body.musicianId, 10);
+
+    if (!Number.isInteger(musicianId)) {
+        return res.status(400).send({ error: 'Invalid musicianId' });
+    }
+
+    try {
+        const agreement = await Agreement.findByPk(agreementId, {
+            include: {
+                model: Performance,
+                as: 'performance',
+                required: true,
+                include: {
+                    model: Event,
+                    required: true,
+                    include: { model: Band, as: 'band', required: true }
+                }
+            }
+        });
+
+        if (!agreement || agreement.status !== 'open') {
+            return res.status(400).send({ error: 'Agreement is not open for invitations' });
+        }
+
+        const event = agreement.performance.Event;
+        const eventStart = new Date(event.date);
+        const [h, m, s] = (event.initialTime || '00:00:00').split(':').map(Number);
+        eventStart.setHours(h || 0, m || 0, s || 0, 0);
+        if (eventStart <= new Date()) {
+            return res.status(403).send({ error: 'Cannot invite musicians after event has started' });
+        }
+
+        const musician = await Musician.findByPk(musicianId, {
+            include: {
+                model: Instrument,
+                as: 'instruments',
+                required: false,
+                where: { id: agreement.instrumentId }
+            }
+        });
+
+        if (!musician) {
+            return res.status(404).send({ error: 'Musician not found' });
+        }
+        if (!musician.instruments || musician.instruments.length === 0) {
+            return res.status(403).send({ error: 'Musician does not have the required instrument' });
+        }
+
+        const component = await Component.findOne({
+            where: { musicianId, bandId: agreement.performance.Event.band.id }
+        });
+        if (component) {
+            return res.status(403).send({ error: 'Musician is already a member of the band' });
+        }
+
+        const existingApplication = await Application.findOne({ where: { musicianId, agreementId } });
+        if (existingApplication) {
+            return res.status(403).send({ error: 'Musician already has an application for this agreement' });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Error checking invite requirements:', error);
+        res.status(500).send({ error: 'Error checking invite requirements' });
+    }
+}
+
+// Middleware to check if a musician can respond to their own band_invite
+const isInvitedMusician = async (req, res, next) => {
+    const applicationId = req.params.applicationId;
+    const musicianId = req.user.musician.id;
+
+    try {
+        const application = await Application.findOne({
+            where: { id: applicationId, musicianId, type: 'band_invite', status: 'pending' }
+        });
+
+        if (!application) {
+            return res.status(404).send({ error: 'Invitation not found or cannot be updated' });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Error checking invitation:', error);
+        res.status(500).send({ error: 'Error checking invitation' });
+    }
+}
+
+export { canInviteMusician, canRateApplication, canUpdateApplicationStatus, hasNoApprovedApplication, hasRequirementToApply, hasRequirementToSee, isAgreementOwner, isEventAdmin, isInvitedMusician };
 

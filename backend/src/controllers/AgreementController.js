@@ -1,5 +1,134 @@
 import { Op, Sequelize } from "sequelize";
-import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance } from "../models/sequelize.js";
+import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance, User } from "../models/sequelize.js";
+
+// Function to list future performances where the authenticated musician is a band admin
+const listAdminPerformances = async (req, res) => {
+    const musicianId = req.user.musician.id;
+
+    try {
+        const upcomingFilter = Sequelize.literal(
+            "TIMESTAMP(DATE(COALESCE(`Event`.`endDate`, `Event`.`date`)), COALESCE(`Event`.`endTime`, `Event`.`initialTime`)) >= NOW()"
+        );
+
+        const performances = await Performance.findAll({
+            include: [{
+                model: Event,
+                required: true,
+                where: { [Op.and]: [upcomingFilter] },
+                include: {
+                    model: Band,
+                    as: 'band',
+                    required: true,
+                    attributes: ['id', 'name', 'profile_picture'],
+                    include: {
+                        model: Component,
+                        as: 'components',
+                        required: true,
+                        attributes: [],
+                        where: { musicianId, administrator: true }
+                    }
+                }
+            }],
+            order: [[Sequelize.literal('`Event`.`date`'), 'ASC']]
+        });
+
+        return res.status(200).json(performances);
+    } catch (error) {
+        console.error('Error listing admin performances:', error);
+        res.status(500).json({ error: 'An error occurred while listing admin performances' });
+    }
+}
+
+// Function to invite a musician to an agreement (band_invite application)
+const inviteMusician = async (req, res) => {
+    const agreementId = req.params.agreementId;
+    const musicianId = parseInt(req.body.musicianId, 10);
+
+    try {
+        await Application.create({
+            musicianId,
+            agreementId,
+            type: 'band_invite'
+        });
+        return res.status(201).json({ message: 'Musician invited successfully' });
+    } catch (error) {
+        console.error('Error inviting musician:', error);
+        res.status(500).json({ error: 'An error occurred while inviting the musician' });
+    }
+}
+
+// Function for a musician to accept or reject a band_invite application
+const respondToInvite = async (req, res) => {
+    const transaction = await Application.sequelize.transaction();
+    try {
+        const applicationId = req.params.applicationId;
+        const musicianId = req.user.musician.id;
+        const nextStatus = req.body.status;
+
+        const application = await Application.findOne({
+            where: { id: applicationId, musicianId, type: 'band_invite', status: 'pending' },
+            include: {
+                model: Agreement,
+                as: 'agreement',
+                required: true,
+                include: {
+                    model: Performance,
+                    as: 'performance',
+                    required: true,
+                    include: { model: Event, required: true }
+                }
+            },
+            transaction
+        });
+
+        if (!application) {
+            await transaction.rollback();
+            return res.status(404).json({ error: 'Invitation not found or cannot be updated' });
+        }
+
+        const event = application.agreement.performance.Event;
+        const eventStart = new Date(event.date);
+        const [hours, minutes, seconds] = (event.initialTime || '00:00:00').split(':').map(Number);
+        eventStart.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+        if (eventStart <= new Date()) {
+            await transaction.rollback();
+            return res.status(403).json({ error: 'Cannot respond to invitation after event has started' });
+        }
+
+        await application.update({ status: nextStatus }, { transaction });
+
+        if (nextStatus === 'accepted') {
+            const agreement = await Agreement.findByPk(application.agreementId, {
+                include: { model: Application, as: 'applications', attributes: ['id', 'status'] },
+                transaction
+            });
+
+            if (!agreement) {
+                await transaction.rollback();
+                return res.status(404).json({ error: 'Agreement not found' });
+            }
+
+            const acceptedCount = agreement.applications.filter(a => a.status === 'accepted').length;
+            const agreementStatus = acceptedCount >= agreement.amount ? 'closed' : 'open';
+
+            if (agreementStatus === 'closed') {
+                await Application.update(
+                    { status: 'rejected' },
+                    { where: { agreementId: application.agreementId, status: 'pending' }, transaction }
+                );
+            }
+
+            await agreement.update({ status: agreementStatus }, { transaction });
+        }
+
+        await transaction.commit();
+        return res.status(200).json({ message: 'Invitation responded successfully' });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error responding to invitation:', error);
+        res.status(500).json({ error: 'An error occurred while responding to the invitation' });
+    }
+}
 
 const normalizeDateQuery = (value) => {
     if (!value) return null;
@@ -17,6 +146,80 @@ const normalizeDateQuery = (value) => {
 
     return parsedDate.toISOString().slice(0, 10);
 };
+
+const _getAverageRateByMusician = async (musicianIds = []) => {
+    if (musicianIds.length === 0) return {};
+
+    const averages = await Application.findAll({
+        where: {
+            musicianId: { [Op.in]: musicianIds },
+            status: 'accepted',
+            type: 'musician_apply',
+            rate: { [Op.not]: null }
+        },
+        attributes: [
+            'musicianId',
+            [Sequelize.fn('ROUND', Sequelize.fn('AVG', Sequelize.col('rate')), 2), 'averageRate']
+        ],
+        group: ['musicianId'],
+        raw: true
+    });
+
+    return averages.reduce((acc, row) => {
+        acc[row.musicianId] = row.averageRate !== null ? Number(row.averageRate) : null;
+        return acc;
+    }, {});
+}
+
+const _getAgreementOwnerApplications = async (agreementId, instrumentId) => {
+    const applications = await Application.findAll({
+        where: { agreementId },
+        include: [{
+            model: Musician,
+            as: 'musician',
+            required: true,
+            attributes: ['id'],
+            include: [{
+                model: User,
+                as: 'user',
+                required: true,
+                attributes: ['id', 'full_name', 'location', 'profile_picture']
+            }, {
+                model: Instrument,
+                as: 'instruments',
+                required: false,
+                attributes: ['id', 'name'],
+                through: { attributes: ['level'] },
+                ...(Number.isInteger(instrumentId) ? { where: { id: instrumentId } } : {})
+            }]
+        }],
+        order: [['createdAt', 'ASC']]
+    });
+
+    const musicianIds = [...new Set(applications.map((application) => application.musicianId).filter(Boolean))];
+    const averageRateByMusician = await _getAverageRateByMusician(musicianIds);
+
+    return applications.map((application) => {
+        const applicationJson = application.toJSON();
+        const musician = applicationJson.musician || {};
+        const instrument = musician.instruments?.[0];
+
+        return {
+            id: applicationJson.id,
+            musicianId: applicationJson.musicianId,
+            agreementId: applicationJson.agreementId,
+            type: applicationJson.type,
+            status: applicationJson.status,
+            rate: applicationJson.rate,
+            musician: {
+                id: musician.id,
+                averageRate: averageRateByMusician[applicationJson.musicianId] ?? null,
+                instrumentLevel: instrument?.MusicianLevel?.level ?? null,
+                user: musician.user || null,
+            }
+        }
+    });
+}
 
 // Function to list 
 const listAgreements = async (req, res) => {
@@ -105,7 +308,7 @@ const listAgreements = async (req, res) => {
             }, {
                 model: Application,
                 as: 'applications',
-                attributes: ['id', 'musicianId', 'agreementId', 'type'],
+                attributes: ['id', 'musicianId', 'agreementId', 'type', 'status'],
                 required: false, // Include agreements even if they have no applications
             }, {
                 model: Instrument,
@@ -183,7 +386,7 @@ const listMyAgreements = async (req, res) => {
             }, {
                 model: Application,
                 as: 'applications',
-                attributes: ['id'],
+                attributes: ['id', 'musicianId'],
                 required: false,
             }, {
                 model: Instrument,
@@ -241,7 +444,7 @@ const listMyApplications = async (req, res) => {
                 as: 'agreement',
                 required: true,
                 where: agreementWhere,
-                include: {
+                include: [{
                     model: Performance,
                     as: 'performance',
                     required: true,
@@ -256,7 +459,12 @@ const listMyApplications = async (req, res) => {
                             required: true,
                         }
                     }
-                }
+                }, {
+                    model: Instrument,
+                    as: 'instrument',
+                    attributes: ['id', 'name', 'image'],
+                    required: false,
+                }]
             },
             order: [
                 [Sequelize.literal('`agreement->performance->Event`.`date`'), 'DESC'],
@@ -292,6 +500,21 @@ const getAgreement = async (req, res) => {
                 model: Application,
                 as: 'applications',
                 required: false,
+            }, {
+                model: Instrument,
+                as: 'instrument',
+                attributes: ['id', 'name'],
+                required: false,
+            }, {
+                model: Musician,
+                as: 'musician',
+                required: true,
+                include: {
+                    model: User,
+                    as: 'user',
+                    attributes: ['phone', 'full_name'],
+                    required: true,
+                }
             }]
         });
         if (!agreement) {
@@ -300,16 +523,30 @@ const getAgreement = async (req, res) => {
 
         const isOwner = agreement.musicianId === req.user?.musician?.id;
         if (isOwner) {
-            return res.status(200).json(agreement);
+            const agreementJson = agreement.toJSON();
+            agreementJson.applications = await _getAgreementOwnerApplications(agreement.id, agreement.instrumentId);
+            return res.status(200).json(agreementJson);
         }
 
         const agreementJson = agreement.toJSON();
-        agreementJson.applications = (agreementJson.applications || []).map((application) => ({
-            id: application.id,
-            musicianId: application.musicianId,
-            agreementId: application.agreementId,
-            type: application.type
-        }));
+        const myApplication = agreementJson.applications?.find(app => app.musicianId === req.user?.musician?.id);
+        const isAccepted = myApplication?.status === 'accepted';
+
+        agreementJson.applications = (agreementJson.applications || []).map((application) => {
+            const isMyApp = application.musicianId === req.user?.musician?.id;
+            return {
+                id: application.id,
+                musicianId: application.musicianId,
+                agreementId: application.agreementId,
+                type: application.type,
+                ...(isMyApp ? { status: application.status } : {})
+            };
+        });
+
+        // Only expose owner contact info when the requesting musician has been accepted
+        if (!isAccepted) {
+            delete agreementJson.musician;
+        }
 
         return res.status(200).json(agreementJson);
     } catch (error) {
@@ -337,7 +574,7 @@ const createAgreement = async (req, res) => {
         if (eventEndDateTime < new Date()) {
             return res.status(400).json({ error: 'Cannot create agreement for past events' });
         }
-        await Agreement.create({
+        const agreement = await Agreement.create({
             instrumentId: req.body.instrumentId,
             musicianId: req.user.musician.id,
             performanceId: req.body.performanceId,
@@ -345,7 +582,7 @@ const createAgreement = async (req, res) => {
             payment: req.body.payment,
             description: req.body.description
         });
-        return res.status(201).json({ message: 'Agreement created successfully' });
+        return res.status(201).json({ message: 'Agreement created successfully', agreementId: agreement.id });
     } catch (error) {
         console.error('Error creating agreement:', error);
         res.status(500).json({ error: 'An error occurred while creating the agreement' });
@@ -404,53 +641,83 @@ const applyToAgreement = async (req, res) => {
 const updateApplicationStatus = async (req, res) => {
     const transaction = await Application.sequelize.transaction();
     try {
+        const nextStatus = req.body.status;
+
         // Find the application to update, ensuring it belongs to the specified agreement and is of type 'musician_apply'
         const application = await Application.findOne({
             where: {
                 id: req.params.applicationId,
                 agreementId: req.params.agreementId,
                 type: 'musician_apply',
-                status: 'pending' // Only allow updating applications that are currently pending
+                status: {
+                    [Op.in]: ['pending', 'accepted']
+                }
             },
             transaction
         });
         if (!application) {
             await transaction.rollback();
-            return res.status(404).json({ error: 'Application not found' });
+            return res.status(404).json({ error: 'Application not found or cannot be updated' });
         }
-        await application.update({ status: req.body.status }, { transaction });
-        // Check if the last application was accepted, if so, reject all the other applications for the same agreement and close the agreement
-        if (req.body.status === 'accepted') {
-            const agreement = await Agreement.findByPk(application.agreementId, {
-                include: {
-                    model: Application,
-                    as: 'applications'
-                },
-                transaction
-            });
-            if (agreement.applications.filter(a => a.status === 'accepted').length >= agreement.amount) {
-                await Application.update(
-                    { status: 'rejected' },
-                    {
-                        where: {
-                            agreementId: application.agreementId,
-                            id: { [Op.ne]: application.id },
-                            status: 'pending'
-                        },
-                        transaction
-                    }
-                );
-                await Agreement.update(
-                    { status: 'closed' },
-                    {
-                        where: { id: application.agreementId },
-                        transaction
-                    }
-                );
-            }
+
+        const previousStatus = application.status;
+
+        if (previousStatus === nextStatus) {
+            await transaction.commit();
+            return res.status(200).json({ message: 'Application status updated successfully', application });
         }
+
+        const isAllowedTransition =
+            (previousStatus === 'pending' && (nextStatus === 'accepted' || nextStatus === 'rejected')) ||
+            (previousStatus === 'accepted' && nextStatus === 'rejected');
+
+        if (!isAllowedTransition) {
+            await transaction.rollback();
+            return res.status(400).json({ error: 'Invalid status transition' });
+        }
+
+        await application.update({ status: nextStatus }, { transaction });
+
+        const agreement = await Agreement.findByPk(application.agreementId, {
+            include: {
+                model: Application,
+                as: 'applications',
+                attributes: ['id', 'status']
+            },
+            transaction
+        });
+
+        if (!agreement) {
+            await transaction.rollback();
+            return res.status(404).json({ error: 'Agreement not found' });
+        }
+
+        const acceptedApplicationsCount = agreement.applications.filter(a => a.status === 'accepted').length;
+        let agreementStatus = acceptedApplicationsCount >= agreement.amount ? 'closed' : 'open';
+
+        if (agreementStatus === 'closed') {
+            await Application.update(
+                { status: 'rejected' },
+                {
+                    where: {
+                        agreementId: application.agreementId,
+                        status: 'pending'
+                    },
+                    transaction
+                }
+            );
+        }
+
+        await agreement.update({ status: agreementStatus }, { transaction });
+
         await transaction.commit();
-        return res.status(200).json({ message: 'Application status updated successfully', application });
+
+        return res.status(200).json({
+            message: 'Application status updated successfully',
+            application,
+            agreementStatus,
+            reopened: previousStatus === 'accepted' && nextStatus === 'rejected' && agreementStatus === 'open'
+        });
     } catch (error) {
         await transaction.rollback();
         console.error('Error updating application status:', error);
@@ -497,7 +764,10 @@ const AgreementController = {
     deleteAgreement,
     applyToAgreement,
     updateApplicationStatus,
-    rateApplication
+    rateApplication,
+    listAdminPerformances,
+    inviteMusician,
+    respondToInvite
 }
 
 export default AgreementController;

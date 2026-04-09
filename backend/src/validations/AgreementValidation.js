@@ -37,5 +37,13 @@ const rateApplication = [
         .custom((value) => Number.isInteger(Number(value) * 2)).withMessage('Rate must be in intervals of 0.5')
 ]
 
-export { create, rateApplication, update, updateApplicationStatus };
+const inviteMusician = [
+    check('musicianId').exists().isInt().withMessage('Musician ID must be an integer')
+]
+
+const respondToInvite = [
+    check('status').exists().isIn(['accepted', 'rejected']).withMessage('Status must be either "accepted" or "rejected"')
+]
+
+export { create, inviteMusician, rateApplication, respondToInvite, update, updateApplicationStatus };
 

@@ -1,6 +1,135 @@
 import { Op, Sequelize } from "sequelize";
 import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance, User } from "../models/sequelize.js";
 
+// Function to list future performances where the authenticated musician is a band admin
+const listAdminPerformances = async (req, res) => {
+    const musicianId = req.user.musician.id;
+
+    try {
+        const upcomingFilter = Sequelize.literal(
+            "TIMESTAMP(DATE(COALESCE(`Event`.`endDate`, `Event`.`date`)), COALESCE(`Event`.`endTime`, `Event`.`initialTime`)) >= NOW()"
+        );
+
+        const performances = await Performance.findAll({
+            include: [{
+                model: Event,
+                required: true,
+                where: { [Op.and]: [upcomingFilter] },
+                include: {
+                    model: Band,
+                    as: 'band',
+                    required: true,
+                    attributes: ['id', 'name', 'profile_picture'],
+                    include: {
+                        model: Component,
+                        as: 'components',
+                        required: true,
+                        attributes: [],
+                        where: { musicianId, administrator: true }
+                    }
+                }
+            }],
+            order: [[Sequelize.literal('`Event`.`date`'), 'ASC']]
+        });
+
+        return res.status(200).json(performances);
+    } catch (error) {
+        console.error('Error listing admin performances:', error);
+        res.status(500).json({ error: 'An error occurred while listing admin performances' });
+    }
+}
+
+// Function to invite a musician to an agreement (band_invite application)
+const inviteMusician = async (req, res) => {
+    const agreementId = req.params.agreementId;
+    const musicianId = parseInt(req.body.musicianId, 10);
+
+    try {
+        await Application.create({
+            musicianId,
+            agreementId,
+            type: 'band_invite'
+        });
+        return res.status(201).json({ message: 'Musician invited successfully' });
+    } catch (error) {
+        console.error('Error inviting musician:', error);
+        res.status(500).json({ error: 'An error occurred while inviting the musician' });
+    }
+}
+
+// Function for a musician to accept or reject a band_invite application
+const respondToInvite = async (req, res) => {
+    const transaction = await Application.sequelize.transaction();
+    try {
+        const applicationId = req.params.applicationId;
+        const musicianId = req.user.musician.id;
+        const nextStatus = req.body.status;
+
+        const application = await Application.findOne({
+            where: { id: applicationId, musicianId, type: 'band_invite', status: 'pending' },
+            include: {
+                model: Agreement,
+                as: 'agreement',
+                required: true,
+                include: {
+                    model: Performance,
+                    as: 'performance',
+                    required: true,
+                    include: { model: Event, required: true }
+                }
+            },
+            transaction
+        });
+
+        if (!application) {
+            await transaction.rollback();
+            return res.status(404).json({ error: 'Invitation not found or cannot be updated' });
+        }
+
+        const event = application.agreement.performance.Event;
+        const eventStart = new Date(event.date);
+        const [hours, minutes, seconds] = (event.initialTime || '00:00:00').split(':').map(Number);
+        eventStart.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+        if (eventStart <= new Date()) {
+            await transaction.rollback();
+            return res.status(403).json({ error: 'Cannot respond to invitation after event has started' });
+        }
+
+        await application.update({ status: nextStatus }, { transaction });
+
+        if (nextStatus === 'accepted') {
+            const agreement = await Agreement.findByPk(application.agreementId, {
+                include: { model: Application, as: 'applications', attributes: ['id', 'status'] },
+                transaction
+            });
+
+            if (!agreement) {
+                await transaction.rollback();
+                return res.status(404).json({ error: 'Agreement not found' });
+            }
+
+            const acceptedCount = agreement.applications.filter(a => a.status === 'accepted').length;
+            const agreementStatus = acceptedCount >= agreement.amount ? 'closed' : 'open';
+
+            if (agreementStatus === 'closed') {
+                await Application.update(
+                    { status: 'rejected' },
+                    { where: { agreementId: application.agreementId, status: 'pending' }, transaction }
+                );
+            }
+
+            await agreement.update({ status: agreementStatus }, { transaction });
+        }
+
+        await transaction.commit();
+        return res.status(200).json({ message: 'Invitation responded successfully' });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error responding to invitation:', error);
+        res.status(500).json({ error: 'An error occurred while responding to the invitation' });
+    }
+}
+
 const normalizeDateQuery = (value) => {
     if (!value) return null;
 
@@ -257,7 +386,7 @@ const listMyAgreements = async (req, res) => {
             }, {
                 model: Application,
                 as: 'applications',
-                attributes: ['id'],
+                attributes: ['id', 'musicianId'],
                 required: false,
             }, {
                 model: Instrument,
@@ -445,7 +574,7 @@ const createAgreement = async (req, res) => {
         if (eventEndDateTime < new Date()) {
             return res.status(400).json({ error: 'Cannot create agreement for past events' });
         }
-        await Agreement.create({
+        const agreement = await Agreement.create({
             instrumentId: req.body.instrumentId,
             musicianId: req.user.musician.id,
             performanceId: req.body.performanceId,
@@ -453,7 +582,7 @@ const createAgreement = async (req, res) => {
             payment: req.body.payment,
             description: req.body.description
         });
-        return res.status(201).json({ message: 'Agreement created successfully' });
+        return res.status(201).json({ message: 'Agreement created successfully', agreementId: agreement.id });
     } catch (error) {
         console.error('Error creating agreement:', error);
         res.status(500).json({ error: 'An error occurred while creating the agreement' });
@@ -635,7 +764,10 @@ const AgreementController = {
     deleteAgreement,
     applyToAgreement,
     updateApplicationStatus,
-    rateApplication
+    rateApplication,
+    listAdminPerformances,
+    inviteMusician,
+    respondToInvite
 }
 
 export default AgreementController;

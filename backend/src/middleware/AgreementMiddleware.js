@@ -51,7 +51,8 @@ const isAgreementOwner = async (req, res, next) => {
     }
 }
 
-// Middleware to check if the authenticated musician has the requirement to see the agreement (is the owner or has the required instrument)
+// Middleware to check if the authenticated musician has the requirement to see the agreement
+// Allowed when musician is owner, currently has the required instrument, or has application history in the agreement.
 const hasRequirementToSee = async (req, res, next) => {
     const agreementId = req.params.agreementId;
     const musicianId = req.user.musician.id;
@@ -82,10 +83,20 @@ const hasRequirementToSee = async (req, res, next) => {
                 bandId: agreement.performance.Event.band.id
             }
         })
+        const applicationHistory = await Application.findOne({
+            where: {
+                musicianId,
+                agreementId
+            },
+            attributes: ['id']
+        })
+
         const hasInstrument = musicianInstrumentsId.includes(agreement.instrumentId);
-        if ( agreement.musicianId !== musicianId && !hasInstrument) {
+        const hasHistory = Boolean(applicationHistory);
+
+        if ( agreement.musicianId !== musicianId && !hasInstrument && !hasHistory) {
             return res.status(403).send({ error: 'Access denied. You do not have the required instrument for this agreement.' });
-        } else if (agreement.musicianId !== musicianId && component) {
+        } else if (agreement.musicianId !== musicianId && component && !hasHistory) {
             return res.status(403).send({ error: 'Access denied. You are a member of the band associated with this agreement.' });
         }
         next();

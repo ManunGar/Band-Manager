@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MusicianEndpoints from '../../../api/MusicianEndpoints';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import profileDefault from '../../../assets/milestones/profile_default.png';
@@ -133,8 +133,9 @@ const MusicianProfileScreen = ({ route }) => {
     }
 
     return (
-        <ScrollView style={styles.container}>
-            <TopContainer title='Perfil de Músico' editEnabled={false} configEnabled={false}>
+        <View style={styles.screen}>
+            <ScrollView style={styles.container}>
+                <TopContainer title='Perfil de Músico' editEnabled={false} configEnabled={false}>
                 <View style={styles.headerContent}>
                     <Image
                         source={musician?.profile_picture ? { uri: musician.profile_picture } : profileDefault}
@@ -169,138 +170,149 @@ const MusicianProfileScreen = ({ route }) => {
                 </View>
             </TopContainer>
 
-            <View style={styles.body}>
-                <View>
-                    <Text style={styles.sectionTitle}>Bandas</Text>
-                    {bands.length === 0 ? (
-                        <View style={styles.emptyBox}>
-                            <Text style={styles.emptyText}>Este músico no pertenece a ninguna banda.</Text>
-                        </View>
-                    ) : (
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.bandsList}
-                            style={{ marginTop: 10 }}
-                        >
-                            {bands.map((band) => (
-                                <View key={band.id} style={styles.bandCard}>
-                                    <Image
-                                        source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage}
-                                        style={styles.bandImage}
-                                    />
-                                    <Text style={styles.bandName} numberOfLines={1} ellipsizeMode='tail'>
-                                        {band.name}
-                                    </Text>
-                                    <Text style={styles.bandRole}>{band.administrator ? 'Administrador' : 'Miembro'}</Text>
-                                </View>
-                            ))}
-                        </ScrollView>
-                    )}
-                </View>
-
-                <View>
-                    <Text style={styles.sectionTitle}>Instrumentos</Text>
-                    {musician?.instruments?.length ? (
-                        <View style={styles.instrumentsList}>
-                            {musician.instruments.map((instrument, index) => (
-                                <View key={`${instrument.id}-${index}`} style={styles.instrumentCard}>
-                                    <View style={styles.instrumentImageWrapper}>
-                                    <Image
-                                        source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }}
-                                        style={styles.instrumentImage}
-                                    />
-                                    </View>
-                                    <View style={styles.instrumentInfo}>
-                                        <Text style={styles.instrumentTitle} numberOfLines={1} ellipsizeMode='tail'>
-                                            {instrument.name}
+                <View style={styles.body}>
+                    <View>
+                        <Text style={styles.sectionTitle}>Bandas</Text>
+                        {bands.length === 0 ? (
+                            <View style={styles.emptyBox}>
+                                <Text style={styles.emptyText}>Este músico no pertenece a ninguna banda.</Text>
+                            </View>
+                        ) : (
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.bandsList}
+                                style={{ marginTop: 10 }}
+                            >
+                                {bands.map((band) => (
+                                    <View key={band.id} style={styles.bandCard}>
+                                        <Image
+                                            source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage}
+                                            style={styles.bandImage}
+                                        />
+                                        <Text style={styles.bandName} numberOfLines={1} ellipsizeMode='tail'>
+                                            {band.name}
                                         </Text>
-                                        <Text style={styles.instrumentLevelText}>
-                                            {instrument?.MusicianLevel?.level || 'No definido'}
-                                        </Text>
+                                        <Text style={styles.bandRole}>{band.administrator ? 'Administrador' : 'Miembro'}</Text>
                                     </View>
-                                </View>
-                            ))}
-                        </View>
-                    ) : (
-                        <View style={styles.emptyBox}>
-                            <Text style={styles.emptyText}>Este músico no tiene instrumentos asignados.</Text>
-                        </View>
-                    )}
-                </View>
+                                ))}
+                            </ScrollView>
+                        )}
+                    </View>
 
-                <View>
-                    <Text style={styles.sectionTitle}>Contratos Realizados</Text>
-
-                    {contracts.length === 0 ? (
-                        <View style={styles.emptyBox}>
-                            <Text style={styles.emptyText}>No hay contratos registrados para este músico.</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.contractsList}>
-                            {contracts.map((application) => {
-                                const agreement = application?.agreement;
-                                const event = agreement?.performance?.Event;
-                                const band = event?.band;
-                                const instrument = agreement?.instrument;
-
-                                return (
-                                    <View key={application.id} style={styles.contractCard}>
-                                        <View style={styles.contractHeader}>
-                                            <Image
-                                                source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage}
-                                                style={styles.contractBandImage}
-                                            />
-                                            <View style={{ flex: 1 }}>
-                                                <Text style={styles.contractEventName} numberOfLines={1} ellipsizeMode='tail'>
-                                                    {event?.name || 'Evento'}
-                                                </Text>
-                                                <Text style={styles.contractDate}>
-                                                    {event?.date ? parseDate(event.date) : 'Fecha no disponible'}
-                                                </Text>
-                                            </View>
-                                            <View style={styles.contractRateBadge}>
-                                                <StarIcon width={12} height={12} fill={GlobalStyle.yellow} stroke={GlobalStyle.yellow} strokeWidth={0.2} />
-                                                <Text style={styles.contractRateText}>{formatRate(application?.rate)}</Text>
-                                            </View>
+                    <View>
+                        <Text style={styles.sectionTitle}>Instrumentos</Text>
+                        {musician?.instruments?.length ? (
+                            <View style={styles.instrumentsList}>
+                                {musician.instruments.map((instrument, index) => (
+                                    <View key={`${instrument.id}-${index}`} style={styles.instrumentCard}>
+                                        <View style={styles.instrumentImageWrapper}>
+                                        <Image
+                                            source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }}
+                                            style={styles.instrumentImage}
+                                        />
                                         </View>
-
-                                        <View style={styles.contractInstrumentRow}>
-                                            {instrument?.image ? (
-                                                <Image
-                                                    source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }}
-                                                    style={styles.contractInstrumentImage}
-                                                />
-                                            ) : (
-                                                <View style={styles.contractInstrumentFallback} />
-                                            )}
-                                            <Text style={styles.contractInstrumentText}>
-                                                {instrument?.name || 'Instrumento no disponible'}
+                                        <View style={styles.instrumentInfo}>
+                                            <Text style={styles.instrumentTitle} numberOfLines={1} ellipsizeMode='tail'>
+                                                {instrument.name}
+                                            </Text>
+                                            <Text style={styles.instrumentLevelText}>
+                                                {instrument?.MusicianLevel?.level || 'No definido'}
                                             </Text>
                                         </View>
                                     </View>
-                                );
-                            })}
-                        </View>
-                    )}
+                                ))}
+                            </View>
+                        ) : (
+                            <View style={styles.emptyBox}>
+                                <Text style={styles.emptyText}>Este músico no tiene instrumentos asignados.</Text>
+                            </View>
+                        )}
+                    </View>
 
-                    {hasMoreContracts && (
-                        <LinkText
-                            onPress={loadMoreContracts}
-                            style={{ textAlign: 'center', marginTop: 10 }}
-                        >
-                            {loadingMoreContracts ? 'Cargando...' : 'Cargar Más'}
-                        </LinkText>
-                    )}
+                    <View>
+                        <Text style={styles.sectionTitle}>Contratos Realizados</Text>
+
+                        {contracts.length === 0 ? (
+                            <View style={styles.emptyBox}>
+                                <Text style={styles.emptyText}>No hay contratos registrados para este músico.</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.contractsList}>
+                                {contracts.map((application) => {
+                                    const agreement = application?.agreement;
+                                    const event = agreement?.performance?.Event;
+                                    const band = event?.band;
+                                    const instrument = agreement?.instrument;
+
+                                    return (
+                                        <View key={application.id} style={styles.contractCard}>
+                                            <View style={styles.contractHeader}>
+                                                <Image
+                                                    source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage}
+                                                    style={styles.contractBandImage}
+                                                />
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={styles.contractEventName} numberOfLines={1} ellipsizeMode='tail'>
+                                                        {event?.name || 'Evento'}
+                                                    </Text>
+                                                    <Text style={styles.contractDate}>
+                                                        {event?.date ? parseDate(event.date) : 'Fecha no disponible'}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.contractRateBadge}>
+                                                    <StarIcon width={12} height={12} fill={GlobalStyle.yellow} stroke={GlobalStyle.yellow} strokeWidth={0.2} />
+                                                    <Text style={styles.contractRateText}>{formatRate(application?.rate)}</Text>
+                                                </View>
+                                            </View>
+
+                                            <View style={styles.contractInstrumentRow}>
+                                                {instrument?.image ? (
+                                                    <Image
+                                                        source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }}
+                                                        style={styles.contractInstrumentImage}
+                                                    />
+                                                ) : (
+                                                    <View style={styles.contractInstrumentFallback} />
+                                                )}
+                                                <Text style={styles.contractInstrumentText}>
+                                                    {instrument?.name || 'Instrumento no disponible'}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        )}
+
+                        {hasMoreContracts && (
+                            <LinkText
+                                onPress={loadMoreContracts}
+                                style={{ textAlign: 'center', marginTop: 10 }}
+                            >
+                                {loadingMoreContracts ? 'Cargando...' : 'Cargar Más'}
+                            </LinkText>
+                        )}
+                    </View>
                 </View>
-            </View>
-        </ScrollView>
+
+                <View style={styles.bottomSpacer} />
+            </ScrollView>
+
+            <Pressable style={styles.floatingButton}>
+                <Text style={styles.floatingButtonText}>Contratar</Text>
+            </Pressable>
+        </View>
     );
 };
 
 export default MusicianProfileScreen;
 
 const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        backgroundColor: GlobalStyle.lightBackground,
+    },
     container: {
         flex: 1,
         backgroundColor: GlobalStyle.lightBackground,
@@ -529,6 +541,29 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         fontSize: 13,
         color: GlobalStyle.darkGray,
+        textTransform: 'uppercase',
+    },
+    bottomSpacer: {
+        height: 92,
+    },
+    floatingButton: {
+        position: 'absolute',
+        right: 20,
+        bottom: 24,
+        backgroundColor: GlobalStyle.yellow,
+        borderRadius: 999,
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        shadowColor: GlobalStyle.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 5,
+    },
+    floatingButtonText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 16,
+        color: GlobalStyle.blue,
         textTransform: 'uppercase',
     },
 });

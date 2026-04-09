@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../api/AgreementEndpoints';
@@ -29,6 +30,7 @@ const AgreementDetailScreen = ({ route }) => {
     const [applying, setApplying] = useState(false);
     const [updatingApplicationId, setUpdatingApplicationId] = useState(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
+    const navigation = useNavigation();
 
     useEffect(() => {
         fetchAgreement();
@@ -279,7 +281,7 @@ const AgreementDetailScreen = ({ route }) => {
                                     const showAcceptedRejectAction = isAccepted && !hasEventStarted;
 
                                     return (
-                                        <View key={application.id} style={styles.applicantCard}>
+                                        <Pressable key={application.id} style={styles.applicantCard} onPress={() => navigation.navigate('MusicianProfile', { musicianId: musician?.id })}>
                                             <View style={styles.applicantHeader}>
                                                 <Image
                                                     source={musicianUser?.profile_picture ? { uri: musicianUser.profile_picture } : profileDefault}
@@ -331,7 +333,7 @@ const AgreementDetailScreen = ({ route }) => {
                                                     <Text style={[styles.statusChipText, { color: statusStyle?.color }]}>{statusStyle?.label || application.status}</Text>
                                                 </View>
                                             )}
-                                        </View>
+                                        </Pressable>
                                     );
                                 })
                             )}

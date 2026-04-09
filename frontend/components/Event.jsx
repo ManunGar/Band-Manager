@@ -9,6 +9,18 @@ import { parseDateTime } from '../helpers/ParseHelpers';
 const Event = ({ event }) => {
     const navigation = useNavigation();
 
+    const attendanceText = event?.attendance?.present === true
+        ? 'Asistencia Confirmada'
+        : event?.attendance?.present === false
+            ? 'Asistencia Rechazada'
+            : 'Sin Confirmar';
+
+    const attendanceColor = event?.attendance?.present === true
+        ? GlobalStyle.darkGreen
+        : event?.attendance?.present === false
+            ? GlobalStyle.darkRed
+            : GlobalStyle.gray;
+
 
     return (
         <TouchableOpacity onPress={() => navigation.navigate('Event', { eventId: event.id })}>
@@ -17,10 +29,8 @@ const Event = ({ event }) => {
             <View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', width: 385 }}>
                     <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{event.name}</Text>
-                    {event.attendance.participates && <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, marginLeft: 10, flexShrink: 0, color: event.attendance.present === true ? GlobalStyle.darkGreen : event.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray }}>
-                        { event.attendance.present && 'Asistencia Confirmada' }
-                        { event.attendance.present === false && 'Asistencia Rechazada' }
-                        { event.attendance.present === null && 'Sin Confirmar' }
+                    {event?.attendance?.participates && <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, marginLeft: 10, flexShrink: 0, color: attendanceColor }}>
+                        {attendanceText}
                     </Text>}
                 </View>
                 <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">{parseDateTime(event.date, event.initialTime)} {event.location ? `· ${event.location}` : ''}</Text>

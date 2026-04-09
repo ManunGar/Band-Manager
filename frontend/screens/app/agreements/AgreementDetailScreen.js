@@ -273,12 +273,14 @@ const AgreementDetailScreen = ({ route }) => {
                                 ownerApplications.map((application) => {
                                     const musician = application?.musician;
                                     const musicianUser = musician?.user;
+                                    const isBandInvite = application?.type === 'band_invite';
                                     const statusStyle = APPLICATION_STATUS[application?.status];
                                     const isPending = application?.status === 'pending';
                                     const isAccepted = application?.status === 'accepted';
                                     const isUpdating = updatingApplicationId === application?.id;
-                                    const showPendingActions = isPending && !hasEventStarted;
-                                    const showAcceptedRejectAction = isAccepted && !hasEventStarted;
+                                    // Band-invite decisions belong to the invited musician, not the owner
+                                    const showPendingActions = isPending && !hasEventStarted && !isBandInvite;
+                                    const showAcceptedRejectAction = isAccepted && !hasEventStarted && !isBandInvite;
 
                                     return (
                                         <Pressable key={application.id} style={styles.applicantCard} onPress={() => navigation.navigate('MusicianProfile', { musicianId: musician?.id })}>
@@ -291,6 +293,11 @@ const AgreementDetailScreen = ({ route }) => {
                                                     <Text style={styles.applicantName}>{musicianUser?.full_name || 'Músico'}</Text>
                                                     <Text style={styles.applicantLevel}>{musician?.instrumentLevel || 'No indicado'}</Text>
                                                 </View>
+                                                {isBandInvite && (
+                                                    <View style={styles.inviteBadge}>
+                                                        <Text style={styles.inviteBadgeText}>Invitado</Text>
+                                                    </View>
+                                                )}
                                             </View>
                                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, marginTop: 6 }}>
                                                 <View style={styles.metaRow}>
@@ -303,7 +310,11 @@ const AgreementDetailScreen = ({ route }) => {
                                                 </View>
                                             </View>
 
-                                            {(showPendingActions || showAcceptedRejectAction) ? (
+                                            {isBandInvite && isPending ? (
+                                                <View style={styles.pendingInviteNotice}>
+                                                    <Text style={styles.pendingInviteText}>Invitación pendiente de respuesta</Text>
+                                                </View>
+                                            ) : (showPendingActions || showAcceptedRejectAction) ? (
                                                 <View style={styles.applicantActions}>
                                                     {showPendingActions && (
                                                         <Pressable
@@ -622,5 +633,33 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         fontSize: 14,
         color: GlobalStyle.gray,
-    }
+    },
+    inviteBadge: {
+        backgroundColor: '#EAF0FF',
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+    },
+    inviteBadgeText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 11,
+        color: '#3A5FC8',
+        textTransform: 'uppercase',
+    },
+    pendingInviteNotice: {
+        marginTop: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: GlobalStyle.lightGray,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: GlobalStyle.white,
+        alignItems: 'center',
+    },
+    pendingInviteText: {
+        fontFamily: 'Oswald_400',
+        fontSize: 13,
+        color: GlobalStyle.gray,
+        textTransform: 'uppercase',
+    },
 });

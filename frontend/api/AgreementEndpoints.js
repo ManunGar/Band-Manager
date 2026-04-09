@@ -83,6 +83,52 @@ const updateApplicationStatus = async (agreementId, applicationId, status) => {
     }
 };
 
+// Endpoint to invite a musician to an agreement (band_invite)
+const inviteMusician = async (agreementId, musicianId) => {
+    try {
+        const response = await axios.post(`${baseUrl}/agreements/${agreementId}/invite`, { musicianId });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
+// Endpoint for a musician to accept or reject a band_invite
+const respondToInvite = async (applicationId, status) => {
+    try {
+        const response = await axios.put(`${baseUrl}/applications/${applicationId}/respond`, { status });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
+// Endpoint to list future performances where the authenticated musician is a band admin (no agreements yet)
+const listAdminPerformances = async () => {
+    try {
+        const response = await axios.get(`${baseUrl}/performances/admin`);
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
+// Endpoint to create a new agreement
+const createAgreement = async (performanceId, instrumentId, amount, payment, description) => {
+    try {
+        const response = await axios.post(`${baseUrl}/agreements`, {
+            performanceId,
+            instrumentId,
+            amount,
+            payment,
+            description,
+        });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     listAgreements,
     listMyAgreements,
@@ -90,4 +136,8 @@ export default {
     getAgreement,
     applyToAgreement,
     updateApplicationStatus,
+    inviteMusician,
+    respondToInvite,
+    listAdminPerformances,
+    createAgreement,
 }

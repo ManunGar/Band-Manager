@@ -52,7 +52,7 @@ const formatRate = (rate) => {
     return Number(rate).toFixed(1);
 };
 
-const MusicianProfileScreen = ({ route }) => {
+const MusicianProfileScreen = ({ route, navigation }) => {
     const { musicianId } = route.params;
     const [musician, setMusician] = useState(null);
     const [contracts, setContracts] = useState([]);
@@ -299,7 +299,15 @@ const MusicianProfileScreen = ({ route }) => {
                 <View style={styles.bottomSpacer} />
             </ScrollView>
 
-            <Pressable style={styles.floatingButton}>
+            <Pressable
+                style={styles.floatingButton}
+                onPress={() => navigation.navigate('HireMusician', {
+                    musicianId,
+                    musicianName: musician?.full_name,
+                    musicianInstruments: musician?.instruments ?? [],
+                })}
+                disabled={!musician}
+            >
                 <Text style={styles.floatingButtonText}>Contratar</Text>
             </Pressable>
         </View>

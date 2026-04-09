@@ -113,6 +113,16 @@ const listAdminPerformances = async () => {
     }
 };
 
+// Endpoint to rate an accepted musician application after the event has ended
+const rateApplication = async (agreementId, applicationId, rate) => {
+    try {
+        const response = await axios.put(`${baseUrl}/agreements/${agreementId}/applications/${applicationId}/rate`, { rate });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 // Endpoint to create a new agreement
 const createAgreement = async (performanceId, instrumentId, amount, payment, description) => {
     try {
@@ -140,4 +150,5 @@ export default {
     respondToInvite,
     listAdminPerformances,
     createAgreement,
+    rateApplication,
 }

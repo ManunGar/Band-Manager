@@ -1,10 +1,12 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../api/AgreementEndpoints';
 import bandProfileDefault from '../../../assets/milestones/band_default.png';
 import performancePictureDefault from '../../../assets/milestones/performance_default.jpg';
 import profileDefault from '../../../assets/milestones/profile_default.png';
+import BottomSheet from '../../../components/BottomSheet';
 import EventMapView from '../../../components/EventMapView';
 import AgendaIcon from '../../../components/icons/AgendaIcon';
 import AttendanceIcon from '../../../components/icons/AttendanceIcon';
@@ -30,7 +32,12 @@ const AgreementDetailScreen = ({ route }) => {
     const [applying, setApplying] = useState(false);
     const [updatingApplicationId, setUpdatingApplicationId] = useState(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
+    const [selectedApplicationToRate, setSelectedApplicationToRate] = useState(null);
+    const [selectedRate, setSelectedRate] = useState(0);
+    const [ratingApplicationId, setRatingApplicationId] = useState(null);
     const navigation = useNavigation();
+    const rateSheetRef = useRef(null);
+    const rateSheetSnapPoints = useMemo(() => ['50%'], []);
 
     useEffect(() => {
         fetchAgreement();
@@ -64,6 +71,16 @@ const AgreementDetailScreen = ({ route }) => {
         eventStart.setHours(hours || 0, minutes || 0, seconds || 0, 0);
         return eventStart <= new Date();
     }, [event?.date, event?.initialTime]);
+
+    const hasEventEnded = useMemo(() => {
+        if (!event?.date) return false;
+
+        const eventEnd = new Date(event.endDate || event.date);
+        const [hours, minutes, seconds] = (event.endTime || event.initialTime || '00:00:00').split(':').map(Number);
+        eventEnd.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+
+        return eventEnd <= new Date();
+    }, [event?.date, event?.endDate, event?.initialTime, event?.endTime]);
 
     const isOwner = agreement?.musicianId === user?.musician?.id;
     const myApplication = agreement?.applications?.find(app => app.musicianId === user?.musician?.id);
@@ -132,6 +149,55 @@ const AgreementDetailScreen = ({ route }) => {
             return '_._';
         }
         return `${Number(averageRate).toFixed(1)} / 5`;
+    };
+
+    const formatApplicationRate = (rate) => {
+        if (rate === null || rate === undefined || Number.isNaN(Number(rate))) {
+            return 'Sin calificar';
+        }
+        return `${Number(rate).toFixed(1)} / 5`;
+    };
+
+    const getNormalizedRate = (rate) => {
+        const parsedRate = Number(rate);
+        if (!Number.isFinite(parsedRate)) return 0;
+        const clampedRate = Math.max(0, Math.min(5, parsedRate));
+        return Math.round(clampedRate * 2) / 2;
+    };
+
+    const getRateIconName = (rate, starNumber) => {
+        if (rate >= starNumber) return 'star';
+        if (rate >= starNumber - 0.5) return 'star-half';
+        return 'star-border';
+    };
+
+    const openRateSheet = (application) => {
+        setSelectedApplicationToRate(application);
+        setSelectedRate(getNormalizedRate(application?.rate));
+        rateSheetRef.current?.present();
+    };
+
+    const closeRateSheet = () => {
+        if (ratingApplicationId) return;
+        rateSheetRef.current?.dismiss();
+        setSelectedApplicationToRate(null);
+    };
+
+    const handleRateApplication = async () => {
+        if (!selectedApplicationToRate?.id) return;
+
+        try {
+            setRatingApplicationId(selectedApplicationToRate.id);
+            await AgreementEndpoints.rateApplication(agreementId, selectedApplicationToRate.id, selectedRate);
+            await fetchAgreement();
+            rateSheetRef.current?.dismiss();
+            setSelectedApplicationToRate(null);
+            Alert.alert('Calificación guardada', 'La calificación se registró correctamente.');
+        } catch (error) {
+            Alert.alert('Error', error.message || 'Hubo un error al calificar al músico.');
+        } finally {
+            setRatingApplicationId(null);
+        }
     };
 
     return (
@@ -278,6 +344,8 @@ const AgreementDetailScreen = ({ route }) => {
                                     const isPending = application?.status === 'pending';
                                     const isAccepted = application?.status === 'accepted';
                                     const isUpdating = updatingApplicationId === application?.id;
+                                    const hasRate = application?.rate !== null && application?.rate !== undefined && !Number.isNaN(Number(application?.rate));
+                                    const canRateApplication = hasEventEnded && isAccepted && application?.type === 'musician_apply';
                                     const showPendingActions = isPending && !hasEventStarted && !isBandInvite;
                                     const showRejectAction = !hasEventStarted && (isPending || isAccepted);
                                     const showAcceptedActionStatus = isAccepted && showRejectAction;
@@ -353,6 +421,21 @@ const AgreementDetailScreen = ({ route }) => {
                                                     <Text style={[styles.statusChipText, { color: statusStyle?.color }]}>{statusStyle?.label || application.status}</Text>
                                                 </View>
                                             )}
+
+                                            {canRateApplication && (
+                                                <View style={styles.rateContainer}>
+                                                    <View style={styles.rateMetaRow}>
+                                                        <StarIcon width={14} height={14} fill={GlobalStyle.yellow} stroke={GlobalStyle.yellow} strokeWidth={0.2} />
+                                                        <Text style={styles.rateMetaText}>{formatApplicationRate(application?.rate)}</Text>
+                                                    </View>
+                                                    <Pressable
+                                                        onPress={() => openRateSheet(application)}
+                                                        style={styles.rateButton}
+                                                    >
+                                                        <Text style={styles.rateButtonText}>{hasRate ? 'Editar calificación' : 'Calificar músico'}</Text>
+                                                    </Pressable>
+                                                </View>
+                                            )}
                                         </Pressable>
                                     );
                                 })
@@ -400,6 +483,45 @@ const AgreementDetailScreen = ({ route }) => {
                     )}
                 </View>
             </ScrollView>
+
+            <BottomSheet sheetRef={rateSheetRef} snapPoints={rateSheetSnapPoints} uploading={Boolean(ratingApplicationId)}>
+                <Text style={styles.rateSheetTitle}>Calificar músico contratado</Text>
+                <Text style={styles.rateSheetName}>{selectedApplicationToRate?.musician?.user?.full_name || 'Músico'}</Text>
+                <Text style={styles.rateSheetHint}>Selecciona una calificación entre 0 y 5 estrellas, con intervalos de 0.5.</Text>
+
+                <View style={styles.rateStarsRow}>
+                    {[1, 2, 3, 4, 5].map((starNumber) => (
+                        <View key={starNumber} style={styles.rateStarWrapper}>
+                            <Pressable style={styles.rateHalfLeft} onPress={() => setSelectedRate(starNumber - 0.5)} />
+                            <Pressable style={styles.rateHalfRight} onPress={() => setSelectedRate(starNumber)} />
+                            <MaterialIcons
+                                name={getRateIconName(selectedRate, starNumber)}
+                                size={40}
+                                color={GlobalStyle.yellow}
+                            />
+                        </View>
+                    ))}
+                </View>
+
+                <Text style={styles.rateValueText}>{selectedRate.toFixed(1)} / 5</Text>
+
+                <View style={styles.rateSheetButtonsRow}>
+                    <Pressable
+                        onPress={closeRateSheet}
+                        disabled={Boolean(ratingApplicationId)}
+                        style={[styles.rateSheetButton, styles.rateSheetCancelButton, Boolean(ratingApplicationId) && styles.actionButtonDisabled]}
+                    >
+                        <Text style={styles.rateSheetCancelButtonText}>Cancelar</Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={handleRateApplication}
+                        disabled={Boolean(ratingApplicationId)}
+                        style={[styles.rateSheetButton, styles.rateSheetSubmitButton, Boolean(ratingApplicationId) && styles.actionButtonDisabled]}
+                    >
+                        <Text style={styles.rateSheetSubmitButtonText}>{ratingApplicationId ? 'Guardando...' : 'Guardar'}</Text>
+                    </Pressable>
+                </View>
+            </BottomSheet>
         </KeyboardAvoidingView>
     );
 };
@@ -673,6 +795,125 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         fontSize: 13,
         color: GlobalStyle.gray,
+        textTransform: 'uppercase',
+    },
+    rateContainer: {
+        marginTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: GlobalStyle.lightGray,
+        paddingTop: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 10,
+    },
+    rateMetaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    rateMetaText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 14,
+        color: GlobalStyle.darkGray,
+    },
+    rateButton: {
+        borderWidth: 1,
+        borderColor: GlobalStyle.yellow,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        backgroundColor: '#FFF5E6',
+    },
+    rateButtonText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 13,
+        color: GlobalStyle.yellow,
+        textTransform: 'uppercase',
+    },
+    rateSheetTitle: {
+        fontFamily: 'Oswald_500',
+        fontSize: 22,
+        color: GlobalStyle.black,
+    },
+    rateSheetName: {
+        marginTop: -4,
+        fontFamily: 'Oswald_400',
+        fontSize: 16,
+        color: GlobalStyle.gray,
+    },
+    rateSheetHint: {
+        marginTop: 10,
+        fontFamily: 'Oswald_400',
+        fontSize: 14,
+        color: GlobalStyle.darkGray,
+    },
+    rateStarsRow: {
+        marginTop: 14,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    rateStarWrapper: {
+        width: 44,
+        height: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+    rateHalfLeft: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: '50%',
+        zIndex: 2,
+    },
+    rateHalfRight: {
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: '50%',
+        zIndex: 2,
+    },
+    rateValueText: {
+        marginTop: 10,
+        textAlign: 'center',
+        fontFamily: 'Oswald_500',
+        fontSize: 18,
+        color: GlobalStyle.yellow,
+    },
+    rateSheetButtonsRow: {
+        marginTop: 16,
+        flexDirection: 'row',
+        gap: 10,
+    },
+    rateSheetButton: {
+        flex: 1,
+        borderRadius: 10,
+        borderWidth: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+    },
+    rateSheetCancelButton: {
+        borderColor: GlobalStyle.lightGray,
+        backgroundColor: GlobalStyle.white,
+    },
+    rateSheetCancelButtonText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 15,
+        color: GlobalStyle.gray,
+        textTransform: 'uppercase',
+    },
+    rateSheetSubmitButton: {
+        borderColor: GlobalStyle.yellow,
+        backgroundColor: GlobalStyle.yellow,
+    },
+    rateSheetSubmitButtonText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 15,
+        color: GlobalStyle.blue,
         textTransform: 'uppercase',
     },
 });

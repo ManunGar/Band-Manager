@@ -1,11 +1,12 @@
 import { useContext, useEffect, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../../api/AgreementEndpoints';
 import AgreementCard from '../../../../components/AgreementCard';
 import LinkText from '../../../../components/LinkText';
 import Tag from '../../../../components/Tap';
 import { useAgreementSearch } from '../../../../contexts/AgreementSearchContext';
 import { AuthContext } from '../../../../contexts/AuthContext';
+import * as GlobalStyle from '../../../../GlobalStyle';
 
 const PAGE_SIZE = 5;
 
@@ -97,6 +98,11 @@ const Agreement = () => {
                 )}
                 refreshing={refreshing}
                 onRefresh={onRefresh}
+                ListEmptyComponent={(
+                    <Text style={{ textAlign: 'center', marginTop: 25, color: GlobalStyle.gray, fontFamily: 'Oswald_400' }}>
+                        No se encontraron contratos para este instrumento.
+                    </Text>
+                )}
                 ListFooterComponent={() =>
                     hasMore ? (
                         <LinkText

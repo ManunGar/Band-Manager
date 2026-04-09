@@ -58,6 +58,7 @@ const MyAgreements = () => {
                 )}
                 refreshing={refreshing}
                 onRefresh={onRefresh}
+                showsVerticalScrollIndicator={false}
                 ListEmptyComponent={(
                     <Text style={{ textAlign: 'center', marginTop: 25, color: '#8C8C8C', fontFamily: 'Oswald_400' }}>
                         No tienes contratos creados con esos filtros.

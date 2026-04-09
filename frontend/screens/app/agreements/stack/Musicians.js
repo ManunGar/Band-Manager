@@ -96,6 +96,7 @@ const Musicians = () => {
                 )}
                 refreshing={refreshing}
                 onRefresh={onRefresh}
+                showsVerticalScrollIndicator={false}
                 ListEmptyComponent={(
                     <Text style={{ textAlign: 'center', marginTop: 25, color: GlobalStyle.gray, fontFamily: 'Oswald_400' }}>
                         No se encontraron músicos con esos filtros.

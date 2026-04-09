@@ -68,6 +68,7 @@ const Applications = () => {
                 data={applications}
                 keyExtractor={(item) => String(item.id)}
                 contentContainerStyle={{ gap: 14, paddingBottom: 20 }}
+                showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => {
                     const isBandInvite = item?.type === 'band_invite';
                     const isPending = item?.status === 'pending';

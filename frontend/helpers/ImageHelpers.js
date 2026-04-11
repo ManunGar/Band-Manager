@@ -1,7 +1,6 @@
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ExpoImagePicker from 'expo-image-picker';
-import { Alert, Linking } from 'react-native';
 
 // Function to ask for media library permissions
 const askLibraryPerm = async () => {
@@ -17,16 +16,20 @@ const askLibraryPerm = async () => {
     // Denied
     // On iOS, if it cannot be asked again (user checked "Do not allow"), req.canAskAgain is usually false
     if (!req.canAskAgain) {
-        showSettingsAlert('la galería de fotos');
-    } else {
         return {
             ok: false,
             limited: false,
-            message: 'Sin acceso a la galería no podemos elegir una imagen.',
+            needsSettings: true,
+            message: 'Necesitamos permiso para usar la galería de fotos. Puedes concederlo desde los Ajustes del dispositivo.',
         };
     }
 
-    return { ok: false, limited: false };
+    return {
+        ok: false,
+        limited: false,
+        needsSettings: false,
+        message: 'Sin acceso a la galería no podemos elegir una imagen.',
+    };
 };
 
 // Function to ask for camera permissions
@@ -38,21 +41,25 @@ const askCameraPerm = async () => {
     if (req.granted) return { ok: true };
 
     if (!req.canAskAgain) {
-        showSettingsAlert('la cámara');
-    } else {
         return {
             ok: false,
-            message: 'Sin acceso a la cámara no podemos tomar una foto.',
+            needsSettings: true,
+            message: 'Necesitamos permiso para usar la cámara. Puedes concederlo desde los Ajustes del dispositivo.',
         };
     }
-    return { ok: false };
+
+    return {
+        ok: false,
+        needsSettings: false,
+        message: 'Sin acceso a la cámara no podemos tomar una foto.',
+    };
 };
 
 // Function to pick an image from the library
 const pickFromLibrary = async (aspect = [1, 1], onPermissionDenied = null) => {
-    const { ok, message } = await askLibraryPerm();
+    const { ok, message, needsSettings } = await askLibraryPerm();
     if (!ok) {
-        if (message) onPermissionDenied?.(message);
+        if (message) onPermissionDenied?.({ message, needsSettings: Boolean(needsSettings) });
         return null;
     }
 
@@ -69,9 +76,9 @@ const pickFromLibrary = async (aspect = [1, 1], onPermissionDenied = null) => {
 
 // Function to take a photo using the camera
 const takePhoto = async (aspect = [1, 1], onPermissionDenied = null) => {
-    const { ok, message } = await askCameraPerm();
+    const { ok, message, needsSettings } = await askCameraPerm();
     if (!ok) {
-        if (message) onPermissionDenied?.(message);
+        if (message) onPermissionDenied?.({ message, needsSettings: Boolean(needsSettings) });
         return null;
     }
 
@@ -106,18 +113,6 @@ const assertSizeLT3MB = async (uri) => {
     const max = 3 * 1024 * 1024; // 3 MB
     if (!info.exists) throw new Error('Archivo no encontrado.');
     if (info.size && info.size > max) throw new Error('La imagen supera los 3 MB.');
-};
-
-// Function to show an alert directing the user to app settings for permissions
-const showSettingsAlert = (featureLabel = 'esta función') => {
-    Alert.alert(
-        'Permiso requerido',
-        `Necesitamos permiso para usar ${featureLabel}. Puedes concederlo desde los Ajustes del dispositivo.`,
-        [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Abrir Ajustes', onPress: () => Linking.openSettings() },
-        ]
-    );
 };
 
 export {

@@ -729,20 +729,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     dangerActionText: {
-        color: GlobalStyles.red,
-        fontSize: 16,
-        fontFamily: 'Oswald_500',
-        letterSpacing: 0.2,
+        fontWeight: '600',
+        color: '#dc2626',
     },
     secondaryAction: {
         borderRadius: 10,
         paddingVertical: 12,
         alignItems: 'center',
-        backgroundColor: '#f3f4f6'
+        backgroundColor: '#e5e7eb'
     },
     secondaryActionText: {
-        fontSize: 16,
-        fontFamily: 'Oswald_500',
-        color: GlobalStyles.black,
+        fontWeight: '600',
+        color: '#111827',
     }
 })

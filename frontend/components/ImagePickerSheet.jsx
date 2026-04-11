@@ -1,18 +1,33 @@
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Linking, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import * as GlobalStyle from '../GlobalStyle';
 import { useToast } from '../contexts/ToastContext';
 import { pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
 import BottomSheet from './BottomSheet';
 
 const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemoved, aspect = [1, 1] }) => {
     const snapPoints = useMemo(() => ['30%'], []);
+    const permissionSnapPoints = useMemo(() => ['38%'], []);
     const [loading, setLoading] = useState(false);
+    const [settingsMessage, setSettingsMessage] = useState('');
     const { showToast } = useToast();
+    const settingsSheetRef = useRef(null);
+
+    const openSettingsPrompt = (message) => {
+        setSettingsMessage(message);
+        sheetRef.current?.dismiss();
+        setTimeout(() => settingsSheetRef.current?.present(), 140);
+    };
 
     // Handle image selection from library
     const handlePickFromLibrary = async () => {
         try {
-            const uri = await pickFromLibrary(aspect, (message) => {
+            const uri = await pickFromLibrary(aspect, ({ message, needsSettings }) => {
+                if (needsSettings) {
+                    openSettingsPrompt(message);
+                    return;
+                }
+
                 showToast('Permiso requerido', message, 'warning');
             });
             if (!uri) return;
@@ -30,7 +45,12 @@ const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemo
     // Handle taking a photo
     const handleTakePhoto = async () => {
         try {
-            const uri = await takePhoto(aspect, (message) => {
+            const uri = await takePhoto(aspect, ({ message, needsSettings }) => {
+                if (needsSettings) {
+                    openSettingsPrompt(message);
+                    return;
+                }
+
                 showToast('Permiso requerido', message, 'warning');
             });
             if (!uri) return;
@@ -59,50 +79,72 @@ const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemo
     };
 
     return (
-        <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ gap: 10 }}>
-            <TouchableOpacity
-                onPress={handlePickFromLibrary}
-                disabled={loading}
-                style={[styles.bottomSheetOption, loading && styles.disabledOption]}
-            >
-                {loading ? (
-                    <ActivityIndicator color="#111827" />
-                ) : (
-                    <Text style={styles.bottomSheetOptionText}>Elegir de la galería</Text>
-                )}
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={handleTakePhoto}
-                disabled={loading}
-                style={[styles.bottomSheetOption, loading && styles.disabledOption]}
-            >
-                {loading ? (
-                    <ActivityIndicator color="#111827" />
-                ) : (
-                    <Text style={styles.bottomSheetOptionText}>Tomar una foto</Text>
-                )}
-            </TouchableOpacity>
-            {imagePreview && (
+        <>
+            <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ gap: 10 }}>
                 <TouchableOpacity
-                    onPress={handleRemoveImage}
+                    onPress={handlePickFromLibrary}
                     disabled={loading}
-                    style={[styles.bottomSheetOption, styles.deleteOption, loading && styles.disabledOption]}
+                    style={[styles.bottomSheetOption, loading && styles.disabledOption]}
                 >
                     {loading ? (
-                        <ActivityIndicator color="#dc2626" />
+                        <ActivityIndicator color="#111827" />
                     ) : (
-                        <Text style={styles.deleteOptionText}>Eliminar imagen</Text>
+                        <Text style={styles.bottomSheetOptionText}>Elegir de la galería</Text>
                     )}
                 </TouchableOpacity>
-            )}
-            <TouchableOpacity
-                onPress={() => sheetRef.current?.dismiss()}
-                disabled={loading}
-                style={[styles.bottomSheetOption, styles.cancelOption, loading && styles.disabledOption]}
-            >
-                <Text style={styles.bottomSheetOptionText}>Cancelar</Text>
-            </TouchableOpacity>
-        </BottomSheet>
+                <TouchableOpacity
+                    onPress={handleTakePhoto}
+                    disabled={loading}
+                    style={[styles.bottomSheetOption, loading && styles.disabledOption]}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#111827" />
+                    ) : (
+                        <Text style={styles.bottomSheetOptionText}>Tomar una foto</Text>
+                    )}
+                </TouchableOpacity>
+                {imagePreview && (
+                    <TouchableOpacity
+                        onPress={handleRemoveImage}
+                        disabled={loading}
+                        style={[styles.bottomSheetOption, styles.deleteOption, loading && styles.disabledOption]}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#dc2626" />
+                        ) : (
+                            <Text style={styles.deleteOptionText}>Eliminar imagen</Text>
+                        )}
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                    onPress={() => sheetRef.current?.dismiss()}
+                    disabled={loading}
+                    style={[styles.bottomSheetOption, styles.cancelOption, loading && styles.disabledOption]}
+                >
+                    <Text style={styles.bottomSheetOptionText}>Cancelar</Text>
+                </TouchableOpacity>
+            </BottomSheet>
+
+            <BottomSheet sheetRef={settingsSheetRef} snapPoints={permissionSnapPoints} style={{ gap: 12 }}>
+                <Text style={styles.sheetTitle}>Permiso requerido</Text>
+                <Text style={styles.sheetMessage}>{settingsMessage}</Text>
+                <TouchableOpacity
+                    style={styles.primaryAction}
+                    onPress={() => {
+                        settingsSheetRef.current?.dismiss();
+                        Linking.openSettings();
+                    }}
+                >
+                    <Text style={styles.primaryActionText}>Abrir ajustes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.secondaryAction}
+                    onPress={() => settingsSheetRef.current?.dismiss()}
+                >
+                    <Text style={styles.secondaryActionText}>Cancelar</Text>
+                </TouchableOpacity>
+            </BottomSheet>
+        </>
     );
 };
 
@@ -131,5 +173,42 @@ const styles = StyleSheet.create({
     },
     disabledOption: {
         opacity: 0.5
+    },
+    sheetTitle: {
+        fontSize: 22,
+        fontFamily: 'Oswald_600',
+        color: GlobalStyle.black,
+        textAlign: 'center',
+    },
+    sheetMessage: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    primaryAction: {
+        backgroundColor: `${GlobalStyle.yellow}d4`,
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+    primaryActionText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyle.blue,
+        textTransform: 'uppercase',
+    },
+    secondaryAction: {
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+    secondaryActionText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_500',
+        color: GlobalStyle.black,
     }
 });

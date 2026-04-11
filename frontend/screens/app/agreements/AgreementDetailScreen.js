@@ -279,7 +279,7 @@ const AgreementDetailScreen = ({ route }) => {
                                 {isSameDay ? (
                                     <Text style={styles.detailText}>{startDateText}</Text>
                                 ) : (
-                                    <Text style={styles.detailText}>{startDateText}{endDateText ? `  —  ${endDateText}` : ''}</Text>
+                                    <Text style={styles.detailText}>{startDateText}</Text>
                                 )}
                             </View>
                         )}
@@ -287,7 +287,7 @@ const AgreementDetailScreen = ({ route }) => {
                             <View style={styles.detailRow}>
                                 <TimeIcon width={20} height={20} fill={GlobalStyle.black} />
                                 <Text style={styles.detailText}>
-                                    {event?.initialTime?.substring(0, 5)} - {event?.endTime?.substring(0, 5)}
+                                    {event?.initialTime?.substring(0, 5)} - {event?.endTime?.substring(0, 5)} {event?.date !== event?.endDate ? `· ${parseDate(event?.endDate).split('de')[0]}` : ''}
                                 </Text>
                             </View>
                         )}
@@ -305,7 +305,7 @@ const AgreementDetailScreen = ({ route }) => {
                             <EventMapView
                                 latitude={eventLat}
                                 longitude={eventLng}
-                                explorable={true}
+                                explorable={false}
                                 selectable={false}
                                 mapHeight={200}
                                 zoomDelta={0.004}

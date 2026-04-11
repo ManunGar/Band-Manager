@@ -3,6 +3,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import EventEndpoints from '../../../api/EventEndpoints';
+import bandProfileDefault from '../../../assets/milestones/band_default.png';
 import performancePictureDefault from '../../../assets/milestones/performance_default.jpg';
 import rehearsalPictureDefault from '../../../assets/milestones/rehearsal_default.jpg';
 import BottomSheet from '../../../components/BottomSheet';
@@ -17,6 +18,7 @@ import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import { parseDate } from '../../../helpers/ParseHelpers';
+
 
 const EventScreen = ({ route }) => {
     const { eventId } = route.params;
@@ -90,9 +92,15 @@ const EventScreen = ({ route }) => {
                 <View style={styles.headerContainer}>
                     <Image source={event?.Performance ? event.Performance.picture ? { uri: event.Performance.picture } : performancePictureDefault : rehearsalPictureDefault}
                         style={styles.image} />
-                    <View style={{ paddingHorizontal: 8, paddingBottom: 15, width: '100%' }}>
-                        <Text style={styles.bandName}>{event?.band?.name}</Text>
-                        <Text style={styles.title}>{event && event.name }</Text>
+                    <View style={{ paddingHorizontal: 8, paddingBottom: 15, width: '100%', gap: 5 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 10 }}>
+                            <Image
+                                source={event?.band?.profile_picture ? { uri: event.band.profile_picture } : bandProfileDefault}
+                                style={styles.bandImage}
+                            />
+                            <Text style={styles.bandName}>{event?.band?.name}</Text>
+                        </View>
+                        <Text style={styles.title}>{event && event.name}</Text>
                     </View>
                     <View style={{ paddingHorizontal: 8, gap: 10, paddingBottom: 30, paddingTop: 20, width: '100%', borderTopWidth: 1, borderTopColor: GlobalStyle.lightGray }}>
                         {event?.Performance &&
@@ -108,7 +116,7 @@ const EventScreen = ({ route }) => {
                         {event &&
                             <View style={styles.textContainer}>
                                 <TimeIcon width={20} height={20} fill={GlobalStyle.black} />
-                                <Text style={styles.text}>{event?.initialTime.substring(0, 5)} - {event?.endTime.substring(0, 5)}</Text>
+                                <Text style={styles.text}>{event?.initialTime.substring(0, 5)} - {event?.endTime.substring(0, 5)} {event?.date !== event?.endDate ? `· ${parseDate(event?.endDate).split('de')[0]}` : ''}</Text>
                             </View>
                         }
                         {event?.location &&
@@ -125,7 +133,7 @@ const EventScreen = ({ route }) => {
                                 latitude={eventLat}
                                 longitude={eventLng}
                                 location={event.location || 'Ubicacion del evento'}
-                                explorable={true}
+                                explorable={false}
                                 selectable={false}
                                 mapHeight={200}
                                 zoomDelta={0.004}
@@ -155,62 +163,62 @@ const EventScreen = ({ route }) => {
                                 {isBandAdministrator &&
                                     <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
                                         <LinkText onPress={() => navigation.navigate('Attendance', { event })}>Ver</LinkText>
-                                        <View style={{borderWidth: 1, borderColor: GlobalStyle.lightGray, borderRadius: 10, width: 1, height: 20}}></View>
+                                        <View style={{ borderWidth: 1, borderColor: GlobalStyle.lightGray, borderRadius: 10, width: 1, height: 20 }}></View>
                                         <LinkText onPress={() => navigation.navigate('TakeAttendance', { event })}>Pasar Lista</LinkText>
                                     </View>
                                 }
                             </View>
                             {event?.attendance?.participates ? <View>
                                 {isAttendanceOpen ?
-                            <View style={{ flex: 1 }}>
-                                {/* BUTTONS */}
-                                <View style={{ flexDirection: 'row', gap: 20, maxWidth: 400, margin: 'auto' }}>
-                                    <Pressable onPress={() => handleAttendance(true)}
-                                        style={[styles.button, { backgroundColor: event.attendance.present === true ? GlobalStyle.green : GlobalStyle.lightGreen, borderColor: GlobalStyle.darkGreen, borderWidth: 1 }]}>
-                                        <Text style={styles.buttonText}>Confirmar</Text>
-                                    </Pressable>
-                                    <Pressable onPress={() => handleAttendance(false)}
-                                        style={[styles.button, { backgroundColor: event.attendance.present === false ? GlobalStyle.red : GlobalStyle.lightRed, borderColor: GlobalStyle.darkRed, borderWidth: 1 }]}>
-                                        <Text style={styles.buttonText}>Negar</Text>
-                                    </Pressable>
-                                </View>
-                                {/* COMMENT */}
-                                <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ paddingInline: 5 }}>
-                                    <Text style={{ fontFamily: 'Oswald_500', color: attendance === true ? GlobalStyle.green : GlobalStyle.red, fontSize: 16 }}>
-                                        Vas a {attendance === true ? "confirmar tu asistencia" : "negar tu asistencia"} a este evento.
-                                    </Text>
-                                    <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
-                                        ¿Quieres añadir algún comentario o justificación? (opcional)
-                                    </Text>
-                                    {/* INPUT */}
-                                    <View style={styles.input}>
-                                        <BottomSheetTextInput
-                                            style={styles.textInput}
-                                            placeholderTextColor={GlobalStyle.gray}
-                                            placeholder="Escribe un comentario/justificación..."
-                                            value={comment}
-                                            onChangeText={setComment}
-                                            multiline
-                                        />
+                                    <View style={{ flex: 1 }}>
+                                        {/* BUTTONS */}
+                                        <View style={{ flexDirection: 'row', gap: 20, maxWidth: 400, margin: 'auto' }}>
+                                            <Pressable onPress={() => handleAttendance(true)}
+                                                style={[styles.button, { backgroundColor: event.attendance.present === true ? GlobalStyle.green : GlobalStyle.lightGreen, borderColor: GlobalStyle.darkGreen, borderWidth: 1 }]}>
+                                                <Text style={styles.buttonText}>Confirmar</Text>
+                                            </Pressable>
+                                            <Pressable onPress={() => handleAttendance(false)}
+                                                style={[styles.button, { backgroundColor: event.attendance.present === false ? GlobalStyle.red : GlobalStyle.lightRed, borderColor: GlobalStyle.darkRed, borderWidth: 1 }]}>
+                                                <Text style={styles.buttonText}>Negar</Text>
+                                            </Pressable>
+                                        </View>
+                                        {/* COMMENT */}
+                                        <BottomSheet sheetRef={sheetRef} snapPoints={snapPoints} style={{ paddingInline: 5 }}>
+                                            <Text style={{ fontFamily: 'Oswald_500', color: attendance === true ? GlobalStyle.green : GlobalStyle.red, fontSize: 16 }}>
+                                                Vas a {attendance === true ? "confirmar tu asistencia" : "negar tu asistencia"} a este evento.
+                                            </Text>
+                                            <Text style={{ fontFamily: 'Oswald_400', color: GlobalStyle.darkGray, fontSize: 16, marginBottom: 10 }}>
+                                                ¿Quieres añadir algún comentario o justificación? (opcional)
+                                            </Text>
+                                            {/* INPUT */}
+                                            <View style={styles.input}>
+                                                <BottomSheetTextInput
+                                                    style={styles.textInput}
+                                                    placeholderTextColor={GlobalStyle.gray}
+                                                    placeholder="Escribe un comentario/justificación..."
+                                                    value={comment}
+                                                    onChangeText={setComment}
+                                                    multiline
+                                                />
+                                            </View>
+                                            {/* SEND BUTTON */}
+                                            <View style={{ alignItems: 'center', marginTop: 20 }}>
+                                                <Pressable onPress={handleSaveAttendance}
+                                                    style={[styles.button, { backgroundColor: GlobalStyle.yellow, borderColor: GlobalStyle.yellow, borderWidth: 1, width: '60%' }]}>
+                                                    <Text style={[styles.buttonText, { color: GlobalStyle.blue }]}>Guardar Asistencia</Text>
+                                                </Pressable>
+                                            </View>
+                                        </BottomSheet>
+                                        <View style={[styles.input, { marginInline: 20, marginTop: 20 }]}>
+                                            <Text onPress={() => handleAttendance(event.attendance.present)} style={[styles.textInput, { color: event.attendance.reason ? GlobalStyle.black : GlobalStyle.gray }]}>{event.attendance.reason || "No has añadido ningún comentario."}</Text>
+                                        </View>
+                                    </View> :
+                                    <View style={[styles.button, { backgroundColor: event?.attendance.present === true ? GlobalStyle.lightGreen : event?.attendance.present === false ? GlobalStyle.lightRed : GlobalStyle.gray, borderColor: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray, borderWidth: 1, alignSelf: 'center', width: '80%' }]}>
+                                        <Text style={[styles.buttonText]}>
+                                            {event?.attendance.present === true ? "Asistencia Confirmada" : event?.attendance.present === false ? "Asistencia Negada" : "Asistencia sin Confirmar"}
+                                        </Text>
                                     </View>
-                                    {/* SEND BUTTON */}
-                                    <View style={{ alignItems: 'center', marginTop: 20 }}>
-                                        <Pressable onPress={handleSaveAttendance}
-                                            style={[styles.button, { backgroundColor: GlobalStyle.yellow, borderColor: GlobalStyle.yellow, borderWidth: 1, width: '60%' }]}>
-                                            <Text style={[styles.buttonText, { color: GlobalStyle.blue }]}>Guardar Asistencia</Text>
-                                        </Pressable>
-                                    </View>
-                                </BottomSheet>
-                                <View style={[styles.input, { marginInline: 20, marginTop: 20 }]}>
-                                    <Text onPress={() => handleAttendance(event.attendance.present)} style={[styles.textInput, { color: event.attendance.reason ? GlobalStyle.black : GlobalStyle.gray }]}>{event.attendance.reason || "No has añadido ningún comentario."}</Text>
-                                </View>
-                            </View> :
-                            <View style={[styles.button, { backgroundColor: event?.attendance.present === true ? GlobalStyle.lightGreen : event?.attendance.present === false ? GlobalStyle.lightRed : GlobalStyle.gray, borderColor: event?.attendance.present === true ? GlobalStyle.darkGreen : event?.attendance.present === false ? GlobalStyle.darkRed : GlobalStyle.gray, borderWidth: 1, alignSelf: 'center', width: '80%' }]}>
-                                <Text style={[styles.buttonText]}>
-                                    {event?.attendance.present === true ? "Asistencia Confirmada" : event?.attendance.present === false ? "Asistencia Negada" : "Asistencia sin Confirmar"}
-                                </Text>
-                            </View>
-                        }
+                                }
                             </View> : <Text style={{ fontFamily: 'Oswald_400', fontSize: 16, color: GlobalStyle.gray, textAlign: 'center', marginTop: 20 }}>No participas en este evento</Text>}
                         </>
                     )}
@@ -234,6 +242,17 @@ const styles = StyleSheet.create({
         height: 200,
         borderRadius: 8,
         maxWidth: 380
+    },
+    bandImage: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: GlobalStyle.lightGray,
+    },
+    bandName: {
+        fontFamily: 'Oswald_400',
+        fontSize: 15,
+        color: GlobalStyle.gray,
     },
     title: {
         fontFamily: 'BebasNeue',

@@ -130,97 +130,6 @@ const respondToInvite = async (req, res) => {
     }
 }
 
-const normalizeDateQuery = (value) => {
-    if (!value) return null;
-
-    const raw = Array.isArray(value) ? value[0] : value;
-    const dateString = String(raw).trim();
-    if (!dateString) return null;
-
-    // Preserve selected day for ISO-like inputs such as 2026-04-06T00:00:00.000Z.
-    const isoPrefix = dateString.match(/^(\d{4}-\d{2}-\d{2})/);
-    if (isoPrefix) return isoPrefix[1];
-
-    const parsedDate = new Date(dateString);
-    if (Number.isNaN(parsedDate.getTime())) return null;
-
-    return parsedDate.toISOString().slice(0, 10);
-};
-
-const _getAverageRateByMusician = async (musicianIds = []) => {
-    if (musicianIds.length === 0) return {};
-
-    const averages = await Application.findAll({
-        where: {
-            musicianId: { [Op.in]: musicianIds },
-            status: 'accepted',
-            type: 'musician_apply',
-            rate: { [Op.not]: null }
-        },
-        attributes: [
-            'musicianId',
-            [Sequelize.fn('ROUND', Sequelize.fn('AVG', Sequelize.col('rate')), 2), 'averageRate']
-        ],
-        group: ['musicianId'],
-        raw: true
-    });
-
-    return averages.reduce((acc, row) => {
-        acc[row.musicianId] = row.averageRate !== null ? Number(row.averageRate) : null;
-        return acc;
-    }, {});
-}
-
-const _getAgreementOwnerApplications = async (agreementId, instrumentId) => {
-    const applications = await Application.findAll({
-        where: { agreementId },
-        include: [{
-            model: Musician,
-            as: 'musician',
-            required: true,
-            attributes: ['id'],
-            include: [{
-                model: User,
-                as: 'user',
-                required: true,
-                attributes: ['id', 'full_name', 'location', 'profile_picture']
-            }, {
-                model: Instrument,
-                as: 'instruments',
-                required: false,
-                attributes: ['id', 'name'],
-                through: { attributes: ['level'] },
-                ...(Number.isInteger(instrumentId) ? { where: { id: instrumentId } } : {})
-            }]
-        }],
-        order: [['createdAt', 'ASC']]
-    });
-
-    const musicianIds = [...new Set(applications.map((application) => application.musicianId).filter(Boolean))];
-    const averageRateByMusician = await _getAverageRateByMusician(musicianIds);
-
-    return applications.map((application) => {
-        const applicationJson = application.toJSON();
-        const musician = applicationJson.musician || {};
-        const instrument = musician.instruments?.[0];
-
-        return {
-            id: applicationJson.id,
-            musicianId: applicationJson.musicianId,
-            agreementId: applicationJson.agreementId,
-            type: applicationJson.type,
-            status: applicationJson.status,
-            rate: applicationJson.rate,
-            musician: {
-                id: musician.id,
-                averageRate: averageRateByMusician[applicationJson.musicianId] ?? null,
-                instrumentLevel: instrument?.MusicianLevel?.level ?? null,
-                user: musician.user || null,
-            }
-        }
-    });
-}
-
 // Function to list 
 const listAgreements = async (req, res) => {
     try {
@@ -228,8 +137,8 @@ const listAgreements = async (req, res) => {
         const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0); // Default to 0
         const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
         const search = req.query.search ? req.query.search.trim() : null;
-        const startDate = normalizeDateQuery(req.query.startDate);
-        const endDate = normalizeDateQuery(req.query.endDate);
+        const startDate = _normalizeDateQuery(req.query.startDate);
+        const endDate = _normalizeDateQuery(req.query.endDate);
         const musician = await Musician.findByPk(req.user.musician.id, {
             include: {
                 model: Component,
@@ -340,8 +249,8 @@ const listMyAgreements = async (req, res) => {
     const musicianId = req.user.musician.id;
     const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
     const search = req.query.search ? req.query.search.trim() : null;
-    const startDate = normalizeDateQuery(req.query.startDate);
-    const endDate = normalizeDateQuery(req.query.endDate);
+    const startDate = _normalizeDateQuery(req.query.startDate);
+    const endDate = _normalizeDateQuery(req.query.endDate);
 
     try {
         const agreementWhere = {
@@ -412,8 +321,8 @@ const listMyApplications = async (req, res) => {
     const musicianId = req.user.musician.id;
     const instrumentId = req.query.instrumentId ? parseInt(req.query.instrumentId, 10) : null;
     const search = req.query.search ? req.query.search.trim() : null;
-    const startDate = normalizeDateQuery(req.query.startDate);
-    const endDate = normalizeDateQuery(req.query.endDate);
+    const startDate = _normalizeDateQuery(req.query.startDate);
+    const endDate = _normalizeDateQuery(req.query.endDate);
 
     try {
         const agreementWhere = {
@@ -752,6 +661,102 @@ const rateApplication = async (req, res) => {
         console.error('Error rating application:', error);
         res.status(500).json({ error: 'An error occurred while rating the application' });
     }
+}
+
+// ==================== Auxiliary Functions ====================
+
+// Normalize date query parameters to ensure consistent date format (YYYY-MM-DD) and handle various input formats gracefully
+const _normalizeDateQuery = (value) => {
+    if (!value) return null;
+
+    const raw = Array.isArray(value) ? value[0] : value;
+    const dateString = String(raw).trim();
+    if (!dateString) return null;
+
+    // Preserve selected day for ISO-like inputs such as 2026-04-06T00:00:00.000Z.
+    const isoPrefix = dateString.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoPrefix) return isoPrefix[1];
+
+    const parsedDate = new Date(dateString);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+
+    return parsedDate.toISOString().slice(0, 10);
+};
+
+// Get the average rate for each musician based on their accepted applications with non-null rates, returning an object mapping musician IDs to their average rates
+const _getAverageRateByMusician = async (musicianIds = []) => {
+    if (musicianIds.length === 0) return {};
+
+    const averages = await Application.findAll({
+        where: {
+            musicianId: { [Op.in]: musicianIds },
+            status: 'accepted',
+            type: 'musician_apply',
+            rate: { [Op.not]: null }
+        },
+        attributes: [
+            'musicianId',
+            [Sequelize.fn('ROUND', Sequelize.fn('AVG', Sequelize.col('rate')), 2), 'averageRate']
+        ],
+        group: ['musicianId'],
+        raw: true
+    });
+
+    return averages.reduce((acc, row) => {
+        acc[row.musicianId] = row.averageRate !== null ? Number(row.averageRate) : null;
+        return acc;
+    }, {});
+}
+
+// Get the applications for the owner of the agreement, including musician info, instrument level, and average rate, optionally filtering by instrument ID if provided
+const _getAgreementOwnerApplications = async (agreementId, instrumentId) => {
+    const applications = await Application.findAll({
+        where: { agreementId },
+        include: [{
+            model: Musician,
+            as: 'musician',
+            required: true,
+            attributes: ['id'],
+            include: [{
+                model: User,
+                as: 'user',
+                required: true,
+                attributes: ['id', 'full_name', 'location', 'profile_picture']
+            }, {
+                model: Instrument,
+                as: 'instruments',
+                required: false,
+                attributes: ['id', 'name'],
+                through: { attributes: ['level'] },
+                ...(Number.isInteger(instrumentId) ? { where: { id: instrumentId } } : {})
+            }]
+        }],
+        order: [['createdAt', 'ASC']]
+    });
+
+    const musicianIds = [...new Set(applications.map((application) => application.musicianId).filter(Boolean))];
+    const averageRateByMusician = await _getAverageRateByMusician(musicianIds);
+
+    return applications.map((application) => {
+        const applicationJson = application.toJSON();
+        const musician = applicationJson.musician || {};
+        const instrument = musician.instruments?.[0];
+
+        return {
+            id: applicationJson.id,
+            musicianId: applicationJson.musicianId,
+            agreementId: applicationJson.agreementId,
+            type: applicationJson.type,
+            status: applicationJson.status,
+            rate: applicationJson.rate,
+            musician: {
+                id: musician.id,
+                averageRate: averageRateByMusician[applicationJson.musicianId] ?? null,
+                instrumentLevel: instrument?.MusicianLevel?.level ?? null,
+                user: musician.user || null,
+            }
+        }
+    });
 }
 
 const AgreementController = {

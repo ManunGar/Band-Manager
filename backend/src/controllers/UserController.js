@@ -182,6 +182,8 @@ const changePassword = async (req, res) => {
     }
 }
 
+// ==================== Auxiliary Functions ====================
+
 // This function creates a new player token
 const _createUserToken = () => {
     // Logic to create a player token

@@ -1,13 +1,14 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import BandEndpoints from '../../../api/BandEndpoints'
 import Band from '../../../components/Band'
 import BottomSheet from '../../../components/BottomSheet'
 import LinkText from '../../../components/LinkText'
 import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
+import { useToast } from '../../../contexts/ToastContext'
 import * as GlobalStyles from '../../../GlobalStyle'
 
 const BandsScreen = () => {
@@ -18,6 +19,7 @@ const BandsScreen = () => {
     const sheetRef = useRef(null)
     const codeSheetRef = useRef(null)
     const { user } = useContext(AuthContext);
+    const { showToast } = useToast();
     const snapPoints = useMemo(() => ['70%'], [])
     const codeSnapPoints = useMemo(() => [])
 
@@ -49,7 +51,7 @@ const BandsScreen = () => {
             }
         } catch (error) {
             const errorMessage = error?.message || 'No se encontró ninguna banda con ese código.';
-            Alert.alert('Error', errorMessage);
+            showToast('Error', errorMessage, 'error');
             return null;
         }
     }

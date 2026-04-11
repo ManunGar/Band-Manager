@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment/moment';
 import { useContext, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import * as GlobalStyle from '../../GlobalStyle';
 import Button from '../../components/Button';
@@ -13,6 +13,7 @@ import LinkText from '../../components/LinkText';
 import LocationAutocomplete from '../../components/LocationAutocomplete';
 import BandManagerIcon from '../../components/icons/BandManager';
 import { AuthContext } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import LoadingScreen from './LoadingScreen';
 
 // ====== Schemas by steps ======
@@ -55,6 +56,7 @@ const TOTAL_STEPS = stepSchemas.length;
 const RegisterScreen = () => {
     const navigation = useNavigation();
     const { register, isLoading } = useContext(AuthContext);
+    const { showToast } = useToast();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [step, setStep] = useState(0);
     const [imagePreview, setImagePreview] = useState(null);
@@ -76,7 +78,7 @@ const RegisterScreen = () => {
             try {
                 // Validar que si hay ubicación, también haya coordenadas
                 if (values.location && (!values.latitude || !values.longitude)) {
-                    Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
+                    showToast('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.', 'warning');
                     setSubmitting(false);
                     return;
                 }
@@ -104,7 +106,7 @@ const RegisterScreen = () => {
                 await register(formData);
             } catch (err) {
                 console.error("Registration error:", err);
-                Alert.alert('Error', err.message || 'No se pudo registrar el usuario');
+                showToast('Error', err.message || 'No se pudo registrar el usuario', 'error');
             } finally {
                 setSubmitting(false);
             }
@@ -145,7 +147,7 @@ const RegisterScreen = () => {
     const next = async () => {
         // Si estamos en el paso 1 (Additional Info) y hay ubicación pero no coordenadas, mostrar error
         if (step === 1 && formik.values.location && (!formik.values.latitude || !formik.values.longitude)) {
-            Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
+            showToast('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.', 'warning');
             return;
         }
         

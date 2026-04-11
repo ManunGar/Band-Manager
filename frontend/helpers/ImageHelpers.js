@@ -19,7 +19,11 @@ const askLibraryPerm = async () => {
     if (!req.canAskAgain) {
         showSettingsAlert('la galería de fotos');
     } else {
-        Alert.alert('Permiso requerido', 'Sin acceso a la galería no podemos elegir una imagen.');
+        return {
+            ok: false,
+            limited: false,
+            message: 'Sin acceso a la galería no podemos elegir una imagen.',
+        };
     }
 
     return { ok: false, limited: false };
@@ -28,23 +32,29 @@ const askLibraryPerm = async () => {
 // Function to ask for camera permissions
 const askCameraPerm = async () => {
     const current = await ExpoImagePicker.getCameraPermissionsAsync();
-    if (current.granted) return true;
+    if (current.granted) return { ok: true };
 
     const req = await ExpoImagePicker.requestCameraPermissionsAsync();
-    if (req.granted) return true;
+    if (req.granted) return { ok: true };
 
     if (!req.canAskAgain) {
         showSettingsAlert('la cámara');
     } else {
-        Alert.alert('Permiso requerido', 'Sin acceso a la cámara no podemos tomar una foto.');
+        return {
+            ok: false,
+            message: 'Sin acceso a la cámara no podemos tomar una foto.',
+        };
     }
-    return false;
+    return { ok: false };
 };
 
 // Function to pick an image from the library
-const pickFromLibrary = async (aspect = [1, 1]) => {
-    const { ok } = await askLibraryPerm();
-    if (!ok) return null;
+const pickFromLibrary = async (aspect = [1, 1], onPermissionDenied = null) => {
+    const { ok, message } = await askLibraryPerm();
+    if (!ok) {
+        if (message) onPermissionDenied?.(message);
+        return null;
+    }
 
     const res = await ExpoImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
@@ -58,9 +68,12 @@ const pickFromLibrary = async (aspect = [1, 1]) => {
 };
 
 // Function to take a photo using the camera
-const takePhoto = async (aspect = [1, 1]) => {
-    const ok = await askCameraPerm();
-    if (!ok) return null;
+const takePhoto = async (aspect = [1, 1], onPermissionDenied = null) => {
+    const { ok, message } = await askCameraPerm();
+    if (!ok) {
+        if (message) onPermissionDenied?.(message);
+        return null;
+    }
 
     const res = await ExpoImagePicker.launchCameraAsync({
         mediaTypes: ['images'],

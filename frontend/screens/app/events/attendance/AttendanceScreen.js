@@ -1,18 +1,20 @@
 import { useFocusEffect } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
-import { Alert, FlatList, Image, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Image, StyleSheet, Text, View } from 'react-native'
 import EventEndpoints from '../../../../api/EventEndpoints'
 import profileDefault from '../../../../assets/milestones/profile_default.png'
 import ConfirmIcon from '../../../../components/icons/ConfirmIcon'
 import DeniedIcon from '../../../../components/icons/DeniedIcon'
 import NoConfirmIcon from '../../../../components/icons/NoConfirmIcon'
 import TopContainer from '../../../../components/TopContainer'
+import { useToast } from '../../../../contexts/ToastContext'
 import * as GlobalStyle from '../../../../GlobalStyle'
 
 const AttendanceScreen = ({ route }) => {
     const { event } = route.params
     const [attendance, setAttendance] = useState({})
     const [contractedMusicians, setContractedMusicians] = useState([])
+    const { showToast } = useToast();
 
     useFocusEffect(
         useCallback(() => {
@@ -27,7 +29,7 @@ const AttendanceScreen = ({ route }) => {
             setContractedMusicians(attendanceData.contractedMusicians || []);
         } catch (error) {
             console.error("Error fetching attendance:", error);
-            Alert.alert("Error", "No se pudo cargar la asistencia del evento. Por favor, inténtalo de nuevo más tarde.");
+            showToast('Error', 'No se pudo cargar la asistencia del evento. Por favor, inténtalo de nuevo más tarde.', 'error');
         }
 
     }
@@ -92,7 +94,7 @@ const AttendanceScreen = ({ route }) => {
                     keyExtractor={(item, index) => item.instrument?.id?.toString() || index.toString()}
                     contentContainerStyle={{ paddingBottom: 100, paddingTop: 0 }}
                     showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={() => <Text>No hay datos de asistencia disponibles.</Text>}
+                    ListEmptyComponent={() => <Text style={styles.emptyText}>No hay datos de asistencia disponibles.</Text>}
                     renderItem={({ item }) => (
                         <View>
                             <AttendanceHeader attendance={item} />
@@ -339,5 +341,13 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_300',
         fontSize: 16,
         color: GlobalStyle.darkGray,
+    },
+    emptyText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        marginTop: 50,
     }
+
 })

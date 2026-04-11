@@ -1,22 +1,26 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useToast } from '../contexts/ToastContext';
 import { pickFromLibrary, takePhoto, toUploadableJpeg } from '../helpers/ImageHelpers';
 import BottomSheet from './BottomSheet';
 
 const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemoved, aspect = [1, 1] }) => {
     const snapPoints = useMemo(() => ['30%'], []);
     const [loading, setLoading] = useState(false);
+    const { showToast } = useToast();
 
     // Handle image selection from library
     const handlePickFromLibrary = async () => {
         try {
-            const uri = await pickFromLibrary(aspect);
+            const uri = await pickFromLibrary(aspect, (message) => {
+                showToast('Permiso requerido', message, 'warning');
+            });
             if (!uri) return;
             setLoading(true);
             const jpeg = await toUploadableJpeg(uri);
             await onImageSelected(jpeg);
         } catch (error) {
-            Alert.alert('Error', 'No se pudo cargar la imagen');
+            showToast('Error', 'No se pudo cargar la imagen', 'error');
         } finally {
             setLoading(false);
             sheetRef.current?.dismiss();
@@ -26,13 +30,15 @@ const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemo
     // Handle taking a photo
     const handleTakePhoto = async () => {
         try {
-            const uri = await takePhoto(aspect);
+            const uri = await takePhoto(aspect, (message) => {
+                showToast('Permiso requerido', message, 'warning');
+            });
             if (!uri) return;
             setLoading(true);
             const jpeg = await toUploadableJpeg(uri);
             await onImageSelected(jpeg);
         } catch (error) {
-            Alert.alert('Error', 'No se pudo tomar la foto');
+            showToast('Error', 'No se pudo tomar la foto', 'error');
         } finally {
             setLoading(false);
             sheetRef.current?.dismiss();
@@ -45,7 +51,7 @@ const ImagePickerSheet = ({ sheetRef, imagePreview, onImageSelected, onImageRemo
             setLoading(true);
             await onImageRemoved();
         } catch (error) {
-            Alert.alert('Error', 'No se pudo eliminar la imagen');
+            showToast('Error', 'No se pudo eliminar la imagen', 'error');
         } finally {
             setLoading(false);
             sheetRef.current?.dismiss();

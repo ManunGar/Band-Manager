@@ -82,8 +82,8 @@ const styles = StyleSheet.create({
         elevation: 12,
     },
     card: {
-        backgroundColor: GlobalStyle.lightGray,
-        borderRadius: 10,
+        backgroundColor: GlobalStyle.lightBackground,
+        borderRadius: 6,
         borderLeftWidth: 4,
         paddingVertical: 14,
         paddingHorizontal: 14,

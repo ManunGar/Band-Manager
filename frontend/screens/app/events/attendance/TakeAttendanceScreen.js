@@ -192,7 +192,7 @@ const TakeAttendanceScreen = ({ route }) => {
                     keyExtractor={(item, index) => item.instrument?.id?.toString() || index.toString()}
                     contentContainerStyle={{ paddingBottom: 100, paddingTop: 0 }}
                     showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={() => <Text>No hay datos de asistencia disponibles.</Text>}
+                    ListEmptyComponent={() => <Text style={styles.emptyText}>No hay datos de asistencia disponibles.</Text>}
                     renderItem={({ item }) => (
                         <AttendanceComponent 
                             attendance={item} 
@@ -335,6 +335,13 @@ const styles = StyleSheet.create({
         backgroundColor: GlobalStyle.darkRed,
         position: 'absolute',
         right: 0,
+    },
+    emptyText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        marginTop: 50,
     },
     attendanceHeaderContainer: {
         flexDirection: 'row',

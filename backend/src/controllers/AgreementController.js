@@ -538,12 +538,15 @@ const updateApplicationStatus = async (req, res) => {
     try {
         const nextStatus = req.body.status;
 
-        // Find the application to update, ensuring it belongs to the specified agreement and is of type 'musician_apply'
+        // Find the application to update, ensuring it belongs to the specified agreement
+        // and is an updatable type managed by the agreement owner.
         const application = await Application.findOne({
             where: {
                 id: req.params.applicationId,
                 agreementId: req.params.agreementId,
-                type: 'musician_apply',
+                type: {
+                    [Op.in]: ['musician_apply', 'band_invite']
+                },
                 status: {
                     [Op.in]: ['pending', 'accepted']
                 }

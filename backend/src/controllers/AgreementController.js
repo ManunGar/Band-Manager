@@ -164,15 +164,7 @@ const listAgreements = async (req, res) => {
             });
         }
 
-        const eventDateWhere = {};
-
-        if (startDate && endDate) {
-            eventDateWhere[Op.between] = [startDate, `${endDate} 23:59:59`];
-        } else if (startDate) {
-            eventDateWhere[Op.gte] = startDate;
-        } else if (endDate) {
-            eventDateWhere[Op.lte] = `${endDate} 23:59:59`;
-        }
+        const eventDateWhere = _buildEventDateWhere(startDate, endDate);
 
         const upcomingEventFilter = Sequelize.literal("TIMESTAMP(DATE(COALESCE(`performance->Event`.`endDate`, `performance->Event`.`date`)), COALESCE(`performance->Event`.`endTime`, `performance->Event`.`initialTime`)) >= NOW()");
 
@@ -196,8 +188,8 @@ const listAgreements = async (req, res) => {
                     required: true, // Only include performances that have an event
                     order: [['date', 'ASC']],
                     where: {
-                        ...(Object.keys(eventDateWhere).length > 0 ? { date: eventDateWhere } : {}),
-                        ...(Object.keys(eventDateWhere).length === 0 ? { [Op.and]: [upcomingEventFilter] } : {}),
+                        ...(eventDateWhere ? { date: eventDateWhere } : {}),
+                        ...(!eventDateWhere ? { [Op.and]: [upcomingEventFilter] } : {}),
                         ...(search ? {
                             [Op.or]: [
                                 { name: { [Op.like]: `%${search.toLowerCase()}%` } },
@@ -267,12 +259,9 @@ const listMyAgreements = async (req, res) => {
             ];
         }
 
-        if (startDate && endDate) {
-            eventWhere.date = { [Op.between]: [startDate, `${endDate} 23:59:59`] };
-        } else if (startDate) {
-            eventWhere.date = { [Op.gte]: startDate };
-        } else if (endDate) {
-            eventWhere.date = { [Op.lte]: `${endDate} 23:59:59` };
+        const eventDateWhere = _buildEventDateWhere(startDate, endDate);
+        if (eventDateWhere) {
+            eventWhere.date = eventDateWhere;
         }
 
         const agreements = await Agreement.findAll({
@@ -338,12 +327,9 @@ const listMyApplications = async (req, res) => {
             ];
         }
 
-        if (startDate && endDate) {
-            eventWhere.date = { [Op.between]: [startDate, `${endDate} 23:59:59`] };
-        } else if (startDate) {
-            eventWhere.date = { [Op.gte]: startDate };
-        } else if (endDate) {
-            eventWhere.date = { [Op.lte]: `${endDate} 23:59:59` };
+        const eventDateWhere = _buildEventDateWhere(startDate, endDate);
+        if (eventDateWhere) {
+            eventWhere.date = eventDateWhere;
         }
 
         const applications = await Application.findAll({
@@ -673,14 +659,53 @@ const _normalizeDateQuery = (value) => {
     const dateString = String(raw).trim();
     if (!dateString) return null;
 
-    // Preserve selected day for ISO-like inputs such as 2026-04-06T00:00:00.000Z.
-    const isoPrefix = dateString.match(/^(\d{4}-\d{2}-\d{2})/);
-    if (isoPrefix) return isoPrefix[1];
+    // Keep explicit YYYY-MM-DD values untouched.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+    }
 
     const parsedDate = new Date(dateString);
     if (Number.isNaN(parsedDate.getTime())) return null;
 
-    return parsedDate.toISOString().slice(0, 10);
+    // Convert to local calendar day to avoid UTC offset drift from ISO query params.
+    return _formatDateAsLocalYmd(parsedDate);
+};
+
+// Format a Date object as YYYY-MM-DD using local calendar values.
+const _formatDateAsLocalYmd = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+// Build a consistent date range filter for DATETIME event columns.
+const _buildEventDateWhere = (startDate, endDate) => {
+    const hasStart = Boolean(startDate);
+    const hasEnd = Boolean(endDate);
+
+    if (!hasStart && !hasEnd) {
+        return null;
+    }
+
+    let startDateTime = hasStart ? `${startDate} 00:00:00` : null;
+    let endDateTime = hasEnd ? `${endDate} 23:59:59` : null;
+
+    // If the user sends the range in reverse order, normalize it instead of returning no results.
+    if (startDateTime && endDateTime && startDateTime > endDateTime) {
+        [startDateTime, endDateTime] = [endDateTime, startDateTime];
+    }
+
+    if (startDateTime && endDateTime) {
+        return { [Op.between]: [startDateTime, endDateTime] };
+    }
+
+    if (startDateTime) {
+        return { [Op.gte]: startDateTime };
+    }
+
+    return { [Op.lte]: endDateTime };
 };
 
 // Get the average rate for each musician based on their accepted applications with non-null rates, returning an object mapping musician IDs to their average rates

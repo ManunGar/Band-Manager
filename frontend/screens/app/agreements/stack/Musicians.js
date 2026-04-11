@@ -1,20 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import MusicianEndpoints from '../../../../api/MusicianEndpoints';
 import LinkText from '../../../../components/LinkText';
 import MusicianCard from '../../../../components/MusicianCard';
 import { useAgreementSearch } from '../../../../contexts/AgreementSearchContext';
-import { AuthContext } from '../../../../contexts/AuthContext';
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 const PAGE_SIZE = 8;
 
 const Musicians = () => {
     const navigation = useNavigation();
-    const { user } = useContext(AuthContext);
-    const { debouncedSearch } = useAgreementSearch();
-    const [instrumentId, setInstrumentId] = useState(null);
+    const { debouncedSearch, musicianInstrumentId } = useAgreementSearch();
     const [musicians, setMusicians] = useState([]);
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(false);
@@ -24,7 +21,7 @@ const Musicians = () => {
         const fetch = async () => {
             try {
                 const fetched = await MusicianEndpoints.listMusicians(
-                    instrumentId,
+                    musicianInstrumentId,
                     debouncedSearch,
                     0,
                     PAGE_SIZE
@@ -39,7 +36,7 @@ const Musicians = () => {
         };
 
         fetch();
-    }, [instrumentId, debouncedSearch]);
+    }, [musicianInstrumentId, debouncedSearch]);
 
     useEffect(() => {
         if (offset === 0) return;
@@ -47,7 +44,7 @@ const Musicians = () => {
         const fetchMore = async () => {
             try {
                 const fetched = await MusicianEndpoints.listMusicians(
-                    instrumentId,
+                    musicianInstrumentId,
                     debouncedSearch,
                     offset,
                     PAGE_SIZE
@@ -67,7 +64,7 @@ const Musicians = () => {
         setRefreshing(true);
         try {
             const fetched = await MusicianEndpoints.listMusicians(
-                instrumentId,
+                musicianInstrumentId,
                 debouncedSearch,
                 0,
                 PAGE_SIZE

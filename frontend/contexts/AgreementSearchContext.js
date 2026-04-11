@@ -15,6 +15,7 @@ export const AgreementSearchProvider = ({ children, debounceMs = 400 }) => {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
+    const [musicianInstrumentId, setMusicianInstrumentId] = useState(null);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -34,6 +35,7 @@ export const AgreementSearchProvider = ({ children, debounceMs = 400 }) => {
         setDebouncedSearch('');
         setStartDate(null);
         setEndDate(null);
+        setMusicianInstrumentId(null);
     };
 
     const value = useMemo(() => ({
@@ -46,7 +48,9 @@ export const AgreementSearchProvider = ({ children, debounceMs = 400 }) => {
         setStartDate,
         endDate,
         setEndDate,
-    }), [search, debouncedSearch, startDate, endDate]);
+        musicianInstrumentId,
+        setMusicianInstrumentId,
+    }), [search, debouncedSearch, startDate, endDate, musicianInstrumentId]);
 
     return (
         <AgreementSearchContext.Provider value={value}>

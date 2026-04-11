@@ -33,7 +33,7 @@ const AgreementsScreen = () => {
             >
                 <Tab.Screen name="Contratos" component={Agreement} />
                 <Tab.Screen name="Músicos" component={Musicians} />
-                <Tab.Screen name="Mis Ofertas" component={MyAgreements} />
+                <Tab.Screen name="Mis Contratos" component={MyAgreements} />
                 <Tab.Screen name="Solicitudes" component={Applications} />
             </Tab.Navigator>
             <AgreementFilterSheet sheetRef={filterSheetRef} activeRouteName={activeRouteName} />

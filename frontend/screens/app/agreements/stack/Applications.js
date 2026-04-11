@@ -3,10 +3,12 @@ import { Alert, FlatList, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../../api/AgreementEndpoints';
 import ApplicationCard from '../../../../components/ApplicationCard';
 import { useAgreementSearch } from '../../../../contexts/AgreementSearchContext';
+import { useToast } from '../../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 const Applications = () => {
     const { debouncedSearch, startDate, endDate } = useAgreementSearch();
+    const { showToast } = useToast();
     const [applications, setApplications] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const [respondingId, setRespondingId] = useState(null);
@@ -52,7 +54,7 @@ const Applications = () => {
                             await AgreementEndpoints.respondToInvite(applicationId, status);
                             await fetchApplications();
                         } catch (error) {
-                            Alert.alert('Error', error.message || 'Hubo un error al responder la invitación.');
+                            showToast('Error', error.message || 'Hubo un error al responder la invitación.', 'error');
                         } finally {
                             setRespondingId(null);
                         }

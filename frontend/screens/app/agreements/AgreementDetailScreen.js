@@ -16,6 +16,7 @@ import StarIcon from '../../../components/icons/StarIcon';
 import TimeIcon from '../../../components/icons/TimeIcon';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import { parseDate } from '../../../helpers/ParseHelpers';
 
@@ -28,6 +29,7 @@ const APPLICATION_STATUS = {
 const AgreementDetailScreen = ({ route }) => {
     const { agreementId } = route.params;
     const { user } = useContext(AuthContext);
+    const { showToast } = useToast();
     const [agreement, setAgreement] = useState(null);
     const [applying, setApplying] = useState(false);
     const [updatingApplicationId, setUpdatingApplicationId] = useState(null);
@@ -98,9 +100,9 @@ const AgreementDetailScreen = ({ route }) => {
             setApplying(true);
             await AgreementEndpoints.applyToAgreement(agreementId);
             await fetchAgreement();
-            Alert.alert('¡Solicitud enviada!', 'Tu solicitud ha sido enviada correctamente.');
+            showToast('¡Solicitud enviada!', 'Tu solicitud ha sido enviada correctamente.', 'success');
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al enviar tu solicitud.');
+            showToast('Error', error.message || 'Hubo un error al enviar tu solicitud.', 'error');
         } finally {
             setApplying(false);
         }
@@ -113,13 +115,13 @@ const AgreementDetailScreen = ({ route }) => {
             await fetchAgreement();
 
             if (response?.reopened) {
-                Alert.alert('Solicitud actualizada', 'La solicitud ha sido rechazada y el contrato se ha reabierto.');
+                showToast('Solicitud actualizada', 'La solicitud ha sido rechazada y el contrato se ha reabierto.', 'info');
                 return;
             }
 
-            Alert.alert('Solicitud actualizada', `La solicitud ha sido ${status === 'accepted' ? 'aceptada' : 'rechazada'} correctamente.`);
+            showToast('Solicitud actualizada', `La solicitud ha sido ${status === 'accepted' ? 'aceptada' : 'rechazada'} correctamente.`, 'success');
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al actualizar la solicitud.');
+            showToast('Error', error.message || 'Hubo un error al actualizar la solicitud.', 'error');
         } finally {
             setUpdatingApplicationId(null);
         }
@@ -194,9 +196,9 @@ const AgreementDetailScreen = ({ route }) => {
             await fetchAgreement();
             rateSheetRef.current?.dismiss();
             setSelectedApplicationToRate(null);
-            Alert.alert('Calificación guardada', 'La calificación se registró correctamente.');
+            showToast('Calificación guardada', 'La calificación se registró correctamente.', 'success');
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al calificar al músico.');
+            showToast('Error', error.message || 'Hubo un error al calificar al músico.', 'error');
         } finally {
             setRatingApplicationId(null);
         }
@@ -206,11 +208,10 @@ const AgreementDetailScreen = ({ route }) => {
         try {
             setDeletingAgreement(true);
             await AgreementEndpoints.deleteAgreement(agreementId);
-            Alert.alert('Contrato eliminado', 'El contrato se eliminó correctamente.', [
-                { text: 'OK', onPress: () => navigation.goBack() }
-            ]);
+            showToast('Contrato eliminado', 'El contrato se eliminó correctamente.', 'success');
+            navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', error.message || 'No se pudo eliminar el contrato.');
+            showToast('Error', error.message || 'No se pudo eliminar el contrato.', 'error');
         } finally {
             setDeletingAgreement(false);
         }

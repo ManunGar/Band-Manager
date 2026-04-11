@@ -3,11 +3,13 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Tex
 import AgreementEndpoints from '../../../api/AgreementEndpoints';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import TopContainer from '../../../components/TopContainer';
+import { useToast } from '../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import { parseDate } from '../../../helpers/ParseHelpers';
 
 const HireMusicianScreen = ({ route, navigation }) => {
     const { musicianId, musicianName, musicianInstruments } = route.params;
+    const { showToast } = useToast();
     const [myAgreements, setMyAgreements] = useState([]);
     const [adminPerformances, setAdminPerformances] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -53,10 +55,10 @@ const HireMusicianScreen = ({ route, navigation }) => {
                         try {
                             setInvitingId(agreement.id);
                             await AgreementEndpoints.inviteMusician(agreement.id, musicianId);
-                            Alert.alert('¡Invitación enviada!', `${musicianName || 'El músico'} ha sido invitado al contrato.`);
+                            showToast('¡Invitación enviada!', `${musicianName || 'El músico'} ha sido invitado al contrato.`, 'success');
                             fetchData();
                         } catch (error) {
-                            Alert.alert('Error', error.message || 'Hubo un error al enviar la invitación.');
+                            showToast('Error', error.message || 'Hubo un error al enviar la invitación.', 'error');
                         } finally {
                             setInvitingId(null);
                         }

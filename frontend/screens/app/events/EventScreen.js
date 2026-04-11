@@ -1,7 +1,7 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import EventEndpoints from '../../../api/EventEndpoints';
 import bandProfileDefault from '../../../assets/milestones/band_default.png';
 import performancePictureDefault from '../../../assets/milestones/performance_default.jpg';
@@ -16,6 +16,7 @@ import TimeIcon from '../../../components/icons/TimeIcon';
 import LinkText from '../../../components/LinkText';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import { parseDate } from '../../../helpers/ParseHelpers';
 
@@ -24,6 +25,7 @@ const EventScreen = ({ route }) => {
     const { eventId } = route.params;
     const [event, setEvent] = useState(null)
     const { setIsBandAdministrator, isBandAdministrator } = useContext(AuthContext)
+    const { showToast } = useToast()
     const [attendance, setAttendance] = useState(null)
     const [comment, setComment] = useState(null)
     const snapPoints = useMemo(() => [])
@@ -67,8 +69,9 @@ const EventScreen = ({ route }) => {
             await EventEndpoints.takeComponentAttendance(eventId, { present: attendance, reason: comment || '' });
             await fetchEventDetails();
             closeSheet();
+            showToast('Asistencia guardada', 'Tu asistencia ha sido registrada correctamente.', 'success');
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al guardar tu asistencia.');
+            showToast('Error', error.message || 'Hubo un error al guardar tu asistencia.', 'error');
         }
     }
 

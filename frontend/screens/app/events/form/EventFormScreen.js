@@ -3,7 +3,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment/moment';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import EventEndpoints from '../../../../api/EventEndpoints';
 import AddressAutocomplete from '../../../../components/AddressAutocomplete';
@@ -16,6 +16,7 @@ import LinkText from '../../../../components/LinkText';
 import Tag from '../../../../components/Tap';
 import TopContainer from '../../../../components/TopContainer';
 import { useEventForm } from '../../../../contexts/EventFormContext';
+import { useToast } from '../../../../contexts/ToastContext';
 import * as GlobalStyles from '../../../../GlobalStyle';
 
 const SEVILLE_CENTER = {
@@ -94,6 +95,7 @@ const schema = Yup.object({
 const EventFormScreen = ({ route }) => {
     const { band, event } = route.params;
     const { eventFormData, updateEventFormData, resetEventFormData } = useEventForm();
+    const { showToast } = useToast();
     const [eventType, setEventType] = useState((event?.Performance ? 'performances' : event?.Rehearsal ? 'rehearsals' : null) || 'performances');
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -189,7 +191,7 @@ const EventFormScreen = ({ route }) => {
                 navigation.navigate('EventInstruments', { band, event });
             } catch (error) {
                 console.error('Error al guardar datos del evento:', error);
-                Alert.alert('Error', 'Ocurrió un error. Por favor, inténtalo de nuevo.');
+                showToast('Error', 'Ocurrió un error. Por favor, inténtalo de nuevo.', 'error');
             } finally {
                 setSubmitting(false);
             }
@@ -393,11 +395,12 @@ const EventFormScreen = ({ route }) => {
         setShowDeleteModal(false);
         try {
             await EventEndpoints.deleteEvent(event.id);
+            showToast('Evento eliminado', 'El evento ha sido eliminado correctamente.', 'success');
             navigation.pop(2)
             
         } catch (error) {
             console.error('Error al eliminar el evento:', error);
-            Alert.alert('Error', 'Ocurrió un error al eliminar el evento. Por favor, inténtalo de nuevo.');
+            showToast('Error', 'Ocurrió un error al eliminar el evento. Por favor, inténtalo de nuevo.', 'error');
         }
     }
 

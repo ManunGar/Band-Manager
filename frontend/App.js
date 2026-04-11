@@ -7,6 +7,7 @@ import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initialWindowMetrics, SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AuthProvider from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import AppNav from './screens/AppNav';
 
 const Stack = createStackNavigator();
@@ -25,9 +26,11 @@ export default function App() {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top', 'left', 'right', 'bottom']} >
           <GestureHandlerRootView style={{ flex: 1 }}>
             <BottomSheetModalProvider>
-              <AuthProvider>
-                <AppNav />
-              </AuthProvider>
+              <ToastProvider>
+                <AuthProvider>
+                  <AppNav />
+                </AuthProvider>
+              </ToastProvider>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>
         </SafeAreaView>

@@ -7,6 +7,7 @@ import BottomSheet from '../../../components/BottomSheet'
 import InputSearch from '../../../components/InputSearch'
 import Instrument from '../../../components/Instrument'
 import TopContainer from '../../../components/TopContainer'
+import { useToast } from '../../../contexts/ToastContext'
 import * as GlobalStyle from '../../../GlobalStyle'
 import { buildMusicianInstrumentMap } from '../../../helpers/ParseHelpers'
 
@@ -25,6 +26,7 @@ const InstrumentsScreen = ({ route }) => {
     const snapPoints = useMemo(() => ['70%'], [])
     const sheetRef = useRef(null)
     const navigation = useNavigation();
+    const { showToast } = useToast();
 
     useEffect(() => { // Debounce search input
         const timeout = setTimeout(() => {
@@ -81,8 +83,10 @@ const InstrumentsScreen = ({ route }) => {
         try {
             setUploading(true);
             await MusicianEndpoints.addInstrumentsToMusician(musicianInstruments);
+            showToast('Instrumentos guardados', 'Tus instrumentos han sido actualizados correctamente.', 'success');
         } catch (error) {
             console.error('Error saving musician instruments:', error);
+            showToast('Error', 'No se pudieron guardar los instrumentos. Por favor, intenta de nuevo.', 'error');
         } finally {
             setUploading(false);
             navigation.goBack();

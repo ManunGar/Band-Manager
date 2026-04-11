@@ -7,12 +7,14 @@ import ComponentAttendance from '../../../components/ComponentAttendance';
 import LinkText from '../../../components/LinkText';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 
 const { width: SCREENW } = Dimensions.get('window')
 const ComponentScreen = ({ route }) => {
     const [component, setComponent] = useState(null);
     const { setIsBandAdministrator, isBandAdministrator, user } = useContext(AuthContext);
+    const { showToast } = useToast();
     const componentId = route.params.component.id;
     const band = route.params.band;
     const navigation = useNavigation();
@@ -38,9 +40,17 @@ const ComponentScreen = ({ route }) => {
     const promoteComponent = async () => {
         try {
             await ComponentEndpoints.promoteComponent(componentId);
+            showToast(
+                component?.administrator ? 'Administrador eliminado' : 'Administrador asignado',
+                component?.administrator
+                    ? 'El componente ya no es administrador.'
+                    : 'El componente ha sido asignado como administrador.',
+                'success'
+            );
             navigation.goBack();
         } catch (error) {
             console.error("Error promoting component:", error);
+            showToast('Error', 'No se pudo actualizar el rol del componente.', 'error');
         }
     };
 
@@ -53,15 +63,18 @@ const ComponentScreen = ({ route }) => {
             });
         } catch (error) {
             console.error("Error leaving component:", error);
+            showToast('Error', 'No se pudo salir del equipo.', 'error');
         }
     };
 
     const deleteComponent = async () => {
         try {
             await ComponentEndpoints.leaveComponent(componentId);
+            showToast('Componente eliminado', 'El componente ha sido eliminado del equipo.', 'success');
             navigation.goBack();
         } catch (error) {
             console.error("Error deleting component:", error);
+            showToast('Error', 'No se pudo eliminar el componente.', 'error');
         }
     };
 

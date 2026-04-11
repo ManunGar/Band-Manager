@@ -105,7 +105,7 @@ const BandsScreen = () => {
                     }}
                     style={{ paddingVertical: 12, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center', marginTop: 6, opacity: uploading ? 0.6 : 1 }}
                 >
-                    <Text style={{ color: '#111827', fontWeight: '600', marginTop: 8 }}>Unirse a una banda</Text>
+                    <Text style={{ color: '#111827', fontWeight: '600' }}>Unirse a una banda</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     disabled={uploading}

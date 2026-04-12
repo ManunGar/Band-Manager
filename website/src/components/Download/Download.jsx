@@ -9,12 +9,38 @@ import { FaAndroid } from 'react-icons/fa';
 import { FiAlertCircle } from 'react-icons/fi';
 import styles from './Download.module.css';
 
+const DRIVE_SHARED_URL = 'https://drive.google.com/file/d/1t0z3HeA9xVQ4UrKUPbThA6CKBden5eQN/view?usp=sharing';
+
+const extractDriveFileId = (url) => {
+  if (!url) return null;
+
+  const filePathMatch = url.match(/\/file\/d\/([^/]+)\//);
+  if (filePathMatch) return filePathMatch[1];
+
+  const openIdMatch = url.match(/[?&]id=([^&]+)/);
+  return openIdMatch ? openIdMatch[1] : null;
+};
+
+const buildForcedDriveDownloadUrl = (fileId) => {
+  if (!fileId) return null;
+  // This endpoint usually bypasses Drive's interstitial page for large files.
+  return `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
+};
+
 function Download() {
   const { t } = useTranslation();
-  const [downloadHref, setDownloadHref] = useState(null);
+  const driveFileId = extractDriveFileId(DRIVE_SHARED_URL);
+  const driveDownloadHref = buildForcedDriveDownloadUrl(driveFileId);
+
+  const [downloadHref, setDownloadHref] = useState(driveDownloadHref);
   const [downloadFileName, setDownloadFileName] = useState('band-manager.apk');
 
   useEffect(() => {
+    if (driveDownloadHref) {
+      setDownloadHref(driveDownloadHref);
+      return;
+    }
+
     let isMounted = true;
 
     const loadLatestDownload = async () => {
@@ -47,7 +73,7 @@ function Download() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [driveDownloadHref]);
 
   const isDownloadAvailable = Boolean(downloadHref);
 

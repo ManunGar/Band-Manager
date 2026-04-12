@@ -1,4 +1,5 @@
-import { useContext, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../../api/AgreementEndpoints';
 import AgreementCard from '../../../../components/AgreementCard';
@@ -19,22 +20,24 @@ const Agreement = () => {
     const [hasMore, setHasMore] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    // When filters change: reset list and fetch from page 0
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const fetched = await AgreementEndpoints.listAgreements(
-                    instrumentId, debouncedSearch, 0, PAGE_SIZE, startDate, endDate
-                );
-                setAgreements(fetched.data);
-                setHasMore(fetched.hasMore);
-                setOffset(0);
-            } catch (error) {
-                console.error('Error fetching agreements:', error);
-            }
-        };
-        fetch();
+    const fetchFirstPage = useCallback(async () => {
+        try {
+            const fetched = await AgreementEndpoints.listAgreements(
+                instrumentId, debouncedSearch, 0, PAGE_SIZE, startDate, endDate
+            );
+            setAgreements(fetched.data);
+            setHasMore(fetched.hasMore);
+            setOffset(0);
+        } catch (error) {
+            console.error('Error fetching agreements:', error);
+        }
     }, [instrumentId, debouncedSearch, startDate, endDate]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchFirstPage();
+        }, [fetchFirstPage])
+    );
 
     // When offset increases (load more): append to existing list
     useEffect(() => {
@@ -60,12 +63,7 @@ const Agreement = () => {
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-            const fetched = await AgreementEndpoints.listAgreements(
-                instrumentId, debouncedSearch, 0, PAGE_SIZE, startDate, endDate
-            );
-            setAgreements(fetched.data);
-            setHasMore(fetched.hasMore);
-            setOffset(0);
+            await fetchFirstPage();
         } catch (error) {
             console.error('Error refreshing agreements:', error);
         } finally {

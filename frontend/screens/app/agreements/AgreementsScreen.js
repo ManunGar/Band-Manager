@@ -1,8 +1,9 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useLinkBuilder } from '@react-navigation/native';
-import { useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AgreementFilterSheet from '../../../components/AgreementFilterSheet';
+import FilterIcon from '../../../components/icons/FilterIcon';
 import InputSearch from '../../../components/InputSearch';
 import TopContainer from '../../../components/TopContainer';
 import { useAgreementSearch } from '../../../contexts/AgreementSearchContext';
@@ -16,31 +17,56 @@ const Tab = createMaterialTopTabNavigator();
 
 const AgreementsScreen = () => {
     const filterSheetRef = useRef(null);
+    const [activeRouteName, setActiveRouteName] = useState('Contratos');
 
     return (
         <>
             <Tab.Navigator
-                tabBar={(props) => <MyTabBar {...props} onFilterPress={() => filterSheetRef.current?.present()} />}
+                tabBar={(props) => (
+                    <MyTabBar
+                        {...props}
+                        onFilterPress={() => filterSheetRef.current?.present()}
+                        onTabChange={setActiveRouteName}
+                    />
+                )}
                 screenOptions={{ swipeEnabled: false }}
             >
                 <Tab.Screen name="Contratos" component={Agreement} />
                 <Tab.Screen name="Músicos" component={Musicians} />
-                <Tab.Screen name="Mis Ofertas" component={MyAgreements} />
+                <Tab.Screen name="Mis Contratos" component={MyAgreements} />
                 <Tab.Screen name="Solicitudes" component={Applications} />
             </Tab.Navigator>
-            <AgreementFilterSheet sheetRef={filterSheetRef} />
+            <AgreementFilterSheet sheetRef={filterSheetRef} activeRouteName={activeRouteName} />
         </>
     )
 }
 
 export default AgreementsScreen
 
-function MyTabBar({ state, descriptors, navigation, onFilterPress }) {
+function MyTabBar({ state, descriptors, navigation, onFilterPress, onTabChange }) {
     const { buildHref } = useLinkBuilder();
-    const { search, setSearch, clearAll } = useAgreementSearch();
+    const { search, setSearch, clearAll, startDate, endDate, musicianInstrumentId } = useAgreementSearch();
+
+    const activeRouteName = state.routes[state.index]?.name;
+
+    useEffect(() => {
+        onTabChange?.(activeRouteName);
+    }, [activeRouteName, onTabChange]);
+
+    const searchPlaceholder = activeRouteName === 'Músicos'
+        ? 'Buscar músico por nombre o lugar'
+        : 'Buscar ofertas de contratos';
+
+    const hasActiveFilters = useMemo(() => {
+        if (activeRouteName === 'Músicos') {
+            return musicianInstrumentId !== null;
+        }
+
+        return startDate !== null || endDate !== null;
+    }, [activeRouteName, musicianInstrumentId, startDate, endDate]);
 
     return (
-        <TopContainer backEnabled={false} editEnabled={false} createEnabled={false} filterEnabled={true} onFilter={onFilterPress} style={{ alignItems: 'left', paddingBottom: 12, marginBottom: 10 }}>
+        <TopContainer backEnabled={false} editEnabled={false} createEnabled={false} style={{ alignItems: 'left', paddingBottom: 12, marginBottom: 10 }}>
             <View style={{ alignItems: 'flex-start', marginTop: -55, marginLeft: -0 }}>
                 <Text style={styles.title}>Ofertas de Contratos</Text>
                 <Text style={styles.subtitle}>Aquí podrás gestionar tus acuerdos con otros músicos y bandas.</Text>
@@ -48,14 +74,23 @@ function MyTabBar({ state, descriptors, navigation, onFilterPress }) {
             <View style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%' }} >
                 <View style={{ flex: 1 }}>
                     <InputSearch
-                        placeholder="Buscar ofertas de contratos"
+                        placeholder={searchPlaceholder}
                         value={search}
                         onChangeText={setSearch}
                     />
                 </View>
-                {/* <Pressable onPress={onFilterPress} hitSlop={10}>
-                    <FilterIcon />
-                </Pressable> */}
+                <Pressable
+                    onPress={onFilterPress}
+                    hitSlop={10}
+                    style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
+                >
+                    <FilterIcon
+                        width={18}
+                        height={18}
+                        stroke={hasActiveFilters ? GlobalStyle.yellow : GlobalStyle.gray}
+                        strokeWidth={2.25}
+                    />
+                </Pressable>
             </View>
             <View style={{ width: '100%' }}>
                 <ScrollView
@@ -126,5 +161,15 @@ const styles = StyleSheet.create({
         fontFamily: 'Oswald_400',
         marginTop: -5,
         textAlign: 'left'
-    }
+    },
+    filterButton: {
+        width: 35,
+        height: 35,
+        borderRadius: 999,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    filterButtonActive: {
+        borderColor: GlobalStyle.yellow,
+    },
 })

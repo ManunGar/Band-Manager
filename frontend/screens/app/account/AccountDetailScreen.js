@@ -13,8 +13,18 @@ import TopContainer from '../../../components/TopContainer'
 import { AuthContext } from '../../../contexts/AuthContext'
 import * as GlobalStyle from '../../../GlobalStyle'
 import { assertSizeLT3MB } from '../../../helpers/ImageHelpers'
+import { parseDate } from '../../../helpers/ParseHelpers'
 
 const { width: SCREENW } = Dimensions.get('window')
+
+const CONTRACT_PAGE_SIZE = 8
+
+const formatRate = (rate) => {
+    if (rate === null || rate === undefined || Number.isNaN(Number(rate))) {
+        return '_._'
+    }
+    return Number(rate).toFixed(1)
+}
 
 const normalizeProfileResponse = (data) => {
     if (!data) return null
@@ -37,6 +47,10 @@ const normalizeProfileResponse = (data) => {
 const AccountDetailScreen = () => {
     const [musician, setMusician] = useState(null)
     const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+    const [contracts, setContracts] = useState([])
+    const [contractsOffset, setContractsOffset] = useState(0)
+    const [hasMoreContracts, setHasMoreContracts] = useState(false)
+    const [loadingMoreContracts, setLoadingMoreContracts] = useState(false)
     const { user, logout, editMusician } = useContext(AuthContext)
     const sheetRef = useRef(null)
     const navigation = useNavigation()
@@ -55,8 +69,14 @@ const AccountDetailScreen = () => {
             return
         }
         try {
-            const data = await MusicianEndpoints.accountDetails(musicianId)
+            const [data, contractsResponse] = await Promise.all([
+                MusicianEndpoints.accountDetails(musicianId),
+                MusicianEndpoints.listMusicianContracts(musicianId, null, 0, CONTRACT_PAGE_SIZE),
+            ])
             setMusician(normalizeProfileResponse(data))
+            setContracts(contractsResponse?.data || [])
+            setContractsOffset(0)
+            setHasMoreContracts(Boolean(contractsResponse?.hasMore))
         } catch (error) {
             console.error(error)
             logout()
@@ -64,6 +84,22 @@ const AccountDetailScreen = () => {
             setIsLoadingProfile(false)
         }
     }, [logout, musicianId])
+
+    const loadMoreContracts = useCallback(async () => {
+        if (!hasMoreContracts || loadingMoreContracts) return
+        const nextOffset = contractsOffset + CONTRACT_PAGE_SIZE
+        try {
+            setLoadingMoreContracts(true)
+            const response = await MusicianEndpoints.listMusicianContracts(musicianId, null, nextOffset, CONTRACT_PAGE_SIZE)
+            setContracts((prev) => [...prev, ...(response?.data || [])])
+            setContractsOffset(nextOffset)
+            setHasMoreContracts(Boolean(response?.hasMore))
+        } catch (error) {
+            console.error('Error loading more contracts:', error)
+        } finally {
+            setLoadingMoreContracts(false)
+        }
+    }, [hasMoreContracts, loadingMoreContracts, contractsOffset, musicianId])
 
     // Close the bottom sheet when the screen is unfocused
     useFocusEffect(
@@ -245,6 +281,69 @@ const AccountDetailScreen = () => {
                                 </View>
                             ))}
                         </View>
+                    )}
+                </View>
+
+                <View>
+                    <Text style={styles.subTitle}>Contratos Realizados:</Text>
+                    {contracts.length === 0 ? (
+                        <View style={styles.emptyBox}>
+                            <Text style={styles.emptyText}>No tienes contratos realizados aún.</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.contractsList}>
+                            {contracts.map((application) => {
+                                const agreement = application?.agreement
+                                const event = agreement?.performance?.Event
+                                const band = event?.band
+                                const instrument = agreement?.instrument
+
+                                return (
+                                    <View key={application.id} style={styles.contractCard}>
+                                        <View style={styles.contractHeader}>
+                                            <Image
+                                                source={band?.profile_picture ? { uri: band.profile_picture } : bandDefaultImage}
+                                                style={styles.contractBandImage}
+                                            />
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.contractEventName} numberOfLines={1} ellipsizeMode='tail'>
+                                                    {event?.name || 'Evento'}
+                                                </Text>
+                                                <Text style={styles.contractDate}>
+                                                    {event?.date ? parseDate(event.date) : 'Fecha no disponible'}
+                                                </Text>
+                                            </View>
+                                            <View style={styles.contractRateBadge}>
+                                                <StarIcon width={12} height={12} fill={GlobalStyle.yellow} stroke={GlobalStyle.yellow} strokeWidth={0.2} />
+                                                <Text style={styles.contractRateText}>{formatRate(application?.rate)}</Text>
+                                            </View>
+                                        </View>
+
+                                        <View style={styles.contractInstrumentRow}>
+                                            {instrument?.image ? (
+                                                <Image
+                                                    source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}${instrument.image}` }}
+                                                    style={styles.contractInstrumentImage}
+                                                />
+                                            ) : (
+                                                <View style={styles.contractInstrumentFallback} />
+                                            )}
+                                            <Text style={styles.contractInstrumentText}>
+                                                {instrument?.name || 'Instrumento no disponible'}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )
+                            })}
+                        </View>
+                    )}
+                    {hasMoreContracts && (
+                        <LinkText
+                            onPress={loadMoreContracts}
+                            style={{ textAlign: 'center', marginTop: 10 }}
+                        >
+                            {loadingMoreContracts ? 'Cargando...' : 'Cargar Más'}
+                        </LinkText>
                     )}
                 </View>
             </View>
@@ -490,5 +589,75 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         backgroundColor: GlobalStyle.darkGray,
         marginBottom: 10,
-    }
+    },
+    contractsList: {
+        marginTop: 10,
+        gap: 10,
+    },
+    contractCard: {
+        backgroundColor: GlobalStyle.white,
+        borderRadius: 12,
+        padding: 12,
+        gap: 10,
+    },
+    contractHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    contractBandImage: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: GlobalStyle.lightBackground,
+    },
+    contractEventName: {
+        fontFamily: 'Oswald_500',
+        fontSize: 17,
+        color: GlobalStyle.black,
+    },
+    contractDate: {
+        fontFamily: 'Oswald_400',
+        fontSize: 13,
+        color: GlobalStyle.gray,
+        textTransform: 'uppercase',
+    },
+    contractRateBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#FFF5E6',
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+    },
+    contractRateText: {
+        fontFamily: 'Oswald_500',
+        fontSize: 12,
+        color: GlobalStyle.yellow,
+    },
+    contractInstrumentRow: {
+        borderTopWidth: 1,
+        borderTopColor: GlobalStyle.lightBackground,
+        paddingTop: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    contractInstrumentImage: {
+        width: 15,
+        height: 15,
+    },
+    contractInstrumentFallback: {
+        width: 15,
+        height: 15,
+        borderRadius: 8,
+        backgroundColor: GlobalStyle.lightBackground,
+    },
+    contractInstrumentText: {
+        fontFamily: 'Oswald_400',
+        fontSize: 13,
+        color: GlobalStyle.darkGray,
+        textTransform: 'uppercase',
+    },
 })

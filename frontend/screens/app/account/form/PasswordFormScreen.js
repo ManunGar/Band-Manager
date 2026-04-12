@@ -1,12 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import * as Yup from 'yup';
 import AuthEndpoints from '../../../../api/AuthEndpoints';
 import Button from '../../../../components/Button';
 import Error from '../../../../components/Error';
 import Input from '../../../../components/Input';
 import TopContainer from '../../../../components/TopContainer';
+import { useToast } from '../../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 const schema = Yup.object({
@@ -18,6 +19,7 @@ const schema = Yup.object({
 })
 const PasswordFormScreen = () => {
     const navigation = useNavigation();
+    const { showToast } = useToast();
 
     const formik = useFormik({
         initialValues: {
@@ -37,7 +39,7 @@ const PasswordFormScreen = () => {
             } catch (error) {
                 console.error(error);
                 const errorMessage = error?.message || 'Ocurrió un error al cambiar la contraseña. Por favor, intenta nuevamente.';
-                Alert.alert('Error', errorMessage);
+                showToast('Error', errorMessage, 'error');
             } finally {
                 setSubmitting(false);
             }

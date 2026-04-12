@@ -323,6 +323,8 @@ const addEventToBand = async (req, res) => {
     }
 };
 
+// ==================== Auxiliary Functions ====================
+
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

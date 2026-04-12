@@ -76,6 +76,7 @@ const registerMusician = async (req, res) => {
         // Create a new musician associated with the user
         await Musician.create({
             userId: newUser.id,
+            isProfilePrivate: true,
         }, { transaction });
         // Handle profile picture upload if provided
         if (req.file) {
@@ -181,6 +182,8 @@ const changePassword = async (req, res) => {
         res.status(500).send({ error: 'Error changing password' });
     }
 }
+
+// ==================== Auxiliary Functions ====================
 
 // This function creates a new player token
 const _createUserToken = () => {

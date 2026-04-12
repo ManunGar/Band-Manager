@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: GlobalStyle.gray,
+        backgroundColor: GlobalStyle.lightGray,
     },
     tag: {
         borderRadius: 20,

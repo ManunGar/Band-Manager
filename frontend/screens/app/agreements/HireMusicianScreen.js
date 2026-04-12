@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../api/AgreementEndpoints';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
+import BottomSheet from '../../../components/BottomSheet';
 import TopContainer from '../../../components/TopContainer';
+import { useToast } from '../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import { parseDate } from '../../../helpers/ParseHelpers';
 
 const HireMusicianScreen = ({ route, navigation }) => {
     const { musicianId, musicianName, musicianInstruments } = route.params;
+    const { showToast } = useToast();
     const [myAgreements, setMyAgreements] = useState([]);
     const [adminPerformances, setAdminPerformances] = useState([]);
     const [loading, setLoading] = useState(true);
     const [invitingId, setInvitingId] = useState(null);
+    const [pendingInviteAgreement, setPendingInviteAgreement] = useState(null);
+    const inviteSheetRef = useRef(null);
+    const inviteSheetSnapPoints = useMemo(() => ['38%'], []);
 
     const musicianInstrumentIds = (musicianInstruments || []).map((i) => i.id);
 
@@ -41,29 +47,31 @@ const HireMusicianScreen = ({ route, navigation }) => {
     };
 
     const handleInvite = (agreement) => {
-        const eventName = agreement?.performance?.Event?.name;
-        Alert.alert(
-            'Invitar músico',
-            `¿Quieres invitar a ${musicianName || 'este músico'} al contrato de "${eventName}"?`,
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Invitar',
-                    onPress: async () => {
-                        try {
-                            setInvitingId(agreement.id);
-                            await AgreementEndpoints.inviteMusician(agreement.id, musicianId);
-                            Alert.alert('¡Invitación enviada!', `${musicianName || 'El músico'} ha sido invitado al contrato.`);
-                            fetchData();
-                        } catch (error) {
-                            Alert.alert('Error', error.message || 'Hubo un error al enviar la invitación.');
-                        } finally {
-                            setInvitingId(null);
-                        }
-                    }
-                }
-            ]
-        );
+        setPendingInviteAgreement(agreement);
+        inviteSheetRef.current?.present();
+    };
+
+    const closeInviteSheet = () => {
+        if (invitingId) return;
+        inviteSheetRef.current?.dismiss();
+        setPendingInviteAgreement(null);
+    };
+
+    const confirmInvite = async () => {
+        if (!pendingInviteAgreement?.id) return;
+
+        try {
+            inviteSheetRef.current?.dismiss();
+            setInvitingId(pendingInviteAgreement.id);
+            await AgreementEndpoints.inviteMusician(pendingInviteAgreement.id, musicianId);
+            showToast('¡Invitación enviada!', `${musicianName || 'El músico'} ha sido invitado al contrato.`, 'success');
+            setPendingInviteAgreement(null);
+            fetchData();
+        } catch (error) {
+            showToast('Error', error.message || 'Hubo un error al enviar la invitación.', 'error');
+        } finally {
+            setInvitingId(null);
+        }
     };
 
     const handleCreateAgreement = (performance) => {
@@ -88,7 +96,8 @@ const HireMusicianScreen = ({ route, navigation }) => {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <>
+            <ScrollView style={styles.container}>
             <TopContainer
                 title={`Contratar músico`}
                 editEnabled={false}
@@ -219,7 +228,29 @@ const HireMusicianScreen = ({ route, navigation }) => {
             </View>
 
             <View style={{ height: 40 }} />
-        </ScrollView>
+            </ScrollView>
+
+            <BottomSheet sheetRef={inviteSheetRef} snapPoints={inviteSheetSnapPoints} uploading={Boolean(invitingId)}>
+                <Text style={styles.sheetTitle}>Invitar músico</Text>
+                <Text style={styles.sheetMessage}>
+                    {`¿Quieres invitar a ${musicianName || 'este músico'} al contrato de "${pendingInviteAgreement?.performance?.Event?.name || 'este evento'}"?`}
+                </Text>
+                <Pressable
+                    style={[styles.primaryAction, Boolean(invitingId) && styles.disabledAction]}
+                    onPress={confirmInvite}
+                    disabled={Boolean(invitingId)}
+                >
+                    <Text style={styles.primaryActionText}>{invitingId ? 'Enviando...' : 'Invitar'}</Text>
+                </Pressable>
+                <Pressable
+                    style={[styles.secondaryAction, Boolean(invitingId) && styles.disabledAction]}
+                    onPress={closeInviteSheet}
+                    disabled={Boolean(invitingId)}
+                >
+                    <Text style={styles.secondaryActionText}>Cancelar</Text>
+                </Pressable>
+            </BottomSheet>
+        </>
     );
 };
 
@@ -359,5 +390,43 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: GlobalStyle.gray,
         textTransform: 'uppercase',
+    },
+    sheetTitle: {
+        fontSize: 22,
+        fontFamily: 'Oswald_600',
+        color: GlobalStyle.black,
+        textAlign: 'center',
+    },
+    sheetMessage: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    primaryAction: {
+        backgroundColor: `${GlobalStyle.yellow}a9`,
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    primaryActionText: {
+        fontWeight: '600',
+        color: '#111827',
+    },
+    secondaryAction: {
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#e5e7eb',
+        marginTop: 10,
+    },
+    secondaryActionText: {
+        fontWeight: '600',
+        color: '#111827',
+    },
+    disabledAction: {
+        opacity: 0.6,
     },
 });

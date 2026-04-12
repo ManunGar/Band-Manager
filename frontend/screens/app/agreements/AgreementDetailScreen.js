@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AgreementEndpoints from '../../../api/AgreementEndpoints';
 import bandProfileDefault from '../../../assets/milestones/band_default.png';
 import performancePictureDefault from '../../../assets/milestones/performance_default.jpg';
@@ -16,6 +16,7 @@ import StarIcon from '../../../components/icons/StarIcon';
 import TimeIcon from '../../../components/icons/TimeIcon';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 import { parseDate } from '../../../helpers/ParseHelpers';
 
@@ -28,6 +29,7 @@ const APPLICATION_STATUS = {
 const AgreementDetailScreen = ({ route }) => {
     const { agreementId } = route.params;
     const { user } = useContext(AuthContext);
+    const { showToast } = useToast();
     const [agreement, setAgreement] = useState(null);
     const [applying, setApplying] = useState(false);
     const [updatingApplicationId, setUpdatingApplicationId] = useState(null);
@@ -36,9 +38,13 @@ const AgreementDetailScreen = ({ route }) => {
     const [selectedRate, setSelectedRate] = useState(0);
     const [ratingApplicationId, setRatingApplicationId] = useState(null);
     const [deletingAgreement, setDeletingAgreement] = useState(false);
+    const [pendingStatusAction, setPendingStatusAction] = useState(null);
     const navigation = useNavigation();
     const rateSheetRef = useRef(null);
+    const statusSheetRef = useRef(null);
+    const deleteSheetRef = useRef(null);
     const rateSheetSnapPoints = useMemo(() => ['50%'], []);
+    const confirmSheetSnapPoints = useMemo(() => ['40%'], []);
 
     useEffect(() => {
         fetchAgreement();
@@ -98,9 +104,9 @@ const AgreementDetailScreen = ({ route }) => {
             setApplying(true);
             await AgreementEndpoints.applyToAgreement(agreementId);
             await fetchAgreement();
-            Alert.alert('¡Solicitud enviada!', 'Tu solicitud ha sido enviada correctamente.');
+            showToast('¡Solicitud enviada!', 'Tu solicitud ha sido enviada correctamente.', 'success');
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al enviar tu solicitud.');
+            showToast('Error', error.message || 'Hubo un error al enviar tu solicitud.', 'error');
         } finally {
             setApplying(false);
         }
@@ -113,13 +119,13 @@ const AgreementDetailScreen = ({ route }) => {
             await fetchAgreement();
 
             if (response?.reopened) {
-                Alert.alert('Solicitud actualizada', 'La solicitud ha sido rechazada y el contrato se ha reabierto.');
+                showToast('Solicitud actualizada', 'La solicitud ha sido rechazada y el contrato se ha reabierto.', 'info');
                 return;
             }
 
-            Alert.alert('Solicitud actualizada', `La solicitud ha sido ${status === 'accepted' ? 'aceptada' : 'rechazada'} correctamente.`);
+            showToast('Solicitud actualizada', `La solicitud ha sido ${status === 'accepted' ? 'aceptada' : 'rechazada'} correctamente.`, 'success');
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al actualizar la solicitud.');
+            showToast('Error', error.message || 'Hubo un error al actualizar la solicitud.', 'error');
         } finally {
             setUpdatingApplicationId(null);
         }
@@ -128,22 +134,30 @@ const AgreementDetailScreen = ({ route }) => {
     const handleStatusChange = (applicationId, status, currentStatus) => {
         const isRejectingAccepted = status === 'rejected' && currentStatus === 'accepted';
 
-        Alert.alert(
-            status === 'accepted' ? 'Aceptar solicitud' : 'Rechazar solicitud',
-            status === 'accepted'
+        setPendingStatusAction({
+            applicationId,
+            status,
+            title: status === 'accepted' ? 'Aceptar solicitud' : 'Rechazar solicitud',
+            message: status === 'accepted'
                 ? '¿Quieres aceptar esta solicitud?'
                 : isRejectingAccepted
                     ? '¿Quieres rechazar esta solicitud ya aceptada? Si el contrato estaba cerrado, se volverá a abrir.'
                     : '¿Quieres rechazar esta solicitud?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: status === 'accepted' ? 'Aceptar' : 'Rechazar',
-                    style: status === 'accepted' ? 'default' : 'destructive',
-                    onPress: () => updateApplicationStatus(applicationId, status),
-                }
-            ]
-        );
+        });
+        statusSheetRef.current?.present();
+    };
+
+    const closeStatusSheet = () => {
+        if (updatingApplicationId) return;
+        statusSheetRef.current?.dismiss();
+        setPendingStatusAction(null);
+    };
+
+    const confirmStatusChange = async () => {
+        if (!pendingStatusAction?.applicationId || !pendingStatusAction?.status) return;
+        statusSheetRef.current?.dismiss();
+        await updateApplicationStatus(pendingStatusAction.applicationId, pendingStatusAction.status);
+        setPendingStatusAction(null);
     };
 
     const formatAverageRate = (averageRate) => {
@@ -194,9 +208,9 @@ const AgreementDetailScreen = ({ route }) => {
             await fetchAgreement();
             rateSheetRef.current?.dismiss();
             setSelectedApplicationToRate(null);
-            Alert.alert('Calificación guardada', 'La calificación se registró correctamente.');
+            showToast('Calificación guardada', 'La calificación se registró correctamente.', 'success');
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al calificar al músico.');
+            showToast('Error', error.message || 'Hubo un error al calificar al músico.', 'error');
         } finally {
             setRatingApplicationId(null);
         }
@@ -206,29 +220,22 @@ const AgreementDetailScreen = ({ route }) => {
         try {
             setDeletingAgreement(true);
             await AgreementEndpoints.deleteAgreement(agreementId);
-            Alert.alert('Contrato eliminado', 'El contrato se eliminó correctamente.', [
-                { text: 'OK', onPress: () => navigation.goBack() }
-            ]);
+            showToast('Contrato eliminado', 'El contrato se eliminó correctamente.', 'success');
+            navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', error.message || 'No se pudo eliminar el contrato.');
+            showToast('Error', error.message || 'No se pudo eliminar el contrato.', 'error');
         } finally {
             setDeletingAgreement(false);
         }
     };
 
     const handleDeleteAgreement = () => {
-        Alert.alert(
-            'Eliminar contrato',
-            '¿Seguro que quieres eliminar este contrato? Esta acción no se puede deshacer.',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: deleteAgreement,
-                }
-            ]
-        );
+        deleteSheetRef.current?.present();
+    };
+
+    const confirmDeleteAgreement = async () => {
+        deleteSheetRef.current?.dismiss();
+        await deleteAgreement();
     };
 
     return (
@@ -248,7 +255,7 @@ const AgreementDetailScreen = ({ route }) => {
                     />
 
                     <View style={{ paddingHorizontal: 8, paddingBottom: 12, paddingTop: 10, width: '100%' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <Image
                                 source={band?.profile_picture ? { uri: band.profile_picture } : bandProfileDefault}
                                 style={styles.bandImage}
@@ -279,7 +286,7 @@ const AgreementDetailScreen = ({ route }) => {
                                 {isSameDay ? (
                                     <Text style={styles.detailText}>{startDateText}</Text>
                                 ) : (
-                                    <Text style={styles.detailText}>{startDateText}{endDateText ? `  —  ${endDateText}` : ''}</Text>
+                                    <Text style={styles.detailText}>{startDateText}</Text>
                                 )}
                             </View>
                         )}
@@ -287,7 +294,7 @@ const AgreementDetailScreen = ({ route }) => {
                             <View style={styles.detailRow}>
                                 <TimeIcon width={20} height={20} fill={GlobalStyle.black} />
                                 <Text style={styles.detailText}>
-                                    {event?.initialTime?.substring(0, 5)} - {event?.endTime?.substring(0, 5)}
+                                    {event?.initialTime?.substring(0, 5)} - {event?.endTime?.substring(0, 5)} {event?.date !== event?.endDate ? `· ${parseDate(event?.endDate).split('de')[0]}` : ''}
                                 </Text>
                             </View>
                         )}
@@ -305,7 +312,7 @@ const AgreementDetailScreen = ({ route }) => {
                             <EventMapView
                                 latitude={eventLat}
                                 longitude={eventLng}
-                                explorable={true}
+                                explorable={false}
                                 selectable={false}
                                 mapHeight={200}
                                 zoomDelta={0.004}
@@ -418,34 +425,34 @@ const AgreementDetailScreen = ({ route }) => {
                                             {(showPendingActions || showRejectAction) ? (
                                                 <>
                                                     {showAcceptedActionStatus && (
-                                                        <View style={[styles.statusChip, styles.inlineActionStatusChip, { backgroundColor: statusStyle?.bg }]}> 
+                                                        <View style={[styles.statusChip, styles.inlineActionStatusChip, { backgroundColor: statusStyle?.bg }]}>
                                                             <Text style={[styles.statusChipText, { color: statusStyle?.color }]}>{statusStyle?.label || application.status}</Text>
                                                         </View>
                                                     )}
-                                                <View style={styles.applicantActions}>
-                                                    {showPendingActions && (
-                                                        <Pressable
-                                                            onPress={() => handleStatusChange(application.id, 'accepted', application.status)}
-                                                            disabled={Boolean(updatingApplicationId)}
-                                                            style={[styles.actionButton, styles.acceptButton, Boolean(updatingApplicationId) && styles.actionButtonDisabled]}
-                                                        >
-                                                            <Text style={[styles.actionButtonText, styles.acceptButtonText]}>{isUpdating ? 'Procesando...' : 'Aceptar'}</Text>
-                                                        </Pressable>
-                                                    )}
+                                                    <View style={styles.applicantActions}>
+                                                        {showPendingActions && (
+                                                            <Pressable
+                                                                onPress={() => handleStatusChange(application.id, 'accepted', application.status)}
+                                                                disabled={Boolean(updatingApplicationId)}
+                                                                style={[styles.actionButton, styles.acceptButton, Boolean(updatingApplicationId) && styles.actionButtonDisabled]}
+                                                            >
+                                                                <Text style={[styles.actionButtonText, styles.acceptButtonText]}>{isUpdating ? 'Procesando...' : 'Aceptar'}</Text>
+                                                            </Pressable>
+                                                        )}
 
-                                                    <Pressable
-                                                        onPress={() => handleStatusChange(application.id, 'rejected', application.status)}
-                                                        disabled={Boolean(updatingApplicationId)}
-                                                        style={[
-                                                            styles.actionButton,
-                                                            styles.rejectButton,
-                                                            !showPendingActions && styles.singleActionButton,
-                                                            Boolean(updatingApplicationId) && styles.actionButtonDisabled
-                                                        ]}
-                                                    >
-                                                        <Text style={[styles.actionButtonText, styles.rejectButtonText]}>{isUpdating ? 'Procesando...' : isAccepted ? 'Revertir a rechazado' : 'Rechazar'}</Text>
-                                                    </Pressable>
-                                                </View>
+                                                        <Pressable
+                                                            onPress={() => handleStatusChange(application.id, 'rejected', application.status)}
+                                                            disabled={Boolean(updatingApplicationId)}
+                                                            style={[
+                                                                styles.actionButton,
+                                                                styles.rejectButton,
+                                                                !showPendingActions && styles.singleActionButton,
+                                                                Boolean(updatingApplicationId) && styles.actionButtonDisabled
+                                                            ]}
+                                                        >
+                                                            <Text style={[styles.actionButtonText, styles.rejectButtonText]}>{isUpdating ? 'Procesando...' : isAccepted ? 'Revertir a rechazado' : 'Rechazar'}</Text>
+                                                        </Pressable>
+                                                    </View>
                                                 </>
                                             ) : (
                                                 <View style={[styles.statusChip, styles.ownerStatusChip, { backgroundColor: statusStyle?.bg }]}>
@@ -536,6 +543,61 @@ const AgreementDetailScreen = ({ route }) => {
                 </View>
             </ScrollView>
 
+            <BottomSheet sheetRef={statusSheetRef} snapPoints={confirmSheetSnapPoints} uploading={Boolean(updatingApplicationId)}>
+                <Text style={styles.confirmSheetTitle}>{pendingStatusAction?.title || 'Confirmar acción'}</Text>
+                <Text style={styles.confirmSheetMessage}>{pendingStatusAction?.message || ''}</Text>
+                <Pressable
+                    onPress={confirmStatusChange}
+                    disabled={Boolean(updatingApplicationId)}
+                    style={[
+                        styles.confirmSheetAction,
+                        pendingStatusAction?.status === 'accepted' ? styles.confirmSheetAcceptAction : styles.confirmSheetDangerAction,
+                        Boolean(updatingApplicationId) && styles.actionButtonDisabled,
+                    ]}
+                >
+                    <Text
+                        style={[
+                            styles.confirmSheetActionText,
+                            pendingStatusAction?.status === 'accepted' ? styles.confirmSheetAcceptActionText : styles.confirmSheetDangerActionText,
+                        ]}
+                    >
+                        {updatingApplicationId
+                            ? 'Procesando...'
+                            : pendingStatusAction?.status === 'accepted'
+                                ? 'Aceptar'
+                                : 'Rechazar'}
+                    </Text>
+                </Pressable>
+                <Pressable
+                    onPress={closeStatusSheet}
+                    disabled={Boolean(updatingApplicationId)}
+                    style={[styles.confirmSheetCancelAction, Boolean(updatingApplicationId) && styles.actionButtonDisabled]}
+                >
+                    <Text style={styles.confirmSheetCancelActionText}>Cancelar</Text>
+                </Pressable>
+            </BottomSheet>
+
+            <BottomSheet sheetRef={deleteSheetRef} snapPoints={confirmSheetSnapPoints} uploading={Boolean(deletingAgreement)}>
+                <Text style={styles.confirmSheetTitle}>Eliminar contrato</Text>
+                <Text style={styles.confirmSheetMessage}>¿Seguro que quieres eliminar este contrato? Esta acción no se puede deshacer.</Text>
+                <Pressable
+                    onPress={confirmDeleteAgreement}
+                    disabled={Boolean(deletingAgreement)}
+                    style={[styles.confirmSheetAction, styles.confirmSheetDangerAction, Boolean(deletingAgreement) && styles.actionButtonDisabled]}
+                >
+                    <Text style={[styles.confirmSheetActionText, styles.confirmSheetDangerActionText]}>
+                        {deletingAgreement ? 'Eliminando...' : 'Eliminar contrato'}
+                    </Text>
+                </Pressable>
+                <Pressable
+                    onPress={() => deleteSheetRef.current?.dismiss()}
+                    disabled={Boolean(deletingAgreement)}
+                    style={[styles.confirmSheetCancelAction, Boolean(deletingAgreement) && styles.actionButtonDisabled]}
+                >
+                    <Text style={styles.confirmSheetCancelActionText}>Cancelar</Text>
+                </Pressable>
+            </BottomSheet>
+
             <BottomSheet sheetRef={rateSheetRef} snapPoints={rateSheetSnapPoints} uploading={Boolean(ratingApplicationId)}>
                 <Text style={styles.rateSheetTitle}>Calificar músico contratado</Text>
                 <Text style={styles.rateSheetName}>{selectedApplicationToRate?.musician?.user?.full_name || 'Músico'}</Text>
@@ -559,18 +621,18 @@ const AgreementDetailScreen = ({ route }) => {
 
                 <View style={styles.rateSheetButtonsRow}>
                     <Pressable
-                        onPress={closeRateSheet}
-                        disabled={Boolean(ratingApplicationId)}
-                        style={[styles.rateSheetButton, styles.rateSheetCancelButton, Boolean(ratingApplicationId) && styles.actionButtonDisabled]}
-                    >
-                        <Text style={styles.rateSheetCancelButtonText}>Cancelar</Text>
-                    </Pressable>
-                    <Pressable
                         onPress={handleRateApplication}
                         disabled={Boolean(ratingApplicationId)}
                         style={[styles.rateSheetButton, styles.rateSheetSubmitButton, Boolean(ratingApplicationId) && styles.actionButtonDisabled]}
                     >
                         <Text style={styles.rateSheetSubmitButtonText}>{ratingApplicationId ? 'Guardando...' : 'Guardar'}</Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={closeRateSheet}
+                        disabled={Boolean(ratingApplicationId)}
+                        style={[styles.rateSheetButton, styles.rateSheetCancelButton, Boolean(ratingApplicationId) && styles.actionButtonDisabled]}
+                    >
+                        <Text style={styles.rateSheetCancelButtonText}>Cancelar</Text>
                     </Pressable>
                 </View>
             </BottomSheet>
@@ -883,6 +945,54 @@ const styles = StyleSheet.create({
         color: GlobalStyle.yellow,
         textTransform: 'uppercase',
     },
+    confirmSheetTitle: {
+        fontFamily: 'Oswald_600',
+        fontSize: 22,
+        color: GlobalStyle.black,
+        textAlign: 'center',
+    },
+    confirmSheetMessage: {
+        marginTop: 2,
+        fontFamily: 'Oswald_400',
+        fontSize: 16,
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    confirmSheetAction: {
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#f3f4f6',
+    },
+    confirmSheetAcceptAction: {
+        backgroundColor: '#f3f4f6',
+    },
+    confirmSheetDangerAction: {
+        backgroundColor: '#fef2f2',
+        marginTop: 10,
+    },
+    confirmSheetActionText: {
+        fontWeight: '600',
+        color: '#111827',
+    },
+    confirmSheetAcceptActionText: {
+        color: '#111827',
+    },
+    confirmSheetDangerActionText: {
+        color: '#dc2626',
+    },
+    confirmSheetCancelAction: {
+        borderRadius: 10,
+        marginTop: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#e5e7eb',
+    },
+    confirmSheetCancelActionText: {
+        fontWeight: '600',
+        color: '#111827',
+    },
     rateSheetTitle: {
         fontFamily: 'Oswald_500',
         fontSize: 22,
@@ -938,19 +1048,17 @@ const styles = StyleSheet.create({
     },
     rateSheetButtonsRow: {
         marginTop: 16,
-        flexDirection: 'row',
+        flexDirection: 'column',
         gap: 10,
     },
     rateSheetButton: {
         flex: 1,
         borderRadius: 10,
-        borderWidth: 1,
         paddingVertical: 10,
         alignItems: 'center',
     },
     rateSheetCancelButton: {
-        borderColor: GlobalStyle.lightGray,
-        backgroundColor: GlobalStyle.white,
+        backgroundColor: '#e5e7eb'
     },
     rateSheetCancelButtonText: {
         fontFamily: 'Oswald_500',
@@ -959,12 +1067,10 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     rateSheetSubmitButton: {
-        borderColor: GlobalStyle.yellow,
-        backgroundColor: GlobalStyle.yellow,
+        backgroundColor: `${GlobalStyle.yellow}a9`,
     },
     rateSheetSubmitButtonText: {
         fontFamily: 'Oswald_500',
-        fontSize: 15,
         color: GlobalStyle.blue,
         textTransform: 'uppercase',
     },

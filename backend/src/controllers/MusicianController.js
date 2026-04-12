@@ -1,29 +1,6 @@
 import { Op, Sequelize } from "sequelize";
 import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance, User } from "../models/sequelize.js";
 
-const _getMusicianAverageRate = async (musicianId) => {
-    const result = await Application.findOne({
-        where: {
-            musicianId,
-            status: 'accepted',
-            type: 'musician_apply',
-            rate: { [Op.not]: null }
-        },
-        attributes: [[Sequelize.fn('AVG', Sequelize.col('rate')), 'averageRate']],
-        raw: true
-    });
-
-    if (!result || result.averageRate === null) {
-        return null;
-    }
-
-    return Number(Number(result.averageRate).toFixed(2));
-}
-
-const _canViewMusicianProfile = (authenticatedMusicianId, musician) => {
-    return authenticatedMusicianId === musician.id || musician.isProfilePrivate === false;
-}
-
 const _getProfileBaseData = async (musicianId) => {
     return Musician.findByPk(musicianId, {
         include: [
@@ -291,6 +268,34 @@ const addInstrumentsToMusician = async (req, res) => {
         res.status(500).send({ error: 'Error adding instruments to musician' });
     }
 }
+
+// ==================== Auxiliary Functions ====================
+
+// Get the average rate for a musician based on their accepted applications with non-null rates, returning the average rate rounded to 2 decimal places or null if no ratings are available
+const _getMusicianAverageRate = async (musicianId) => {
+    const result = await Application.findOne({
+        where: {
+            musicianId,
+            status: 'accepted',
+            type: 'musician_apply',
+            rate: { [Op.not]: null }
+        },
+        attributes: [[Sequelize.fn('AVG', Sequelize.col('rate')), 'averageRate']],
+        raw: true
+    });
+
+    if (!result || result.averageRate === null) {
+        return null;
+    }
+
+    return Number(Number(result.averageRate).toFixed(2));
+}
+
+// Check if the authenticated musician can view the profile of another musician based on whether they are the same musician or if the profile is public
+const _canViewMusicianProfile = (authenticatedMusicianId, musician) => {
+    return authenticatedMusicianId === musician.id || musician.isProfilePrivate === false;
+}
+
 
 const MusicianController = {
     addInstrumentsToMusician,

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { createContext, useContext, useState } from "react";
 import AuthEndpoints from '../api/AuthEndpoints.js';
+import MusicianEndpoints from '../api/MusicianEndpoints.js';
 
 const AuthContext = createContext();
 
@@ -94,6 +95,24 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const updateMusicianInstruments = async (instrumentsData) => {
+        try {
+            await MusicianEndpoints.addInstrumentsToMusician(instrumentsData);
+
+            const token = user?.token || JSON.parse(await AsyncStorage.getItem('userToken'));
+            if (!token) throw new Error('Token not found');
+
+            const refreshed = await AuthEndpoints.isTokenValid({ token });
+            axios.defaults.headers.common = {
+                Authorization: `Bearer ${refreshed.user.token}`,
+            };
+            setUser(refreshed.user);
+            return refreshed.user;
+        } catch (error) {
+            throw error
+        }
+    };
+
     const getToken = async () => {
         let userToken
         try {
@@ -112,7 +131,7 @@ export function AuthProvider({ children }) {
 
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, editProfilePicture, deleteProfilePicture, isLoading, loadingText, isBandAdministrator, setIsBandAdministrator }}>
+        <AuthContext.Provider value={{ user, login, logout, register, getToken, editMusician, updateMusicianInstruments, editProfilePicture, deleteProfilePicture, isLoading, loadingText, isBandAdministrator, setIsBandAdministrator }}>
             {children}
         </AuthContext.Provider>
     );

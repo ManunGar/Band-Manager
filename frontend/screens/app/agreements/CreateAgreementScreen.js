@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import AgreementEndpoints from '../../../api/AgreementEndpoints';
 import InstrumentsEndpoints from '../../../api/InstrumentsEndpoints';
+import { useToast } from '../../../contexts/ToastContext';
 import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import TopContainer from '../../../components/TopContainer';
 import * as GlobalStyle from '../../../GlobalStyle';
@@ -30,6 +30,8 @@ const CreateAgreementScreen = ({ route, navigation }) => {
         musicianName,
         musicianInstruments,
     } = route.params ?? {};
+
+    const { showToast } = useToast();
 
     const [performances, setPerformances] = useState([]);
     const [instruments, setInstruments] = useState([]);
@@ -83,7 +85,7 @@ const CreateAgreementScreen = ({ route, navigation }) => {
 
     const handleSubmit = async () => {
         if (!canSubmit) {
-            Alert.alert('Formulario incompleto', 'Rellena todos los campos antes de continuar.');
+            showToast('Formulario incompleto', 'Rellena todos los campos antes de continuar.', 'warning');
             return;
         }
 
@@ -101,26 +103,19 @@ const CreateAgreementScreen = ({ route, navigation }) => {
             if (musicianId && result?.agreementId) {
                 try {
                     await AgreementEndpoints.inviteMusician(result.agreementId, musicianId);
-                    Alert.alert(
-                        '¡Contrato creado!',
-                        `Se ha creado el contrato y se ha enviado la invitación a ${musicianName || 'el músico'}.`,
-                        [{ text: 'OK', onPress: () => navigation.pop(2) }]
-                    );
+                    showToast('¡Contrato creado!', `Se ha creado el contrato y se ha enviado la invitación a ${musicianName || 'el músico'}.`, 'success');
+                    navigation.pop(2);
                 } catch {
                     // Agreement created but invite failed — still navigate back
-                    Alert.alert(
-                        'Contrato creado',
-                        'El contrato se ha creado, pero no se pudo enviar la invitación al músico. Puedes invitarlo desde el detalle del contrato.',
-                        [{ text: 'OK', onPress: () => navigation.goBack() }]
-                    );
+                    showToast('Contrato creado', 'El contrato se ha creado, pero no se pudo enviar la invitación al músico. Puedes invitarlo desde el detalle del contrato.', 'info');
+                    navigation.goBack();
                 }
             } else {
-                Alert.alert('¡Contrato creado!', 'El contrato ha sido creado correctamente.', [
-                    { text: 'OK', onPress: () => navigation.goBack() }
-                ]);
+                showToast('¡Contrato creado!', 'El contrato ha sido creado correctamente.', 'success');
+                navigation.goBack();
             }
         } catch (error) {
-            Alert.alert('Error', error.message || 'Hubo un error al crear el contrato.');
+            showToast('Error', error.message || 'Hubo un error al crear el contrato.', 'error');
         } finally {
             setSubmitting(false);
         }

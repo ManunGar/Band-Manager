@@ -162,6 +162,8 @@ const leaveBand = async (req, res) => {
     }
 };
 
+// ==================== Auxiliary Functions ====================
+
 // Function to transform instruments data from request body
 const _transformInstrumentsData = (instruments) => {
     const instrumentsId = Object.keys(instruments).map(id => parseInt(id, 10))

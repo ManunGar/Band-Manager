@@ -409,6 +409,7 @@ const _getMusicianComponents = async (musicianId) => {
     });
 };
 
+// Get contracted musicians for an event, excluding those who are already components (to avoid duplicates in attendance)
 const _getContractedMusiciansForEvent = async (eventId, excludedMusicianIds = new Set()) => {
     const acceptedApplications = await Application.findAll({
         where: { status: 'accepted' },
@@ -462,6 +463,7 @@ const _getContractedMusiciansForEvent = async (eventId, excludedMusicianIds = ne
     return [...contractedByMusicianId.values()];
 };
 
+// Get events visible to the musician based on their band memberships and participation, including attendance info
 const _getBandVisibleEvents = async ({ bandIdNumber, musicianComponents, timeScope, type }) => {
     const where = {
         [Op.and]: [
@@ -490,6 +492,7 @@ const _getBandVisibleEvents = async ({ bandIdNumber, musicianComponents, timeSco
     });
 };
 
+// Get events for which the musician has an accepted contract (performance) and is not a component, including attendance info if they participate as a contracted musician
 const _getAcceptedContractEvents = async ({ musicianId, musicianComponents, timeScope, type }) => {
     // Contract events always come from performances.
     if (type === 'rehearsals') {
@@ -526,6 +529,7 @@ const _getAcceptedContractEvents = async ({ musicianId, musicianComponents, time
     });
 };
 
+// Get event IDs for which the musician has an accepted contract (performance)
 const _getAcceptedContractEventIds = async (musicianId) => {
     const acceptedApplications = await Application.findAll({
         where: {
@@ -554,6 +558,7 @@ const _getAcceptedContractEventIds = async (musicianId) => {
     return [...new Set(eventIds)];
 };
 
+// Check if the musician has an accepted contract for the event (used to determine access and attendance info for contracted musicians who are not components)
 const _hasAcceptedContractForEvent = async (eventId, musicianId) => {
     const acceptedApplication = await Application.findOne({
         where: {
@@ -579,6 +584,7 @@ const _hasAcceptedContractForEvent = async (eventId, musicianId) => {
     return Boolean(acceptedApplication);
 };
 
+// Merge two lists of events, giving priority to the first list (band events) in case of duplicates, and ensuring a deterministic order
 const _mergeEventsWithPriority = (priorityEvents = [], secondaryEvents = []) => {
     const eventsById = new Map();
 
@@ -593,6 +599,7 @@ const _mergeEventsWithPriority = (priorityEvents = [], secondaryEvents = []) => 
     return [...eventsById.values()];
 };
 
+// Build order array for events query based on timeScope
 const _buildEventsOrder = (timeScope) => {
     if (timeScope === 'past') {
         return [['endDate', 'DESC'], ['endTime', 'DESC']];
@@ -601,6 +608,7 @@ const _buildEventsOrder = (timeScope) => {
     return [['date', 'ASC'], ['initialTime', 'ASC']];
 };
 
+// Sort events by their date and time based on the timeScope (for past events, sort by end date/time; for upcoming events, sort by start date/time), ensuring a deterministic order even when dates are missing or invalid
 const _sortEventsByTimeScope = (events = [], timeScope) => {
     const sortedEvents = [...events];
 
@@ -623,6 +631,7 @@ const _sortEventsByTimeScope = (events = [], timeScope) => {
     return sortedEvents;
 };
 
+// Get a comparable timestamp for the event based on timeScope (for past events, use end date/time; for upcoming events, use start date/time), handling missing or invalid dates gracefully
 const _getComparableEventDate = (event, timeScope) => {
     const baseDate = timeScope === 'past'
         ? (event.endDate || event.date)

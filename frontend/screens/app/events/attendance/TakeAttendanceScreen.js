@@ -1,12 +1,13 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
-import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import EventEndpoints from '../../../../api/EventEndpoints'
 import profileDefault from '../../../../assets/milestones/profile_default.png'
 import ConfirmIcon from '../../../../components/icons/ConfirmIcon'
 import DeniedIcon from '../../../../components/icons/DeniedIcon'
 import NoConfirmIcon from '../../../../components/icons/NoConfirmIcon'
 import TopContainer from '../../../../components/TopContainer'
+import { useToast } from '../../../../contexts/ToastContext'
 import * as GlobalStyle from '../../../../GlobalStyle'
 
 const TakeAttendanceScreen = ({ route }) => {
@@ -15,6 +16,7 @@ const TakeAttendanceScreen = ({ route }) => {
     const [contractedMusicians, setContractedMusicians] = useState([])
     const [updatedAttendance, setUpdatedAttendance] = useState({})
     const navigation = useNavigation();
+    const { showToast } = useToast();
 
     useFocusEffect(
         useCallback(() => {
@@ -29,7 +31,7 @@ const TakeAttendanceScreen = ({ route }) => {
             setContractedMusicians(attendanceData.contractedMusicians || []);
         } catch (error) {
             console.error("Error fetching attendance:", error);
-            Alert.alert("Error", "No se pudo cargar la asistencia del evento. Por favor, inténtalo de nuevo más tarde.");
+            showToast('Error', 'No se pudo cargar la asistencia del evento. Por favor, inténtalo de nuevo más tarde.', 'error');
         }
     }
 
@@ -72,10 +74,11 @@ const TakeAttendanceScreen = ({ route }) => {
             await EventEndpoints.takeAttendance(event?.id, body);
             // Clean local changes after successful save
             setUpdatedAttendance({});
+            showToast('Asistencia guardada', 'El pase de lista ha sido guardado correctamente.', 'success');
             navigation.goBack();
         } catch (error) {
             console.error("Error saving attendance:", error);
-            Alert.alert("Error", "No se pudo guardar la asistencia. Por favor, inténtalo de nuevo.");
+            showToast('Error', 'No se pudo guardar la asistencia. Por favor, inténtalo de nuevo.', 'error');
         }
     }
 
@@ -189,7 +192,7 @@ const TakeAttendanceScreen = ({ route }) => {
                     keyExtractor={(item, index) => item.instrument?.id?.toString() || index.toString()}
                     contentContainerStyle={{ paddingBottom: 100, paddingTop: 0 }}
                     showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={() => <Text>No hay datos de asistencia disponibles.</Text>}
+                    ListEmptyComponent={() => <Text style={styles.emptyText}>No hay datos de asistencia disponibles.</Text>}
                     renderItem={({ item }) => (
                         <AttendanceComponent 
                             attendance={item} 
@@ -332,6 +335,13 @@ const styles = StyleSheet.create({
         backgroundColor: GlobalStyle.darkRed,
         position: 'absolute',
         right: 0,
+    },
+    emptyText: {
+        fontSize: 16,
+        fontFamily: 'Oswald_400',
+        color: GlobalStyle.gray,
+        textAlign: 'center',
+        marginTop: 50,
     },
     attendanceHeaderContainer: {
         flexDirection: 'row',

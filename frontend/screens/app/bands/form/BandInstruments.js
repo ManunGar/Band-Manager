@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
 import BandEndpoints from '../../../../api/BandEndpoints';
 import InstrumentsEndpoints from '../../../../api/InstrumentsEndpoints';
 import bandDefaultImage from '../../../../assets/milestones/band_default.png';
@@ -9,6 +9,7 @@ import InputSearch from '../../../../components/InputSearch';
 import Instrument from '../../../../components/Instrument';
 import TopContainer from '../../../../components/TopContainer';
 import { useBandForm } from '../../../../contexts/BandFormContext';
+import { useToast } from '../../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 const BandInstruments = ({ route }) => {
@@ -19,6 +20,7 @@ const BandInstruments = ({ route }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [search, setSearch] = useState('')
     const navigation = useNavigation();
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchInstruments();
@@ -157,7 +159,7 @@ const BandInstruments = ({ route }) => {
 
         } catch (error) {
             console.error(error?.message);
-            Alert.alert('Error', 'Hubo un error al crear la banda. Por favor, intenta de nuevo.');
+            showToast('Error', 'Hubo un error al crear la banda. Por favor, intenta de nuevo.', 'error');
         } finally {
             setIsSubmitting(false);
         }

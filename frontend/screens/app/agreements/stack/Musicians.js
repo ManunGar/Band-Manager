@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
-import { useContext, useEffect, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import MusicianEndpoints from '../../../../api/MusicianEndpoints';
 import LinkText from '../../../../components/LinkText';
@@ -13,18 +13,37 @@ const PAGE_SIZE = 8;
 const Musicians = () => {
     const navigation = useNavigation();
     const { user } = useContext(AuthContext);
-    const { debouncedSearch } = useAgreementSearch();
-    const [instrumentId, setInstrumentId] = useState(null);
+    const { debouncedSearch, musicianInstrumentId } = useAgreementSearch();
     const [musicians, setMusicians] = useState([]);
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [isProfilePrivate, setIsProfilePrivate] = useState(false);
+    const loggedMusicianId = user?.musician?.id;
+
+    const fetchOwnVisibility = useCallback(async () => {
+        if (!loggedMusicianId) return;
+
+        try {
+            const fetched = await MusicianEndpoints.accountDetails(loggedMusicianId);
+            const ownIsPrivate = fetched?.musician?.isProfilePrivate ?? fetched?.isProfilePrivate;
+            setIsProfilePrivate(Boolean(ownIsPrivate));
+        } catch (error) {
+            console.error('Error fetching own visibility:', error);
+        }
+    }, [loggedMusicianId]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchOwnVisibility();
+        }, [fetchOwnVisibility])
+    );
 
     useEffect(() => {
         const fetch = async () => {
             try {
                 const fetched = await MusicianEndpoints.listMusicians(
-                    instrumentId,
+                    musicianInstrumentId,
                     debouncedSearch,
                     0,
                     PAGE_SIZE
@@ -39,7 +58,7 @@ const Musicians = () => {
         };
 
         fetch();
-    }, [instrumentId, debouncedSearch]);
+    }, [musicianInstrumentId, debouncedSearch]);
 
     useEffect(() => {
         if (offset === 0) return;
@@ -47,7 +66,7 @@ const Musicians = () => {
         const fetchMore = async () => {
             try {
                 const fetched = await MusicianEndpoints.listMusicians(
-                    instrumentId,
+                    musicianInstrumentId,
                     debouncedSearch,
                     offset,
                     PAGE_SIZE
@@ -66,12 +85,16 @@ const Musicians = () => {
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-            const fetched = await MusicianEndpoints.listMusicians(
-                instrumentId,
-                debouncedSearch,
-                0,
-                PAGE_SIZE
-            );
+            const [fetched] = await Promise.all([
+                MusicianEndpoints.listMusicians(
+                    musicianInstrumentId,
+                    debouncedSearch,
+                    0,
+                    PAGE_SIZE
+                ),
+                fetchOwnVisibility(),
+            ]);
+
             setMusicians(fetched?.data || []);
             setHasMore(Boolean(fetched?.hasMore));
             setOffset(0);
@@ -97,6 +120,25 @@ const Musicians = () => {
                 refreshing={refreshing}
                 onRefresh={onRefresh}
                 showsVerticalScrollIndicator={false}
+                ListHeaderComponent={
+                    isProfilePrivate ? (
+                        <View style={{
+                            backgroundColor: '#FFF5E6',
+                            borderRadius: 10,
+                            borderWidth: 1,
+                            borderColor: '#FFD892',
+                            padding: 12,
+                            marginBottom: 6,
+                        }}>
+                            <Text style={{ fontFamily: 'Oswald_500', fontSize: 16, color: GlobalStyle.blue }}>
+                                Tu visibilidad está desactivada.
+                            </Text>
+                            <Text style={{ fontFamily: 'Oswald_400', fontSize: 14, color: GlobalStyle.darkGray }}>
+                                No aparecerás para otras personas en esta lista. Si quieres aparecer, ve a tu configuración y activa esta opción.
+                            </Text>
+                        </View>
+                    ) : null
+                }
                 ListEmptyComponent={(
                     <Text style={{ textAlign: 'center', marginTop: 25, color: GlobalStyle.gray, fontFamily: 'Oswald_400' }}>
                         No se encontraron músicos con esos filtros.

@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, Image, Text, View } from 'react-native';
+import { FlatList, Image, Text, View } from 'react-native';
 import * as Yup from 'yup';
 import ComponentEndpoints from '../../../api/ComponentEndpoints';
 import InstrumentsEndpoints from '../../../api/InstrumentsEndpoints';
@@ -9,6 +9,7 @@ import bandDefaultImage from '../../../assets/milestones/band_default.png';
 import InputSearch from '../../../components/InputSearch';
 import Instrument from '../../../components/Instrument';
 import TopContainer from '../../../components/TopContainer';
+import { useToast } from '../../../contexts/ToastContext';
 
 const schema = Yup.object({
     instruments: Yup.object()
@@ -26,6 +27,7 @@ const EditComponentScreen = ({ route }) => {
     const [allInstruments, setAllInstruments] = useState([])
     const [search, setSearch] = useState('')
     const navigation = useNavigation();
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchInstruments();
@@ -99,10 +101,11 @@ const EditComponentScreen = ({ route }) => {
         onSubmit: async (values, { setSubmitting }) => {
             try {
                 await ComponentEndpoints.updateComponentInstruments(component.id, values);
+                showToast('Instrumentos guardados', 'Los instrumentos han sido actualizados correctamente.', 'success');
                 navigation.goBack();
             } catch (error) {
                 console.error(error?.response?.data || error);
-                Alert.alert('Error', 'Hubo un error al unirte a la banda. Por favor, intenta de nuevo.');
+                showToast('Error', 'Hubo un error al guardar los instrumentos. Por favor, intenta de nuevo.', 'error');
             } finally {
                 setSubmitting(false);
             }

@@ -66,10 +66,23 @@ const listMusicianContracts = async (musicianId, instrumentId, offset = 0, limit
     }
 };
 
+// Endpoint to update the authenticated musician profile visibility
+const updateVisibility = async (isProfilePrivate) => {
+    try {
+        const response = await axios.put(`${baseUrl}/musicians/account/visibility`, {
+            isProfilePrivate,
+        });
+        return response.data;
+    } catch (error) {
+        handleError(error);
+    }
+};
+
 export default {
     accountDetails,
     getMusicianProfile,
     addInstrumentsToMusician,
     listMusicians,
-    listMusicianContracts
+    listMusicianContracts,
+    updateVisibility
 };

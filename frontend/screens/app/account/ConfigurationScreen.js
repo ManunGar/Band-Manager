@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import { useContext } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import MusicianEndpoints from '../../../api/MusicianEndpoints';
 import profileDefault from '../../../assets/milestones/profile_default.png';
 import LogoutIcon from '../../../components/icons/LogoutIcon';
 import RightArrowIcon from '../../../components/icons/RightArrowIcon';
@@ -13,6 +14,28 @@ const ConfigurationScreen = ({ route }) => {
     const { logout } = useContext(AuthContext)
     const { musician } = route.params;
     const navigation = useNavigation();
+    const [isVisibleForContracts, setIsVisibleForContracts] = useState(
+        !Boolean(musician?.musician?.isProfilePrivate ?? musician?.isProfilePrivate)
+    );
+    const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+
+    useEffect(() => {
+        setIsVisibleForContracts(!Boolean(musician?.musician?.isProfilePrivate ?? musician?.isProfilePrivate));
+    }, [musician]);
+
+    const handleVisibilityToggle = async (nextValue) => {
+        setIsVisibleForContracts(nextValue);
+        setIsUpdatingVisibility(true);
+
+        try {
+            await MusicianEndpoints.updateVisibility(!nextValue);
+        } catch (error) {
+            console.error('Error updating musician visibility:', error);
+            setIsVisibleForContracts(!nextValue);
+        } finally {
+            setIsUpdatingVisibility(false);
+        }
+    };
 
     return (
         <View style={{ flex: 1 }}>
@@ -33,6 +56,26 @@ const ConfigurationScreen = ({ route }) => {
             <ScrollView style={styles.bodyContainer}>
                 <Text style={styles.sectionTitle}>Cuenta</Text>
                 <View style={styles.sectionContainer}>
+                    <View style={styles.visibilityContainer}>
+                        <View style={styles.visibilityTextContainer}>
+                            <Text style={styles.subSectionTitle}>Visibilidad en contratos</Text>
+                            <Text style={styles.subSectionText}>
+                                Mostrar mi perfil en la lista de músicos.
+                            </Text>
+                        </View>
+                        <View style={styles.visibilityControlContainer}>
+                            {isUpdatingVisibility && (
+                                <ActivityIndicator size="small" color={GlobalStyle.yellow} />
+                            )}
+                            <Switch
+                                value={isVisibleForContracts}
+                                onValueChange={handleVisibilityToggle}
+                                disabled={isUpdatingVisibility}
+                                trackColor={{ false: GlobalStyle.lightGray, true: '#FFD892' }}
+                                thumbColor={isVisibleForContracts ? GlobalStyle.yellow : GlobalStyle.gray}
+                            />
+                        </View>
+                    </View>
                     <TouchableOpacity onPress={() => navigation.navigate('PasswordForm')} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                         <Text style={styles.subSectionTitle}>Cambiar contraseña</Text>
                         <RightArrowIcon fill={GlobalStyle.gray} />
@@ -49,14 +92,14 @@ const ConfigurationScreen = ({ route }) => {
                             <Text style={styles.subSectionTitle}>Tema</Text>
                             <LinkText>Claro</LinkText>
                         </View>
-                        <RightArrowIcon fill={GlobalStyle.gray} />
+                        {/* <RightArrowIcon fill={GlobalStyle.gray} /> */}
                     </TouchableOpacity>
                     <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                         <View>
                             <Text style={styles.subSectionTitle}>Idioma</Text>
                             <LinkText>Español</LinkText>
                         </View>
-                        <RightArrowIcon fill={GlobalStyle.gray} />
+                        {/* <RightArrowIcon fill={GlobalStyle.gray} /> */}
                     </TouchableOpacity>
                 </View>
                 <Text style={styles.sectionTitle}>Ayuda</Text>
@@ -115,6 +158,20 @@ const styles = StyleSheet.create({
     },
     subSectionContainer: {
         flexDirection: 'column',
+    },
+    visibilityContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+    },
+    visibilityTextContainer: {
+        flexShrink: 1,
+    },
+    visibilityControlContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     subSectionTitle: {
         fontFamily: 'Oswald_400',

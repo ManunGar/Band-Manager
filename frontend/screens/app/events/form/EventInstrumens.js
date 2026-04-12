@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import EventEndpoints from "../../../../api/EventEndpoints";
 import InstrumentsEndpoints from "../../../../api/InstrumentsEndpoints";
 import Button from "../../../../components/Button";
@@ -8,11 +8,13 @@ import InputSearch from "../../../../components/InputSearch";
 import Instrument from "../../../../components/Instrument";
 import TopContainer from "../../../../components/TopContainer";
 import { useEventForm } from "../../../../contexts/EventFormContext";
+import { useToast } from "../../../../contexts/ToastContext";
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 const EventInstruments = ({ route }) => {
     const { band, event } = route.params;
     const { eventFormData, updateEventFormData, resetEventFormData } = useEventForm();
+    const { showToast } = useToast();
     const [instruments, setInstruments] = useState([]);
     const [allInstruments, setAllInstruments] = useState([]);
     const [search, setSearch] = useState('');
@@ -97,6 +99,7 @@ const EventInstruments = ({ route }) => {
             // Add all text fields
             formData.append('eventType', eventFormData.eventType);
             formData.append('date', eventFormData.date);
+            formData.append('endDate', eventFormData.endDate);
             formData.append('initialTime', eventFormData.initialTime);
             formData.append('endTime', eventFormData.endTime);
             formData.append('delete_picture', eventFormData.delete_picture);
@@ -130,6 +133,12 @@ const EventInstruments = ({ route }) => {
             !event ? await EventEndpoints.createEvent(band.id, formData) : await EventEndpoints.editEvent(event.id, formData);
             resetEventFormData();
 
+            showToast(
+                event?.id ? 'Evento editado' : 'Evento creado',
+                event?.id ? 'El evento ha sido actualizado correctamente.' : 'El evento ha sido creado correctamente.',
+                'success'
+            );
+
             // Navigate back based on whether we're creating or editing
             if (event?.id) {
                 // Editing: go back 2 screens (EventInstruments -> EventFormScreen -> EventScreen)
@@ -140,7 +149,7 @@ const EventInstruments = ({ route }) => {
             }
         } catch (error) {
             console.error('Error al crear el evento:', error);
-            Alert.alert('Error', 'Ocurrió un error al guardar el evento. Por favor, inténtalo de nuevo.');
+            showToast('Error', 'Ocurrió un error al guardar el evento. Por favor, inténtalo de nuevo.', 'error');
         } finally {
             setIsSubmitting(false);
         }

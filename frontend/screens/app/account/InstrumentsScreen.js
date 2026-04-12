@@ -2,11 +2,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import InstrumentsEndpoints from '../../../api/InstrumentsEndpoints'
-import MusicianEndpoints from '../../../api/MusicianEndpoints'
 import BottomSheet from '../../../components/BottomSheet'
 import InputSearch from '../../../components/InputSearch'
 import Instrument from '../../../components/Instrument'
 import TopContainer from '../../../components/TopContainer'
+import { useAuth } from '../../../contexts/AuthContext'
+import { useToast } from '../../../contexts/ToastContext'
 import * as GlobalStyle from '../../../GlobalStyle'
 import { buildMusicianInstrumentMap } from '../../../helpers/ParseHelpers'
 
@@ -25,6 +26,8 @@ const InstrumentsScreen = ({ route }) => {
     const snapPoints = useMemo(() => ['70%'], [])
     const sheetRef = useRef(null)
     const navigation = useNavigation();
+    const { showToast } = useToast();
+    const { updateMusicianInstruments } = useAuth();
 
     useEffect(() => { // Debounce search input
         const timeout = setTimeout(() => {
@@ -80,9 +83,11 @@ const InstrumentsScreen = ({ route }) => {
     const handleSave = async () => {
         try {
             setUploading(true);
-            await MusicianEndpoints.addInstrumentsToMusician(musicianInstruments);
+            await updateMusicianInstruments(musicianInstruments);
+            showToast('Instrumentos guardados', 'Tus instrumentos han sido actualizados correctamente.', 'success');
         } catch (error) {
             console.error('Error saving musician instruments:', error);
+            showToast('Error', 'No se pudieron guardar los instrumentos. Por favor, intenta de nuevo.', 'error');
         } finally {
             setUploading(false);
             navigation.goBack();

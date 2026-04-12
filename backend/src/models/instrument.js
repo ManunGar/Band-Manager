@@ -15,12 +15,12 @@ const loadModel = (sequelize, DataTypes) => {
           allowNull: false
         }
       });
-      Instrument.belongsToMany(models.Musician, { 
-        through: MusicianLevel, 
-        as: 'musicians', 
-        foreignKey: 'instrumentId', 
-        onDelete: 'CASCADE', 
-        onUpdate: 'CASCADE' 
+      Instrument.belongsToMany(models.Musician, {
+        through: MusicianLevel,
+        as: 'musicians',
+        foreignKey: 'instrumentId',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       });
 
       // Component relationship with Instrument (Many-to-Many)
@@ -46,6 +46,9 @@ const loadModel = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       });
+
+      // Agreement relationship with Instrument (One-to-Many)
+      Instrument.hasMany(models.Agreement, { foreignKey: 'instrumentId', as: 'agreements' });
     }
   }
   Instrument.init({

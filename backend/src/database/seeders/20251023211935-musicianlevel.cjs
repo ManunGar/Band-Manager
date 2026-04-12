@@ -7,14 +7,14 @@ module.exports = {
       // Manuel Nuño (Musician 1) - Clarinete y Requinto
       {
         musicianId: 1,
-        instrumentId: 5, // Clarinete
+        instrumentId: 6, // Clarinete
         level: 'título profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 1,
-        instrumentId: 6, // Requinto
+        instrumentId: 8, // Requinto
         level: 'aficionado profesional',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -23,21 +23,21 @@ module.exports = {
       // Carlos Ruiz (Musician 2) - Saxofón alto, Saxofón tenor y Clarinete
       {
         musicianId: 2,
-        instrumentId: 8, // Saxofón alto
+        instrumentId: 13, // Saxofón alto
         level: 'título profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 2,
-        instrumentId: 10, // Saxofón tenor
+        instrumentId: 15, // Saxofón tenor
         level: 'aficionado profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 2,
-        instrumentId: 5, // Clarinete
+        instrumentId: 6, // Clarinete
         level: 'enseñanzas básica',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -46,7 +46,7 @@ module.exports = {
       // Antonio Jiménez (Musician 3) - Tuba
       {
         musicianId: 3,
-        instrumentId: 15, // Tuba
+        instrumentId: 21, // Tuba
         level: 'título profesional',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -55,14 +55,14 @@ module.exports = {
       // Francisco Martín (Musician 4) - Percusión y Tambor
       {
         musicianId: 4,
-        instrumentId: 20, // Percusión
+        instrumentId: 26, // Percusión
         level: 'aficionado profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 4,
-        instrumentId: 21, // Tambor
+        instrumentId: 27, // Tambor
         level: 'título profesional',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -71,14 +71,14 @@ module.exports = {
       // Miguel Navarro (Musician 5) - Trombón y Bombardino
       {
         musicianId: 5,
-        instrumentId: 14, // Trombón
+        instrumentId: 20, // Trombón
         level: 'título superior',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 5,
-        instrumentId: 16, // Bombardino
+        instrumentId: 22, // Bombardino
         level: 'aficionado profesional',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -87,21 +87,21 @@ module.exports = {
       // María García (Musician 6) - Flauta, Flautín y Oboe
       {
         musicianId: 6,
-        instrumentId: 2, // Flauta
+        instrumentId: 3, // Flauta
         level: 'título superior',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 6,
-        instrumentId: 3, // Flautín
+        instrumentId: 4, // Flautín
         level: 'título profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 6,
-        instrumentId: 4, // Oboe
+        instrumentId: 5, // Oboe
         level: 'enseñanzas básica',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -110,14 +110,14 @@ module.exports = {
       // Carmen López (Musician 7) - Trompeta y Fliscorno
       {
         musicianId: 7,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         level: 'título superior',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 7,
-        instrumentId: 18, // Fliscorno
+        instrumentId: 24, // Fliscorno
         level: 'título profesional',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -126,7 +126,7 @@ module.exports = {
       // Isabel Sánchez (Musician 8) - Trompa
       {
         musicianId: 8,
-        instrumentId: 13, // Trompa
+        instrumentId: 19, // Trompa
         level: 'título superior',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -135,14 +135,14 @@ module.exports = {
       // Laura Fernández (Musician 9) - Corneta y Trompeta
       {
         musicianId: 9,
-        instrumentId: 19, // Corneta
+        instrumentId: 25, // Corneta
         level: 'aficionado profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 9,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         level: 'enseñanzas básica',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -151,21 +151,21 @@ module.exports = {
       // Elena Torres (Musician 10) - Saxofón barítono, Fagot y Clarinete bajo
       {
         musicianId: 10,
-        instrumentId: 11, // Saxofón barítono
+        instrumentId: 16, // Saxofón barítono
         level: 'título profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 10,
-        instrumentId: 12, // Fagot
+        instrumentId: 17, // Fagot
         level: 'aficionado profesional',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         musicianId: 10,
-        instrumentId: 7, // Clarinete bajo
+        instrumentId: 9, // Clarinete bajo
         level: 'aficionado',
         createdAt: new Date(),
         updatedAt: new Date()

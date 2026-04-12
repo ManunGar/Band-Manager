@@ -3,17 +3,19 @@ import { useNavigation } from '@react-navigation/native';
 import { useFormik } from 'formik';
 import moment from 'moment';
 import { useContext, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Input from '../../../../components/Input';
 import LocationAutocomplete from '../../../../components/LocationAutocomplete';
 import TopContainer from '../../../../components/TopContainer';
 import { AuthContext } from '../../../../contexts/AuthContext';
+import { useToast } from '../../../../contexts/ToastContext';
 import * as GlobalStyle from '../../../../GlobalStyle';
 
 const AccountFormScreen = ({ route }) => {
     const { label, value, keyboardType, schema } = route.params;
     const [showDatePicker, setShowDatePicker] = useState(false);
     const { editMusician } = useContext(AuthContext);
+    const { showToast } = useToast();
     const [error, setError] = useState(null);
     const [locationData, setLocationData] = useState({ location: value || '', latitude: null, longitude: null });
     const navigation = useNavigation();
@@ -46,7 +48,7 @@ const AccountFormScreen = ({ route }) => {
                 
                 handleEditSubmit(formData);
             } catch (err) {
-                Alert.alert('Error', err?.response?.data?.message || 'No se pudo guardar la información.');
+                showToast('Error', err?.response?.data?.message || 'No se pudo guardar la información.', 'error');
             } finally {
                 setSubmitting(false);
             }
@@ -56,6 +58,7 @@ const AccountFormScreen = ({ route }) => {
     const handleEditSubmit = async (payload) => {
         try {
             await editMusician(payload);
+            showToast('Perfil actualizado', 'Los cambios han sido guardados correctamente.', 'success');
             navigation.goBack();
         } catch (err) {
             setError(err.message);
@@ -81,16 +84,16 @@ const AccountFormScreen = ({ route }) => {
     const submit = async () => {        
         // Validar que se hayan seleccionado coordenadas si se está editando ubicación
         if (schema === 'location' && locationData.location && (!locationData.latitude || !locationData.longitude)) {
-            Alert.alert('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.');
+            showToast('Ubicación no válida', 'Por favor, selecciona una ubicación de las sugerencias.', 'warning');
             return;
         }
-        
+
         try {
             const errors = await formik.validateForm();
             if (Object.keys(errors).length === 0) {
                 formik.handleSubmit();
             } else {
-                Alert.alert('Errores en el formulario', 'Revisa los campos antes de guardar.');
+                showToast('Errores en el formulario', 'Revisa los campos antes de guardar.', 'warning');
             }
         } catch (err) {
             console.error('validateForm error', err);

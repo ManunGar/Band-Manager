@@ -280,6 +280,7 @@ const addEventToBand = async (req, res) => {
         const event = await Event.create({
             name: req.body.name,
             date: req.body.date,
+            endDate: req.body.endDate,
             initialTime: req.body.initialTime,
             endTime: req.body.endTime,
             location: req.body.location,
@@ -321,6 +322,8 @@ const addEventToBand = async (req, res) => {
         res.status(500).send({ error: 'Error adding event to band' });
     }
 };
+
+// ==================== Auxiliary Functions ====================
 
 // Function to generate a unique band code
 const _generateUniqueBandCode = async () => {

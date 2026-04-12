@@ -7,55 +7,55 @@ module.exports = {
       // ========== Event 2: Cabalgata de Reyes (Banda 1) - Solo metales y percusión ==========
       {
         eventId: 2,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 18, // Fliscorno
+        instrumentId: 24, // Fliscorno
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 19, // Corneta
+        instrumentId: 25, // Corneta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 14, // Trombón
+        instrumentId: 20, // Trombón
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 15, // Tuba
+        instrumentId: 21, // Tuba
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 16, // Bombardino
+        instrumentId: 22, // Bombardino
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 20, // Percusión
+        instrumentId: 26, // Percusión
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 21, // Tambor
+        instrumentId: 27, // Tambor
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 2,
-        instrumentId: 22, // Bombo
+        instrumentId: 28, // Bombo
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -63,49 +63,49 @@ module.exports = {
       // ========== Event 9: Pasacalles (Banda 2) - Solo metales y percusión ==========
       {
         eventId: 9,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 9,
-        instrumentId: 18, // Fliscorno
+        instrumentId: 24, // Fliscorno
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 9,
-        instrumentId: 19, // Corneta
+        instrumentId: 25, // Corneta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 9,
-        instrumentId: 13, // Trompa
+        instrumentId: 19, // Trompa
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 9,
-        instrumentId: 14, // Trombón
+        instrumentId: 20, // Trombón
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 9,
-        instrumentId: 16, // Bombardino
+        instrumentId: 22, // Bombardino
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 9,
-        instrumentId: 20, // Percusión
+        instrumentId: 26, // Percusión
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 9,
-        instrumentId: 21, // Tambor
+        instrumentId: 27, // Tambor
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -113,31 +113,31 @@ module.exports = {
       // ========== Event 17: Misa del Gallo (Banda 3) - Solo instrumentos suaves ==========
       {
         eventId: 17,
-        instrumentId: 2, // Flauta
+        instrumentId: 3, // Flauta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 17,
-        instrumentId: 4, // Oboe
+        instrumentId: 5, // Oboe
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 17,
-        instrumentId: 5, // Clarinete
+        instrumentId: 6, // Clarinete
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 17,
-        instrumentId: 13, // Trompa
+        instrumentId: 19, // Trompa
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 17,
-        instrumentId: 14, // Trombón
+        instrumentId: 20, // Trombón
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -145,49 +145,49 @@ module.exports = {
       // ========== Event 19: Día de Andalucía Pasacalles (Banda 3) - Metales y percusión ==========
       {
         eventId: 19,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 19,
-        instrumentId: 19, // Corneta
+        instrumentId: 25, // Corneta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 19,
-        instrumentId: 13, // Trompa
+        instrumentId: 19, // Trompa
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 19,
-        instrumentId: 14, // Trombón
+        instrumentId: 20, // Trombón
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 19,
-        instrumentId: 15, // Tuba
+        instrumentId: 21, // Tuba
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 19,
-        instrumentId: 20, // Percusión
+        instrumentId: 26, // Percusión
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 19,
-        instrumentId: 21, // Tambor
+        instrumentId: 27, // Tambor
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 19,
-        instrumentId: 22, // Bombo
+        instrumentId: 28, // Bombo
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -195,49 +195,49 @@ module.exports = {
       // ========== Event 5: Ensayo parcial Banda 1 - Solo maderas ==========
       {
         eventId: 5,
-        instrumentId: 2, // Flauta
+        instrumentId: 3, // Flauta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 5,
-        instrumentId: 3, // Flautín
+        instrumentId: 4, // Flautín
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 5,
-        instrumentId: 4, // Oboe
+        instrumentId: 5, // Oboe
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 5,
-        instrumentId: 5, // Clarinete
+        instrumentId: 6, // Clarinete
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 5,
-        instrumentId: 7, // Clarinete bajo
+        instrumentId: 9, // Clarinete bajo
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 5,
-        instrumentId: 8, // Saxofón alto
+        instrumentId: 13, // Saxofón alto
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 5,
-        instrumentId: 10, // Saxofón tenor
+        instrumentId: 15, // Saxofón tenor
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 5,
-        instrumentId: 11, // Saxofón barítono
+        instrumentId: 16, // Saxofón barítono
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -245,43 +245,43 @@ module.exports = {
       // ========== Event 14: Ensayo parcial Banda 2 - Solo metales ==========
       {
         eventId: 14,
-        instrumentId: 17, // Trompeta
+        instrumentId: 23, // Trompeta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 14,
-        instrumentId: 18, // Fliscorno
+        instrumentId: 24, // Fliscorno
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 14,
-        instrumentId: 19, // Corneta
+        instrumentId: 25, // Corneta
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 14,
-        instrumentId: 13, // Trompa
+        instrumentId: 19, // Trompa
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 14,
-        instrumentId: 14, // Trombón
+        instrumentId: 20, // Trombón
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 14,
-        instrumentId: 16, // Bombardino
+        instrumentId: 22, // Bombardino
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 14,
-        instrumentId: 15, // Tuba
+        instrumentId: 21, // Tuba
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -289,43 +289,43 @@ module.exports = {
       // ========== Event 22: Ensayo parcial Banda 3 - Solo saxofones y clarinetes ==========
       {
         eventId: 22,
-        instrumentId: 5, // Clarinete
+        instrumentId: 6, // Clarinete
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 22,
-        instrumentId: 6, // Requinto
+        instrumentId: 8, // Requinto
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 22,
-        instrumentId: 7, // Clarinete bajo
+        instrumentId: 9, // Clarinete bajo
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 22,
-        instrumentId: 8, // Saxofón alto
+        instrumentId: 13, // Saxofón alto
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 22,
-        instrumentId: 9, // Saxofón soprano
+        instrumentId: 14, // Saxofón soprano
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 22,
-        instrumentId: 10, // Saxofón tenor
+        instrumentId: 15, // Saxofón tenor
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 22,
-        instrumentId: 11, // Saxofón barítono
+        instrumentId: 16, // Saxofón barítono
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -333,19 +333,19 @@ module.exports = {
       // ========== Event 15: Ensayo parcial Banda 2 - Solo percusión ==========
       {
         eventId: 15,
-        instrumentId: 20, // Percusión
+        instrumentId: 26, // Percusión
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 15,
-        instrumentId: 21, // Tambor
+        instrumentId: 27, // Tambor
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         eventId: 15,
-        instrumentId: 22, // Bombo
+        instrumentId: 28, // Bombo
         createdAt: new Date(),
         updatedAt: new Date()
       }

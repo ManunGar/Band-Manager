@@ -15,6 +15,7 @@ export const EventFormProvider = ({ children }) => {
         eventId: null, // Track which event this data belongs to
         eventType: 'performances',
         date: '',
+        endDate: '',
         initialTime: '',
         endTime: '',
         name: '',
@@ -37,6 +38,7 @@ export const EventFormProvider = ({ children }) => {
             eventId: null,
             eventType: 'performances',
             date: '',
+            endDate: '',
             initialTime: '',
             endTime: '',
             name: '',

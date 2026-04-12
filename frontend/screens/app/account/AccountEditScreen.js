@@ -1,80 +1,134 @@
 import { useNavigation } from '@react-navigation/native';
 import moment from 'moment/moment';
 import { useContext } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import BackIcon from '../../../components/icons/BackIcons';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Input from '../../../components/Input';
 import TopContainer from '../../../components/TopContainer';
 import { AuthContext } from '../../../contexts/AuthContext';
 import * as GlobalStyle from '../../../GlobalStyle';
 
 const AccountEditScreen = () => {
     const { user } = useContext(AuthContext);
+    const navigation = useNavigation();
 
     const formatDate = (date) => {
         return date ? moment(date, 'YYYY-MM-DD').format('DD/MM/YYYY') : '';
     }
 
+    const goToForm = (label, value, keyboardType, schema) => {
+        navigation.navigate('AccountForm', { label, value, keyboardType, schema });
+    }
+
     return (
-        <ScrollView>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <TopContainer
                 title="Editar Perfil"
                 editEnabled={false}
-                style={{ marginBottom: 10 }} />
-            <View style={styles.form}>
-                <FormRow label="Nombre completo" value={user.full_name} schema="full_name" />
-                <FormRow label="Correo electrónico" value={user.email} keyboardType="email-address" schema="email" />
-                <FormRow label="Teléfono" value={user.phone} keyboardType="numeric" schema="phone" />
-                <FormRow label="Fecha de nacimiento" value={formatDate(user.birthday)} keyboardType="datetime" schema="birthday"/>
-                <FormRow label="Ubicación" value={user.location} schema="location" />
-                <FormRow label="Nombre de usuario" value={user.username} schema="username" />
+                style={{ marginBottom: 0 }}
+            />
+
+            <View style={styles.sections}>
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Datos Personales</Text>
+                    <View style={styles.card}>
+                        <View style={styles.fieldWrapper}>
+                            <Input
+                                label="Nombre completo"
+                                value={user.full_name}
+                                onPress={() => goToForm('Nombre completo', user.full_name, 'default', 'full_name')}
+                            />
+                        </View>
+                        <View style={styles.fieldWrapper}>
+                            <Input
+                                label="Fecha de nacimiento"
+                                value={formatDate(user.birthday)}
+                                keyboardType="datetime"
+                                onPress={() => goToForm('Fecha de nacimiento', user.birthday, 'datetime', 'birthday')}
+                            />
+                        </View>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Contacto</Text>
+                    <View style={styles.card}>
+                        <View style={styles.fieldWrapper}>
+                            <Input
+                                label="Teléfono"
+                                value={user.phone}
+                                keyboardType="numeric"
+                                onPress={() => goToForm('Teléfono', user.phone, 'numeric', 'phone')}
+                            />
+                        </View>
+                        <View style={styles.fieldWrapper}>
+                            <Input
+                                label="Ubicación"
+                                value={user.location}
+                                onPress={() => goToForm('Ubicación', user.location, 'default', 'location')}
+                            />
+                        </View>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Cuenta</Text>
+                    <View style={styles.card}>
+                        <View style={styles.fieldWrapper}>
+                            <Input
+                                label="Correo electrónico"
+                                value={user.email}
+                                keyboardType="email-address"
+                                onPress={() => goToForm('Correo electrónico', user.email, 'email-address', 'email')}
+                            />
+                        </View>
+                        <View style={styles.fieldWrapper}>
+                            <Input
+                                label="Nombre de usuario"
+                                value={user.username}
+                                onPress={() => goToForm('Nombre de usuario', user.username, 'default', 'username')}
+                            />
+                        </View>
+                    </View>
+                </View>
             </View>
         </ScrollView>
-    )
-}
-
-const FormRow = ({label, value, alt, keyboardType, schema}) => {
-    const navigation = useNavigation();
-
-    return (
-        <TouchableOpacity style={styles.formRow} onPress={() => navigation.navigate('AccountForm', {label, value, keyboardType, schema})}>
-            <Text style={{ fontFamily: 'Oswald_500', fontSize: 16, flex: 1, maxWidth: '45%' }}>
-                {label}
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, alignContent: 'center', maxWidth: '55%' }}>
-                <Text style={{ fontFamily: 'Oswald_400', fontSize: 14, 
-                        color: value ? GlobalStyle.black : GlobalStyle.darkGray, maxWidth: '85%' }} numberOfLines={1} ellipsizeMode="tail">
-                    {value || alt || 'No especificado'}
-                </Text>
-                <BackIcon
-                    width={8}
-                    fill={GlobalStyle.darkGray}
-                    style={{ transform: [{ rotate: '180deg' }], marginBottom: -2 }} />
-            </View>
-        </TouchableOpacity>
     )
 }
 
 export default AccountEditScreen
 
 const styles = StyleSheet.create({
-    form: {
+    container: {
+        flex: 1,
+        backgroundColor: GlobalStyle.lightBackground,
+    },
+    content: {
+        paddingBottom: 40,
+    },
+    sections: {
         paddingHorizontal: 20,
-        marginHorizontal: 10,
-        paddingVertical: 20,
-        gap: 25,
-        borderRadius: 10,
-        alignContent: 'center',
-        backgroundColor: GlobalStyle.white,
+        paddingTop: 24,
+        gap: 24,
     },
-    formRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingBottom: 10,
+    section: {
+        gap: 10,
     },
-    errorText: {
-        color: GlobalStyle.red,
+    sectionTitle: {
         fontFamily: 'Oswald_500',
-        fontSize: 14,
-    }
+        fontSize: 13,
+        textTransform: 'uppercase',
+        letterSpacing: 1.2,
+        color: GlobalStyle.gray,
+        paddingHorizontal: 4,
+    },
+    card: {
+        backgroundColor: GlobalStyle.white,
+        borderRadius: 16,
+        paddingHorizontal: 20,
+        paddingTop: 8,
+        paddingBottom: 20,
+    },
+    fieldWrapper: {
+        paddingTop: 44,
+    },
 })

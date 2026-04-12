@@ -41,4 +41,48 @@ const addInstruments = [
         .custom(_areLevelsValid)
 ]
 
-export { addInstruments };
+const updateVisibility = [
+    check('isProfilePrivate')
+        .exists().withMessage('isProfilePrivate is required')
+        .isBoolean().withMessage('isProfilePrivate must be a boolean value')
+]
+
+const listMusicians = [
+    check('search')
+        .optional()
+        .isString().withMessage('search must be a string')
+        .isLength({ max: 100 }).withMessage('search must have at most 100 characters'),
+    check('instrument')
+        .optional()
+        .isInt({ gt: 0 }).withMessage('instrument must be a positive integer'),
+    check('offset')
+        .optional()
+        .isInt({ min: 0 }).withMessage('offset must be a non-negative integer'),
+    check('limit')
+        .optional()
+        .isInt({ min: 1, max: 50 }).withMessage('limit must be an integer between 1 and 50')
+]
+
+const getProfile = [
+    check('musicianId')
+        .exists().withMessage('musicianId is required')
+        .isInt({ gt: 0 }).withMessage('musicianId must be a positive integer')
+]
+
+const listContracts = [
+    check('musicianId')
+        .exists().withMessage('musicianId is required')
+        .isInt({ gt: 0 }).withMessage('musicianId must be a positive integer'),
+    check('offset')
+        .optional()
+        .isInt({ min: 0 }).withMessage('offset must be a non-negative integer'),
+    check('limit')
+        .optional()
+        .isInt({ min: 1, max: 50 }).withMessage('limit must be an integer between 1 and 50'),
+    check('instrument')
+        .optional()
+        .isInt({ gt: 0 }).withMessage('instrument must be a positive integer')
+]
+
+export { addInstruments, getProfile, listContracts, listMusicians, updateVisibility };
+

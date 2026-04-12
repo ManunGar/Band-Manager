@@ -1,7 +1,7 @@
 import { Op, Sequelize } from "sequelize";
 import { isBandMember } from "../middleware/BandMiddleware.js";
 import { addFilenameToBody, deleteFileFromCloudinary } from "../middleware/FileHandlerMiddleware.js";
-import { Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
+import { Agreement, Application, Band, Component, Event, Instrument, Musician, Performance, Rehearsal, User } from "../models/sequelize.js";
 
 // ==================== Controller Functions ====================
 
@@ -26,41 +26,29 @@ const listEvents = async (req, res) => {
         // Get musician's components with their instruments
         const musicianComponents = await _getMusicianComponents(musicianId);
 
-        // Build where clause
-        const where = {
-            [Op.and]: [
-                { bandId: _buildBandIdFilter(bandIdNumber, musicianComponents) },
-                _buildTimeScopeFilter(timeScope)
-            ]
-        };
-
-        // Build include array and order
-        const include = _buildEventIncludes(type);
-        const order = timeScope === 'past' ? [['date', 'DESC']] : [['date', 'ASC']];
-
-        // Fetch events
-        const events = await Event.findAll({ where, include, order });
-
-        // Filter events based on component's participation or admin status
-        const filteredEvents = events.filter(event => {
-            const component = musicianComponents.find(c => c.bandId === event.bandId);
-            if (!component) return false;
-            
-            // If component is administrator, they can see all events
-            if (component.administrator) return true;
-            
-            // Otherwise, check if component participates in the event
-            return _checkComponentParticipation(component, event);
+        const bandEventsWithAttendance = await _getBandVisibleEvents({
+            bandIdNumber,
+            musicianComponents,
+            timeScope,
+            type,
         });
 
-        // Add attendance information for each event
-        const eventsWithAttendance = filteredEvents.map(event => {
-            const eventJson = event.toJSON();
-            const component = musicianComponents.find(c => c.bandId === event.bandId);
-            return _addAttendanceInfo(eventJson, component);
+        // Keep existing behavior for band-specific listing.
+        if (bandIdNumber) {
+            return res.status(200).send(bandEventsWithAttendance);
+        }
+
+        const contractEventsWithAttendance = await _getAcceptedContractEvents({
+            musicianId,
+            musicianComponents,
+            timeScope,
+            type,
         });
 
-        res.status(200).send(eventsWithAttendance);
+        const mergedEvents = _mergeEventsWithPriority(bandEventsWithAttendance, contractEventsWithAttendance);
+        const orderedEvents = _sortEventsByTimeScope(mergedEvents, timeScope);
+
+        res.status(200).send(orderedEvents);
     } catch (error) {
         console.error('Error listing events:', error);
         res.status(500).send({ error: 'Error listing events' });
@@ -87,10 +75,12 @@ const getEvent = async (req, res) => {
                 include: {
                     model: Component,
                     as: 'components',
+                    required: false,
                     where: { musicianId },
                     include: {
                         model: Instrument,
                         as: 'instruments',
+                        required: false,
                         through: {
                             where: {
                                 principal: true
@@ -120,18 +110,22 @@ const getEvent = async (req, res) => {
         }
 
         const eventJson = event.toJSON();
-        const component = eventJson.band.components[0];
+        const component = eventJson?.band?.components?.[0];
+        const hasAcceptedContract = await _hasAcceptedContractForEvent(eventId, musicianId);
         
         // Check if component is administrator or participates in the event
-        const isAdmin = component.administrator;
-        const participates = _checkComponentParticipation(component, eventJson);
+        const isAdmin = Boolean(component?.administrator);
+        const participates = component ? _checkComponentParticipation(component, eventJson) : false;
         
-        if (!isAdmin && !participates) {
+        if (!isAdmin && !participates && !hasAcceptedContract) {
             return res.status(403).send({ error: 'No tienes permisos para ver este evento' });
         }
         
-        // Add attendance information using the auxiliary function
-        _addAttendanceInfo(eventJson, component);
+        if (component && (isAdmin || participates)) {
+            _addAttendanceInfo(eventJson, component);
+        } else if (hasAcceptedContract) {
+            delete eventJson.attendees;
+        }
         
         res.status(200).send(eventJson);
     } catch (error) {
@@ -331,7 +325,10 @@ const getEventAttendance = async (req, res) => {
             }
         }
 
-        res.status(200).send({ componentsAttendance, attendanceByInstrument});
+        const componentMusicianIds = new Set(event.band.components.map(component => component.musicianId));
+        const contractedMusicians = await _getContractedMusiciansForEvent(eventId, componentMusicianIds);
+
+        res.status(200).send({ componentsAttendance, attendanceByInstrument, contractedMusicians });
     } catch (error) {
         console.error('Error retrieving event attendance:', error);
         res.status(500).send({ error: 'Error retrieving event attendance' });
@@ -412,6 +409,258 @@ const _getMusicianComponents = async (musicianId) => {
     });
 };
 
+// Get contracted musicians for an event, excluding those who are already components (to avoid duplicates in attendance)
+const _getContractedMusiciansForEvent = async (eventId, excludedMusicianIds = new Set()) => {
+    const acceptedApplications = await Application.findAll({
+        where: { status: 'accepted' },
+        include: [{
+            model: Agreement,
+            as: 'agreement',
+            required: true,
+            include: [{
+                model: Performance,
+                as: 'performance',
+                required: true,
+                where: { eventId }
+            }, {
+                model: Instrument,
+                as: 'instrument',
+                required: false,
+                attributes: ['id', 'name', 'image']
+            }]
+        }, {
+            model: Musician,
+            as: 'musician',
+            required: true,
+            attributes: ['id'],
+            include: {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'full_name', 'profile_picture']
+            }
+        }],
+        order: [[{ model: Musician, as: 'musician' }, { model: User, as: 'user' }, 'full_name', 'ASC']]
+    });
+
+    const contractedByMusicianId = new Map();
+
+    for (const application of acceptedApplications) {
+        const musicianId = application?.musicianId;
+
+        if (!musicianId || excludedMusicianIds.has(musicianId) || contractedByMusicianId.has(musicianId)) {
+            continue;
+        }
+
+        contractedByMusicianId.set(musicianId, {
+            applicationId: application.id,
+            musicianId,
+            agreementId: application.agreementId,
+            instrument: application.agreement?.instrument || null,
+            musician: application.musician || null,
+        });
+    }
+
+    return [...contractedByMusicianId.values()];
+};
+
+// Get events visible to the musician based on their band memberships and participation, including attendance info
+const _getBandVisibleEvents = async ({ bandIdNumber, musicianComponents, timeScope, type }) => {
+    const where = {
+        [Op.and]: [
+            { bandId: _buildBandIdFilter(bandIdNumber, musicianComponents) },
+            _buildTimeScopeFilter(timeScope)
+        ]
+    };
+
+    const include = _buildEventIncludes(type);
+    const order = _buildEventsOrder(timeScope);
+    const events = await Event.findAll({ where, include, order });
+
+    const filteredEvents = events.filter(event => {
+        const component = musicianComponents.find(c => c.bandId === event.bandId);
+        if (!component) return false;
+
+        if (component.administrator) return true;
+
+        return _checkComponentParticipation(component, event);
+    });
+
+    return filteredEvents.map(event => {
+        const eventJson = event.toJSON();
+        const component = musicianComponents.find(c => c.bandId === event.bandId);
+        return _addAttendanceInfo(eventJson, component);
+    });
+};
+
+// Get events for which the musician has an accepted contract (performance) and is not a component, including attendance info if they participate as a contracted musician
+const _getAcceptedContractEvents = async ({ musicianId, musicianComponents, timeScope, type }) => {
+    // Contract events always come from performances.
+    if (type === 'rehearsals') {
+        return [];
+    }
+
+    const acceptedContractEventIds = await _getAcceptedContractEventIds(musicianId);
+
+    if (acceptedContractEventIds.length === 0) {
+        return [];
+    }
+
+    const where = {
+        [Op.and]: [
+            { id: { [Op.in]: acceptedContractEventIds } },
+            _buildTimeScopeFilter(timeScope)
+        ]
+    };
+
+    const include = _buildEventIncludes(type);
+    const order = _buildEventsOrder(timeScope);
+    const events = await Event.findAll({ where, include, order });
+
+    return events.map(event => {
+        const eventJson = event.toJSON();
+        const component = musicianComponents.find(c => c.bandId === event.bandId);
+
+        if (component) {
+            return _addAttendanceInfo(eventJson, component);
+        }
+
+        delete eventJson.attendees;
+        return eventJson;
+    });
+};
+
+// Get event IDs for which the musician has an accepted contract (performance)
+const _getAcceptedContractEventIds = async (musicianId) => {
+    const acceptedApplications = await Application.findAll({
+        where: {
+            musicianId,
+            status: 'accepted'
+        },
+        attributes: ['id'],
+        include: {
+            model: Agreement,
+            as: 'agreement',
+            required: true,
+            attributes: ['id'],
+            include: {
+                model: Performance,
+                as: 'performance',
+                required: true,
+                attributes: ['eventId']
+            }
+        }
+    });
+
+    const eventIds = acceptedApplications
+        .map((application) => application?.agreement?.performance?.eventId)
+        .filter((eventId) => Number.isInteger(eventId));
+
+    return [...new Set(eventIds)];
+};
+
+// Check if the musician has an accepted contract for the event (used to determine access and attendance info for contracted musicians who are not components)
+const _hasAcceptedContractForEvent = async (eventId, musicianId) => {
+    const acceptedApplication = await Application.findOne({
+        where: {
+            musicianId,
+            status: 'accepted'
+        },
+        attributes: ['id'],
+        include: {
+            model: Agreement,
+            as: 'agreement',
+            required: true,
+            attributes: ['id'],
+            include: {
+                model: Performance,
+                as: 'performance',
+                required: true,
+                where: { eventId },
+                attributes: ['id']
+            }
+        }
+    });
+
+    return Boolean(acceptedApplication);
+};
+
+// Merge two lists of events, giving priority to the first list (band events) in case of duplicates, and ensuring a deterministic order
+const _mergeEventsWithPriority = (priorityEvents = [], secondaryEvents = []) => {
+    const eventsById = new Map();
+
+    for (const event of secondaryEvents) {
+        eventsById.set(event.id, event);
+    }
+
+    for (const event of priorityEvents) {
+        eventsById.set(event.id, event);
+    }
+
+    return [...eventsById.values()];
+};
+
+// Build order array for events query based on timeScope
+const _buildEventsOrder = (timeScope) => {
+    if (timeScope === 'past') {
+        return [['endDate', 'DESC'], ['endTime', 'DESC']];
+    }
+
+    return [['date', 'ASC'], ['initialTime', 'ASC']];
+};
+
+// Sort events by their date and time based on the timeScope (for past events, sort by end date/time; for upcoming events, sort by start date/time), ensuring a deterministic order even when dates are missing or invalid
+const _sortEventsByTimeScope = (events = [], timeScope) => {
+    const sortedEvents = [...events];
+
+    sortedEvents.sort((a, b) => {
+        const aDateTime = _getComparableEventDate(a, timeScope);
+        const bDateTime = _getComparableEventDate(b, timeScope);
+
+        // Keep a deterministic order when one of the dates cannot be parsed.
+        if (!Number.isFinite(aDateTime) && !Number.isFinite(bDateTime)) return 0;
+        if (!Number.isFinite(aDateTime)) return 1;
+        if (!Number.isFinite(bDateTime)) return -1;
+
+        if (timeScope === 'past') {
+            return bDateTime - aDateTime;
+        }
+
+        return aDateTime - bDateTime;
+    });
+
+    return sortedEvents;
+};
+
+// Get a comparable timestamp for the event based on timeScope (for past events, use end date/time; for upcoming events, use start date/time), handling missing or invalid dates gracefully
+const _getComparableEventDate = (event, timeScope) => {
+    const baseDate = timeScope === 'past'
+        ? (event.endDate || event.date)
+        : event.date;
+
+    const baseTime = timeScope === 'past'
+        ? (event.endTime || event.initialTime || '00:00:00')
+        : (event.initialTime || '00:00:00');
+
+    const comparableDate = new Date(baseDate);
+    if (Number.isNaN(comparableDate.getTime())) {
+        return Number.NaN;
+    }
+
+    const [hours, minutes, seconds] = String(baseTime || '00:00:00')
+        .slice(0, 8)
+        .split(':')
+        .map(Number);
+
+    comparableDate.setHours(
+        Number.isFinite(hours) ? hours : 0,
+        Number.isFinite(minutes) ? minutes : 0,
+        Number.isFinite(seconds) ? seconds : 0,
+        0
+    );
+
+    return comparableDate.getTime();
+};
+
 // Build bandId filter for events query
 const _buildBandIdFilter = (bandIdNumber, musicianComponents) => {
     if (bandIdNumber) {
@@ -423,27 +672,14 @@ const _buildBandIdFilter = (bandIdNumber, musicianComponents) => {
 
 // Build timeScope filter for events query
 const _buildTimeScopeFilter = (timeScope) => {
-    let filter;
+    const eventEndDateTime = "TIMESTAMP(DATE(COALESCE(`Event`.`endDate`, `Event`.`date`)), COALESCE(`Event`.`endTime`, `Event`.`initialTime`))";
 
     if (timeScope === 'past') {
-        // Past: dates before today, or today with initialTime earlier than current DB time
-        filter = {
-            [Op.or]: [
-                Sequelize.literal("DATE(`Event`.`date`) < CURDATE()"),
-                Sequelize.literal("DATE(`Event`.`date`) = CURDATE() AND `Event`.`initialTime` < CURTIME()")
-            ]
-        };
-    } else {
-        // Upcoming: dates after today, or today with initialTime >= current DB time
-        filter = {
-            [Op.or]: [
-                Sequelize.literal("DATE(`Event`.`date`) > CURDATE()"),
-                Sequelize.literal("DATE(`Event`.`date`) = CURDATE() AND `Event`.`initialTime` >= CURTIME()")
-            ]
-        };
+        return Sequelize.literal(`${eventEndDateTime} < NOW()`);
     }
 
-    return filter;
+    // Upcoming includes events that have not finished yet.
+    return Sequelize.literal(`${eventEndDateTime} >= NOW()`);
 };
 
 // Build include array for events query based on type

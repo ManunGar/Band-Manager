@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "download": "Download",
+    "downloadApk": "Download APK"
+  },
+  "hero": {
+    "tagline": "Your Band. Your Musicians. Your Stage.",
+    "description": "The all-in-one platform for managing your band, scheduling rehearsals and performances, and hiring the right musicians for every event.",
+    "downloadButton": "Download for Android"
+  },
+  "pillars": {
+    "label": "Two Pillars",
+    "heading": "Everything Your Band Needs",
+    "subheading": "From day-to-day band operations to one-off event hires — one app covers it all.",
+    "bandManagement": {
+      "title": "Band Management",
+      "subtitle": "Full control. Zero friction.",
+      "description": "Create and manage your band, schedule rehearsals and performances, track member attendance, and handle everything from a single place.",
+      "bullets": [
+        "Event scheduling & calendar",
+        "Attendance tracking per event",
+        "Member roles & permissions",
+        "Unique band join codes"
+      ]
+    },
+    "musicianHiring": {
+      "title": "Musician Hiring",
+      "subtitle": "Find the right player. Every time.",
+      "description": "Post open agreements for external musicians, manage applications, and formalize collaborations with built-in contract and payment details.",
+      "bullets": [
+        "Open hiring agreements",
+        "Application & review flow",
+        "Payment & fee tracking",
+        "Instrument-based filtering"
+      ]
+    }
+  },
+  "featureGrid": {
+    "label": "Features",
+    "heading": "Everything In One Place",
+    "subheading": "From profiles to payments, Band Manager covers the full lifecycle of band management and musician hiring.",
+    "items": [
+      {
+        "id": "musician-profiles",
+        "title": "Musician Profiles",
+        "description": "Instruments, proficiency levels, and personal info all in one place."
+      },
+      {
+        "id": "band-creation",
+        "title": "Band Creation",
+        "description": "Create bands, generate unique join codes, and manage members easily."
+      },
+      {
+        "id": "event-scheduling",
+        "title": "Event Scheduling",
+        "description": "Plan rehearsals and performances with dates, times, and locations."
+      },
+      {
+        "id": "attendance-tracking",
+        "title": "Attendance Tracking",
+        "description": "Know who confirmed, who declined, and who has not responded yet."
+      },
+      {
+        "id": "hire-musicians",
+        "title": "Hire Musicians",
+        "description": "Post open positions and accept applications from external musicians."
+      },
+      {
+        "id": "agreements",
+        "title": "Agreements",
+        "description": "Formalize contracts with payment details, role, and performance info."
+      },
+      {
+        "id": "role-management",
+        "title": "Role Management",
+        "description": "Admin and member roles with fine-grained access control per band."
+      },
+      {
+        "id": "media-uploads",
+        "title": "Media Uploads",
+        "description": "Profile pictures and event images stored securely via Cloudinary."
+      }
+    ]
+  },
+  "howItWorks": {
+    "label": "How It Works",
+    "heading": "Up And Running In Minutes",
+    "subheading": "Four simple steps to go from signup to a fully managed band.",
+    "steps": [
+      {
+        "id": "step-1",
+        "number": "01",
+        "title": "Create Your Profile",
+        "description": "Sign up and build your musician profile with your instruments and proficiency levels."
+      },
+      {
+        "id": "step-2",
+        "number": "02",
+        "title": "Join or Create a Band",
+        "description": "Start a new band and invite members with a unique code, or join an existing one."
+      },
+      {
+        "id": "step-3",
+        "number": "03",
+        "title": "Schedule & Attend Events",
+        "description": "Add rehearsals and performances, confirm attendance, and track who shows up."
+      },
+      {
+        "id": "step-4",
+        "number": "04",
+        "title": "Hire or Get Hired",
+        "description": "Post open agreements for external musicians, or apply as a musician for performances."
+      }
+    ]
+  },
+  "download": {
+    "label": "Available Now",
+    "subtitle": "Free. No subscription. Direct APK download for Android.",
+    "downloadButton": "Download APK",
+    "downloadAriaLabel": "Download Band Manager APK for Android",
+    "androidBadge": "Android",
+    "disclaimer": "Not available on Google Play Store — sideloading required.",
+    "openSource": "Open source · University final project"
+  },
+  "footer": {
+    "tagline": "For musicians, by musicians.",
+    "projectGroup": "Project",
+    "aboutGroup": "About",
+    "downloadApk": "Download APK",
+    "featuresLink": "Features",
+    "copyright": "University Final Project"
+  }
+}

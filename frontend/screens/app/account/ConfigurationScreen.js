@@ -48,7 +48,7 @@ const ConfigurationScreen = ({ route }) => {
                     />
                     <View style={styles.musicianInfoContainer}>
                         <Text style={styles.nameText}>{musician?.full_name}</Text>
-                        <Text style={styles.usernameText}>@{musician?.username}</Text>
+                        <Text style={styles.usernameText}>{musician?.email}</Text>
                         <LinkText onPress={() => navigation.navigate('AccountEdit')}>Editar Perfil</LinkText>
                     </View>
                 </View>
@@ -106,7 +106,7 @@ const ConfigurationScreen = ({ route }) => {
                 <View style={styles.sectionContainer}>
                     <View style={styles.subSectionContainer}>
                         <Text style={styles.subSectionTitle}>Sobre la aplicación</Text>
-                        <Text style={styles.subSectionText}>Versión 0.1.2</Text>
+                        <Text style={styles.subSectionText}>Versión 0.2.0</Text>
                     </View>
                 </View>
             </ScrollView>

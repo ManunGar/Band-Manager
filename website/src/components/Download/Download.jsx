@@ -8,7 +8,7 @@ import { FaAndroid } from 'react-icons/fa';
 import { FiAlertCircle } from 'react-icons/fi';
 import styles from './Download.module.css';
 
-const GITHUB_RELEASE_APK_URL = 'https://github.com/ManunGar/Band-Manager-APK/releases/download/v0.2.0/band-manager-v0.2.0.apk';
+const GITHUB_RELEASE_APK_URL = 'https://github.com/ManunGar/Band-Manager-APK/releases/download/v0.2.0.1/band-manager-v0.2.0.1.apk';
 
 function Download() {
   const { t } = useTranslation();

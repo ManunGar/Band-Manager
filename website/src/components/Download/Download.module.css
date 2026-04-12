@@ -98,6 +98,12 @@
   box-shadow: 0 0 56px rgba(246, 171, 51, 0.45);
 }
 
+.downloadButtonDisabled {
+  opacity: 0.6;
+  pointer-events: none;
+  box-shadow: none;
+}
+
 /* Platform badge row */
 .badges {
   display: flex;

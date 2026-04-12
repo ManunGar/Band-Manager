@@ -10,6 +10,8 @@
 
 # production
 /build
+/public/downloads/*.apk
+/public/downloads/downloads-manifest.json
 
 # misc
 .DS_Store

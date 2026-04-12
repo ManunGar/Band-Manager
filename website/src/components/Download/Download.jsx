@@ -1,9 +1,9 @@
 /* =========================================================
    Download.jsx — Final call-to-action section.
-   Serves the APK directly from public/downloads/.
-   NOTE: Place the APK file at public/downloads/band-manager.apk
+   Serves the latest APK from public/downloads/ using a generated manifest.
    ========================================================= */
 
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaAndroid } from 'react-icons/fa';
 import { FiAlertCircle } from 'react-icons/fi';
@@ -11,6 +11,51 @@ import styles from './Download.module.css';
 
 function Download() {
   const { t } = useTranslation();
+  const [downloadHref, setDownloadHref] = useState(null);
+  const [downloadFileName, setDownloadFileName] = useState('band-manager.apk');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLatestDownload = async () => {
+      try {
+        const response = await fetch(`${process.env.PUBLIC_URL}/downloads/downloads-manifest.json`, {
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Manifest request failed with status ${response.status}`);
+        }
+
+        const manifest = await response.json();
+        const latestHref = manifest?.latestHref;
+        const latestFileName = manifest?.latestFileName;
+
+        if (!isMounted || !latestHref) return;
+
+        setDownloadHref(`${process.env.PUBLIC_URL}${latestHref}`);
+        if (latestFileName) {
+          setDownloadFileName(latestFileName);
+        }
+      } catch (error) {
+        console.error('Could not load latest APK manifest:', error);
+      }
+    };
+
+    loadLatestDownload();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const isDownloadAvailable = Boolean(downloadHref);
+
+  const handleDownloadClick = (event) => {
+    if (!isDownloadAvailable) {
+      event.preventDefault();
+    }
+  };
 
   return (
     <section id="download" className={styles.section}>
@@ -30,13 +75,14 @@ function Download() {
           {/* One-liner pitch */}
           <p className={styles.subtitle}>{t('download.subtitle')}</p>
 
-          {/* Primary download button
-              The `download` attribute triggers a file save dialog.
-              TODO: verify APK is placed at public/downloads/band-manager.apk */}
+          {/* Primary download button. It points to the latest APK listed in downloads-manifest.json. */}
           <a
-            href="https://n8n-production-a7f5.up.railway.app/form/f021fa06-5daa-4dbd-9265-608286a144b9"
-            className={styles.downloadButton}
+            href={downloadHref || '#'}
+            download={isDownloadAvailable ? downloadFileName : undefined}
+            onClick={handleDownloadClick}
+            className={`${styles.downloadButton} ${!isDownloadAvailable ? styles.downloadButtonDisabled : ''}`.trim()}
             aria-label={t('download.downloadAriaLabel')}
+            aria-disabled={!isDownloadAvailable}
           >
             <FaAndroid size={22} />
             {t('download.downloadButton')}

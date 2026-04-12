@@ -76,7 +76,7 @@ const registerMusician = async (req, res) => {
         // Create a new musician associated with the user
         await Musician.create({
             userId: newUser.id,
-            isProfilePrivate: false,
+            isProfilePrivate: true,
         }, { transaction });
         // Handle profile picture upload if provided
         if (req.file) {

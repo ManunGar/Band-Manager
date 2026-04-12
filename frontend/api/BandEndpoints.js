@@ -3,6 +3,34 @@ import { handleError } from "./handleError.js";
 
 const baseUrl = process.env.EXPO_PUBLIC_API_URL; // Adjust the base URL as needed
 
+const isLocalFileUri = (value) => {
+    return typeof value === 'string' && value.trim() !== '' && !/^https?:\/\//i.test(value);
+};
+
+const buildBandEditFormData = (bandData) => {
+    const formData = new FormData();
+
+    ['name', 'location', 'phone', 'type'].forEach((field) => {
+        if (bandData[field] !== undefined && bandData[field] !== null) {
+            formData.append(field, bandData[field]);
+        }
+    });
+
+    if (bandData.delete_profile_picture !== undefined) {
+        formData.append('delete_profile_picture', String(Boolean(bandData.delete_profile_picture)));
+    }
+
+    if (!bandData.delete_profile_picture && isLocalFileUri(bandData.profile_picture)) {
+        formData.append('profile_picture', {
+            uri: bandData.profile_picture,
+            name: `band_${Date.now()}.jpg`,
+            type: 'image/jpeg',
+        });
+    }
+
+    return formData;
+};
+
 // Endpoint to list my bands
 const listMyBands = async () => {
     try {
@@ -43,7 +71,15 @@ const createBand = async (bandData) => {
 // Endpoint to edit band details
 const editBand = async (bandId, bandData) => {
     try {
-        const response = await axios.put(`${baseUrl}/bands/${bandId}`, bandData);
+        const preparedData = buildBandEditFormData(bandData);
+        const response = await axios.put(`${baseUrl}/bands/${bandId}`, preparedData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                transformRequest: (data) => data,
+            }
+        );
         return response.data;
     } catch (error) {
         handleError(error);

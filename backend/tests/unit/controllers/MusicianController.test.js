@@ -48,6 +48,7 @@ const buildMockMusician = (overrides = {}) => ({
 describe('MusicianController', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('getMusicianProfile', () => {

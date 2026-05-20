@@ -18,7 +18,7 @@ vi.mock('../../../src/models/sequelize.js', () => ({
 }));
 
 import ComponentController from '../../../src/controllers/ComponentController.js';
-import { Band, Component } from '../../../src/models/sequelize.js';
+import { Band, Component, Instrument } from '../../../src/models/sequelize.js';
 
 const mockReq = (overrides = {}) => ({
   body: {},
@@ -42,6 +42,7 @@ const buildMockTransaction = () => ({
 describe('ComponentController', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('promoteToAdministrator', () => {
@@ -270,6 +271,103 @@ describe('ComponentController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith(mockComponent);
+    });
+
+    it('devuelve 500 cuando la base de datos falla', async () => {
+      Component.findByPk.mockRejectedValue(new Error('DB error'));
+
+      const req = mockReq({ params: { componentId: '1' } });
+      const res = mockRes();
+
+      await ComponentController.findComponentById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('updateComponentInstruments', () => {
+    it('devuelve 200 cuando actualiza los instrumentos correctamente', async () => {
+      const mockTransaction = {
+        commit: vi.fn().mockResolvedValue(undefined),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      const mockInstrument = { id: 5 };
+      const mockUpdatedComponent = { id: 1, instruments: [mockInstrument] };
+      const mockComponent = {
+        id: 1,
+        setInstruments: vi.fn().mockResolvedValue(true),
+        addInstrument: vi.fn().mockResolvedValue(true),
+        reload: vi.fn().mockResolvedValue(mockUpdatedComponent)
+      };
+
+      Component.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Component.findByPk.mockResolvedValue(mockComponent);
+      Instrument.findByPk.mockResolvedValue(mockInstrument);
+
+      const req = mockReq({
+        params: { componentId: '1' },
+        body: { instruments: { '5': true } }
+      });
+      const res = mockRes();
+
+      await ComponentController.updateComponentInstruments(req, res);
+
+      expect(mockComponent.setInstruments).toHaveBeenCalledWith([], expect.any(Object));
+      expect(mockComponent.addInstrument).toHaveBeenCalled();
+      expect(mockTransaction.commit).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Component instruments updated successfully' })
+      );
+    });
+
+    it('devuelve 200 cuando el instrumento no existe (lo omite)', async () => {
+      const mockTransaction = {
+        commit: vi.fn().mockResolvedValue(undefined),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      const mockUpdatedComponent = { id: 1, instruments: [] };
+      const mockComponent = {
+        id: 1,
+        setInstruments: vi.fn().mockResolvedValue(true),
+        addInstrument: vi.fn(),
+        reload: vi.fn().mockResolvedValue(mockUpdatedComponent)
+      };
+
+      Component.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Component.findByPk.mockResolvedValue(mockComponent);
+      Instrument.findByPk.mockResolvedValue(null);
+
+      const req = mockReq({
+        params: { componentId: '1' },
+        body: { instruments: { '99': true } }
+      });
+      const res = mockRes();
+
+      await ComponentController.updateComponentInstruments(req, res);
+
+      expect(mockComponent.addInstrument).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('devuelve 500 y hace rollback cuando la base de datos falla', async () => {
+      const mockTransaction = {
+        commit: vi.fn(),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      Component.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Component.findByPk.mockRejectedValue(new Error('DB error'));
+
+      const req = mockReq({
+        params: { componentId: '1' },
+        body: { instruments: { '5': true } }
+      });
+      const res = mockRes();
+
+      await ComponentController.updateComponentInstruments(req, res);
+
+      expect(mockTransaction.rollback).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(500);
     });
   });
 });

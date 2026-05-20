@@ -27,6 +27,7 @@ const mockRes = () => {
 describe('ComponentMiddleware', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('isInTheSameBand', () => {

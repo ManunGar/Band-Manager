@@ -26,7 +26,7 @@ vi.mock('../../../src/middleware/FileHandlerMiddleware.js', () => ({
 
 import bcrypt from 'bcryptjs';
 import UserController from '../../../src/controllers/UserController.js';
-import { User } from '../../../src/models/sequelize.js';
+import { Musician, User } from '../../../src/models/sequelize.js';
 
 const mockReq = (overrides = {}) => ({
   body: {},
@@ -47,6 +47,7 @@ const mockRes = () => {
 describe('UserController', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('loginMusician', () => {
@@ -147,6 +148,113 @@ describe('UserController', () => {
       await UserController.isValidProviderToken(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('registerMusician', () => {
+    it('devuelve 201 cuando el registro es exitoso', async () => {
+      const mockTransaction = {
+        commit: vi.fn().mockResolvedValue(undefined),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      const mockUser = { id: 1, update: vi.fn().mockResolvedValue(true) };
+      const mockFullUser = { id: 1, musician: { instruments: [] } };
+
+      User.sequelize.transaction.mockResolvedValue(mockTransaction);
+      User.create.mockResolvedValue(mockUser);
+      Musician.create.mockResolvedValue({ id: 1 });
+      User.findByPk.mockResolvedValue(mockFullUser);
+
+      const req = mockReq({
+        body: { full_name: 'Test User', username: 'test', email: 'test@test.com', password: 'pass' }
+      });
+      const res = mockRes();
+
+      await UserController.registerMusician(req, res);
+
+      expect(mockTransaction.commit).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Musician registered successfully' })
+      );
+    });
+
+    it('devuelve 500 y hace rollback cuando la base de datos falla', async () => {
+      const mockTransaction = {
+        commit: vi.fn(),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      User.sequelize.transaction.mockResolvedValue(mockTransaction);
+      User.create.mockRejectedValue(new Error('DB error'));
+
+      const req = mockReq({ body: { username: 'test', password: 'pass' } });
+      const res = mockRes();
+
+      await UserController.registerMusician(req, res);
+
+      expect(mockTransaction.rollback).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('editUserDetails', () => {
+    it('devuelve 200 cuando actualiza los datos del usuario correctamente', async () => {
+      const mockUser = {
+        id: 1,
+        profile_picture: null,
+        update: vi.fn().mockResolvedValue(true)
+      };
+      User.findByPk.mockResolvedValue(mockUser);
+
+      const req = mockReq({
+        user: { id: 1, profile_picture: null },
+        body: { full_name: 'Nuevo Nombre' }
+      });
+      const res = mockRes();
+
+      await UserController.editUserDetails(req, res);
+
+      expect(mockUser.update).toHaveBeenCalledTimes(2);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'User details updated successfully' })
+      );
+    });
+
+    it('devuelve 200 y borra la foto cuando delete_profile_picture es true', async () => {
+      const mockUser = {
+        id: 1,
+        profile_picture: 'https://cloudinary.com/image.jpg',
+        update: vi.fn().mockResolvedValue(true)
+      };
+      User.findByPk.mockResolvedValue(mockUser);
+
+      const req = mockReq({
+        user: { id: 1, profile_picture: 'https://cloudinary.com/image.jpg' },
+        body: { delete_profile_picture: true }
+      });
+      const res = mockRes();
+
+      await UserController.editUserDetails(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('devuelve 500 cuando la base de datos falla', async () => {
+      User.findByPk.mockRejectedValue(new Error('DB error'));
+
+      const req = mockReq({
+        user: { id: 1 },
+        body: { full_name: 'Test' }
+      });
+      const res = mockRes();
+
+      await UserController.editUserDetails(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Error editing user details' })
+      );
     });
   });
 

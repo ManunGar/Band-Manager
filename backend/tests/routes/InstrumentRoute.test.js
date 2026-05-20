@@ -14,7 +14,10 @@ app.use(express.json());
 loadFileRoutes(app);
 
 describe('GET /instruments', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
 
   it('devuelve 200 con la lista de instrumentos', async () => {
     const fakeInstruments = [

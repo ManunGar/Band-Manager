@@ -11,14 +11,14 @@
  *   k6 run tests/load/api-load-test.js
  *
  * Con variables de entorno:
- *   k6 run -e BASE_URL=http://192.168.1.10:3030 -e USERNAME=test -e PASSWORD=1234 tests/load/api-load-test.js
+ *   k6 run -e BASE_URL=http://192.168.1.10:3030 -e API_USERNAME=test -e API_PASSWORD=1234 tests/load/api-load-test.js
  *
  * Generar reporte HTML:
  *   k6 run --out html=tests/load/report.html tests/load/api-load-test.js
  */
 
-import http from 'k6/http';
 import { check, group, sleep } from 'k6';
+import http from 'k6/http';
 import { Counter, Rate, Trend } from 'k6/metrics';
 
 // ─── Métricas personalizadas ────────────────────────────────────────────────
@@ -85,8 +85,9 @@ export const options = {
 
 // ─── Configuración ───────────────────────────────────────────────────────────
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3030';
-const TEST_USERNAME = __ENV.USERNAME || 'testuser';
-const TEST_PASSWORD = __ENV.PASSWORD || 'testpassword';
+// Nota: evitar __ENV.USERNAME — en Windows es una variable de sistema (nombre del usuario del SO)
+const TEST_USERNAME = __ENV.API_USERNAME || 'manuel_nuno';
+const TEST_PASSWORD = __ENV.API_PASSWORD || 'Patata1234';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
@@ -138,16 +139,17 @@ export default function (data) {
   group('Endpoints públicos', () => {
     // GET / — Home
     const homeRes = http.get(`${BASE_URL}/`, { tags: { name: 'GET /' } });
-    check(homeRes, {
+    const homeOk = check(homeRes, {
       'GET / → 200': (r) => r.status === 200,
-    }) || (failedRequests.add(1), errorRate.add(1));
-    errorRate.add(homeRes.status !== 200 ? 1 : 0);
+    });
+    if (!homeOk) failedRequests.add(1);
+    errorRate.add(homeOk ? 0 : 1);
 
     sleep(0.5);
 
-    // GET /instruments — Listar instrumentos (requiere auth)
+    // GET /instruments — Listar instrumentos (endpoint público, no requiere auth)
     const instRes = http.get(`${BASE_URL}/instruments`, {
-      headers: authHeaders,
+      headers: JSON_HEADERS,
       tags: { name: 'GET /instruments' },
     });
     const instOk = check(instRes, {
@@ -157,7 +159,8 @@ export default function (data) {
       },
     });
     instrumentsDuration.add(instRes.timings.duration);
-    if (!instOk) { failedRequests.add(1); errorRate.add(1); }
+    if (!instOk) failedRequests.add(1);
+    errorRate.add(instOk ? 0 : 1);
 
     sleep(0.3);
   });
@@ -180,7 +183,8 @@ export default function (data) {
       },
     });
     loginDuration.add(loginRes.timings.duration);
-    if (!loginOk) { failedRequests.add(1); errorRate.add(1); }
+    if (!loginOk) failedRequests.add(1);
+    errorRate.add(loginOk ? 0 : 1);
 
     sleep(0.5);
 
@@ -216,7 +220,8 @@ export default function (data) {
       },
     });
     bandsListDuration.add(bandsRes.timings.duration);
-    if (!bandsOk) { failedRequests.add(1); errorRate.add(1); }
+    if (!bandsOk) failedRequests.add(1);
+    errorRate.add(bandsOk ? 0 : 1);
 
     sleep(0.5);
 
@@ -248,7 +253,8 @@ export default function (data) {
       },
     });
     musiciansDuration.add(musiciansRes.timings.duration);
-    if (!musiciansOk) { failedRequests.add(1); errorRate.add(1); }
+    if (!musiciansOk) failedRequests.add(1);
+    errorRate.add(musiciansOk ? 0 : 1);
 
     sleep(0.5);
 

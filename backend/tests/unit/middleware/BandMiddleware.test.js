@@ -25,6 +25,7 @@ const mockRes = () => {
 describe('BandMiddleware', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('isBandMember', () => {

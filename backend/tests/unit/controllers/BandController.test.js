@@ -12,11 +12,11 @@ vi.mock('../../../src/models/sequelize.js', () => ({
     findOne: vi.fn(),
     create: vi.fn()
   },
-  Event: {},
+  Event: { create: vi.fn() },
   Instrument: {},
   Musician: {},
-  Performance: {},
-  Rehearsal: {},
+  Performance: { create: vi.fn(), update: vi.fn() },
+  Rehearsal: { create: vi.fn() },
   User: {}
 }));
 
@@ -30,7 +30,7 @@ vi.mock('../../../src/controllers/EventController.js', () => ({
 }));
 
 import BandController from '../../../src/controllers/BandController.js';
-import { Band, Component } from '../../../src/models/sequelize.js';
+import { Band, Component, Event, Performance, Rehearsal } from '../../../src/models/sequelize.js';
 
 const mockReq = (overrides = {}) => ({
   body: {},
@@ -51,6 +51,7 @@ const mockRes = () => {
 describe('BandController', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('listMyBands', () => {
@@ -221,6 +222,177 @@ describe('BandController', () => {
 
       await BandController.deleteBand(req, res);
 
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('createBand', () => {
+    it('devuelve 201 cuando crea la banda correctamente', async () => {
+      const mockTransaction = {
+        commit: vi.fn().mockResolvedValue(undefined),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      const mockBand = { id: 1, update: vi.fn().mockResolvedValue(true) };
+      const mockComponent = { addInstrument: vi.fn().mockResolvedValue(true) };
+
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Band.findOne.mockResolvedValue(null); // para _generateUniqueBandCode
+      Band.create.mockResolvedValue(mockBand);
+      Component.create.mockResolvedValue(mockComponent);
+      Component.findOne.mockResolvedValue(mockComponent);
+
+      const req = mockReq({ body: { name: 'Banda Test', location: 'Madrid', instruments: {} } });
+      const res = mockRes();
+
+      await BandController.createBand(req, res);
+
+      expect(mockTransaction.commit).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Band created successfully' })
+      );
+    });
+
+    it('devuelve 500 y hace rollback cuando falla la creación', async () => {
+      const mockTransaction = {
+        commit: vi.fn(),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Band.findOne.mockResolvedValue(null);
+      Band.create.mockRejectedValue(new Error('DB error'));
+
+      const req = mockReq({ body: { name: 'Banda Test', instruments: {} } });
+      const res = mockRes();
+
+      await BandController.createBand(req, res);
+
+      expect(mockTransaction.rollback).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('joinBand', () => {
+    it('devuelve 201 cuando el músico se une correctamente', async () => {
+      const mockTransaction = {
+        commit: vi.fn().mockResolvedValue(undefined),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      const mockComponent = { addInstrument: vi.fn().mockResolvedValue(true) };
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Band.findByPk.mockResolvedValue({ id: 1 });
+      Component.create.mockResolvedValue(mockComponent);
+
+      const req = mockReq({ params: { bandId: '1' }, body: { instruments: {} } });
+      const res = mockRes();
+
+      await BandController.joinBand(req, res);
+
+      expect(mockTransaction.commit).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Joined band successfully' })
+      );
+    });
+
+    it('devuelve 404 cuando la banda no existe', async () => {
+      const mockTransaction = {
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Band.findByPk.mockResolvedValue(null);
+
+      const req = mockReq({ params: { bandId: '999' }, body: { instruments: {} } });
+      const res = mockRes();
+
+      await BandController.joinBand(req, res);
+
+      expect(mockTransaction.rollback).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    it('devuelve 500 y hace rollback cuando falla', async () => {
+      const mockTransaction = {
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Band.findByPk.mockRejectedValue(new Error('DB error'));
+
+      const req = mockReq({ params: { bandId: '1' }, body: { instruments: {} } });
+      const res = mockRes();
+
+      await BandController.joinBand(req, res);
+
+      expect(mockTransaction.rollback).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('addEventToBand', () => {
+    it('devuelve 201 al añadir un ensayo correctamente', async () => {
+      const mockTransaction = {
+        commit: vi.fn().mockResolvedValue(undefined),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      const mockEvent = { id: 1, addInstrumentsAttended: vi.fn().mockResolvedValue(true) };
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Event.create.mockResolvedValue(mockEvent);
+      Rehearsal.create.mockResolvedValue({ id: 1 });
+
+      const req = mockReq({
+        params: { bandId: '1' },
+        body: { name: 'Ensayo', date: '2099-01-01', eventType: 'rehearsals' }
+      });
+      const res = mockRes();
+
+      await BandController.addEventToBand(req, res);
+
+      expect(Rehearsal.create).toHaveBeenCalled();
+      expect(mockTransaction.commit).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it('devuelve 201 al añadir una performance correctamente', async () => {
+      const mockTransaction = {
+        commit: vi.fn().mockResolvedValue(undefined),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      const mockEvent = { id: 1, addInstrumentsAttended: vi.fn().mockResolvedValue(true) };
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Event.create.mockResolvedValue(mockEvent);
+      Performance.create.mockResolvedValue({ id: 1 });
+      Performance.update.mockResolvedValue([1]);
+
+      const req = mockReq({
+        params: { bandId: '1' },
+        body: { name: 'Concierto', date: '2099-01-01', eventType: 'performances', instruments: [5] }
+      });
+      const res = mockRes();
+
+      await BandController.addEventToBand(req, res);
+
+      expect(Performance.create).toHaveBeenCalled();
+      expect(mockEvent.addInstrumentsAttended).toHaveBeenCalledWith(5, expect.any(Object));
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it('devuelve 500 y hace rollback cuando falla', async () => {
+      const mockTransaction = {
+        commit: vi.fn(),
+        rollback: vi.fn().mockResolvedValue(undefined)
+      };
+      Band.sequelize.transaction.mockResolvedValue(mockTransaction);
+      Event.create.mockRejectedValue(new Error('DB error'));
+
+      const req = mockReq({
+        params: { bandId: '1' },
+        body: { eventType: 'rehearsals' }
+      });
+      const res = mockRes();
+
+      await BandController.addEventToBand(req, res);
+
+      expect(mockTransaction.rollback).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
     });
   });

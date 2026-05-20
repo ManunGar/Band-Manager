@@ -23,6 +23,21 @@ module.exports = {
       return;
     }
 
-    await queryInterface.removeColumn('Musicians', 'isProfilePrivate');
+    try {
+      await queryInterface.removeColumn('Musicians', 'isProfilePrivate');
+    } catch (error) {
+      // Workaround for MariaDB + Sequelize issue where removeColumn may throw
+      // "Cannot delete property 'meta' of [object Array]" after ALTER execution.
+      if (!String(error?.message || '').includes("Cannot delete property 'meta'")) {
+        throw error;
+      }
+
+      const refreshedTableDefinition = await queryInterface.describeTable('Musicians');
+      if (refreshedTableDefinition.isProfilePrivate) {
+        await queryInterface.sequelize.query('ALTER TABLE `Musicians` DROP COLUMN `isProfilePrivate`', {
+          raw: true
+        });
+      }
+    }
   }
 };

@@ -8,7 +8,10 @@
     "start": "node src/index.js",
     "start-dev": "npx nodemon src/index.js",
     "migrate": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate",
-    "seed": "npx sequelize-cli db:seed:undo:all && npx sequelize-cli db:seed:all"
+    "seed": "npx sequelize-cli db:seed:undo:all && npx sequelize-cli db:seed:all",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -34,7 +37,10 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
     "nodemon": "^3.1.10",
-    "sequelize-cli": "^6.6.3"
+    "sequelize-cli": "^6.6.3",
+    "supertest": "^7.2.2",
+    "vitest": "^3.2.4"
   }
 }
